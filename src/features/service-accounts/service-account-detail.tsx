@@ -4,17 +4,12 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { z } from "zod"
 
 import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
-import {
-  ApiCredentialCard,
-  RotateCredentialAction,
-} from "@/components/crucible/api-credential-card"
+import { RotateCredentialAction } from "@/components/crucible/api-credential-card"
 import {
   EditableCardActions,
   EditableCardTrigger,
 } from "@/components/crucible/editable-card-actions"
-import { MfidValue } from "@/components/crucible/mfid-value"
-import { PersonIdentity } from "@/components/crucible/person-identity"
-import { PlatformRoleBadge } from "@/components/crucible/platform-role-badge"
+import { PersonProfileFields } from "@/components/crucible/person-profile-fields"
 import { PlatformRoleDialog } from "@/components/crucible/platform-role-dialog"
 import type { PlatformRole } from "@/components/crucible/platform-role-dialog"
 import { Button } from "@/components/ui/button"
@@ -47,7 +42,6 @@ import {
   DiscardChangesDialog,
   useDiscardProtection,
 } from "@/features/forms/discard-changes"
-import { formatUsername } from "@/lib/username"
 import { USERNAME_MAX_LENGTH, usernameSchema } from "@/data/crucible/slugs"
 import { OneTimeCredentialDialog } from "./one-time-credential-dialog"
 import {
@@ -134,31 +128,7 @@ function profileChanges(
   return changes
 }
 
-export function ServiceAccountDetail({
-  account,
-  canChangePlatformRole,
-  mode,
-  scope,
-}: {
-  account: WorkspaceServiceAccountDetail
-  canChangePlatformRole: boolean
-  mode: WorkspaceMode
-  scope: IdentityScope
-}) {
-  return (
-    <div className="grid gap-4 @split/content:grid-cols-2 @split/content:items-start">
-      <ServiceAccountIdentityCard
-        account={account}
-        canChangePlatformRole={canChangePlatformRole}
-        mode={mode}
-        scope={scope}
-      />
-      <ServiceAccountCredentialCard account={account} scope={scope} />
-    </div>
-  )
-}
-
-function ServiceAccountIdentityCard({
+export function ServiceAccountProfileCard({
   account,
   canChangePlatformRole,
   mode,
@@ -267,7 +237,7 @@ function ServiceAccountIdentityCard({
       <>
         <Card>
           <CardHeader>
-            <CardTitle>Identity</CardTitle>
+            <CardTitle>Profile</CardTitle>
             <CardAction>
               <div className="flex flex-wrap justify-end gap-2">
                 {canChangePlatformRole ? (
@@ -289,31 +259,11 @@ function ServiceAccountIdentityCard({
                 propagate.
               </p>
             ) : null}
-            <PersonIdentity person={account} presentation="avatar" size="lg" />
-            <dl className="grid grid-cols-2 gap-4">
-              <div className="min-w-0">
-                <dt className="text-label text-muted-foreground">Username</dt>
-                <dd className="mt-1 text-body break-words">
-                  {formatUsername(account.username, "raw")}
-                </dd>
-              </div>
-              <div className="min-w-0">
-                <dt className="text-label text-muted-foreground">
-                  Platform role
-                </dt>
-                <dd className="mt-1">
-                  <PlatformRoleBadge role={account.platform_role} />
-                </dd>
-              </div>
-              <div className="col-span-2 min-w-0">
-                <dt className="text-label text-muted-foreground">
-                  Crucible ID
-                </dt>
-                <dd className="mt-1">
-                  <MfidValue value={account.unique_id} />
-                </dd>
-              </div>
-            </dl>
+            <PersonProfileFields
+              lastActiveAt={account.last_active_at ?? null}
+              person={account}
+              platformRole={account.platform_role}
+            />
           </CardContent>
         </Card>
         <PlatformRoleDialog
@@ -400,7 +350,7 @@ function ServiceAccountIdentityCard({
   )
 }
 
-function ServiceAccountCredentialCard({
+export function RotateServiceAccountKeyAction({
   account,
   scope,
 }: {
@@ -425,7 +375,6 @@ function ServiceAccountCredentialCard({
         )
       ),
   })
-  const status = account.api_key_status
 
   async function rotateKey() {
     setError(undefined)
@@ -433,9 +382,12 @@ function ServiceAccountCredentialCard({
       const nextCredential = await mutation.mutateAsync()
       setConfirming(false)
       setCredential(nextCredential)
-      void queryClient.invalidateQueries({
-        queryKey: crucibleKeys.serviceAccountAdmin(scope, account.unique_id),
-      })
+      void Promise.all(
+        [
+          crucibleKeys.serviceAccountAdmin(scope, account.unique_id),
+          crucibleKeys.userApiKeyQueries(scope, account.unique_id),
+        ].map((queryKey) => queryClient.invalidateQueries({ queryKey }))
+      )
     } catch (cause) {
       setError(
         hubActionError(
@@ -450,15 +402,9 @@ function ServiceAccountCredentialCard({
 
   return (
     <>
-      <ApiCredentialCard
-        action={
-          <RotateCredentialAction
-            label="Rotate key"
-            onClick={() => setConfirming(true)}
-          />
-        }
-        lastActiveAt={account.last_active_at}
-        status={status}
+      <RotateCredentialAction
+        label="Rotate key"
+        onClick={() => setConfirming(true)}
       />
       <ConfirmationDialog
         kind="alert"

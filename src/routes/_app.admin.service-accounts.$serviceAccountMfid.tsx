@@ -1,14 +1,22 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
-import { Link, createFileRoute } from "@tanstack/react-router"
+import { Link, Outlet, createFileRoute } from "@tanstack/react-router"
 
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
-import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
+import {
+  PersonAvatar,
+  personDisplayName,
+} from "@/components/crucible/person-identity"
+import {
+  ResourceSectionNavigation,
+  ResourceSectionPanel,
+  resourceSectionActiveProps,
+  resourceSectionLinkClassName,
+} from "@/components/crucible/resource-section-navigation"
 import { IdentityDetailPending } from "@/components/crucible/route-content-pending"
 import {
   useAdministrationScope,
   useWorkspacePrivilegeMode,
-  useWorkspaceMode,
   useWorkspaceScope,
 } from "@/components/crucible/workspace-provider"
 import {
@@ -34,7 +42,6 @@ import {
 } from "@/data/crucible/query-keys"
 import { serviceAccountAdminQueryOptions } from "@/data/crucible/service-accounts.queries"
 import type { WorkspaceAccount } from "@/data/crucible/workspace-source"
-import { ServiceAccountDetail } from "@/features/service-accounts/service-account-detail"
 import { hubPageTitle } from "@/lib/page-title"
 import { formatUsername } from "@/lib/username"
 
@@ -77,7 +84,6 @@ function ServiceAccountAdminPage() {
   const scope = useWorkspaceScope()
   const administrationScope = useAdministrationScope()
   const privilegeMode = useWorkspacePrivilegeMode()
-  const mode = useWorkspaceMode()
   const { data: account } = useSuspenseQuery(accountQueryOptions(scope))
 
   if (!canOpenServiceAccountAdministration(account, privilegeMode)) {
@@ -93,8 +99,6 @@ function ServiceAccountAdminPage() {
   return (
     <ServiceAccountAdminDetail
       administrationScope={administrationScope}
-      canChangePlatformRole={!account.is_service_account}
-      mode={mode}
       serviceAccountMfid={serviceAccountMfid}
     />
   )
@@ -113,13 +117,9 @@ function ServiceAccountLoadError() {
 
 function ServiceAccountAdminDetail({
   administrationScope,
-  canChangePlatformRole,
-  mode,
   serviceAccountMfid,
 }: {
   administrationScope: ReturnType<typeof useAdministrationScope>
-  canChangePlatformRole: boolean
-  mode: ReturnType<typeof useWorkspaceMode>
   serviceAccountMfid: string
 }) {
   const serviceAccountResult = useSuspenseQuery(
@@ -140,9 +140,7 @@ function ServiceAccountAdminDetail({
   }
 
   const serviceAccount = serviceAccountResult.data
-
-  const title =
-    formatUsername(serviceAccount.username, "raw") || serviceAccount.unique_id
+  const title = personDisplayName(serviceAccount)
 
   return (
     <PageLayout>
@@ -160,16 +158,40 @@ function ServiceAccountAdminDetail({
         </BreadcrumbList>
       </Breadcrumb>
       <PageHeader
-        icon={<PrincipalTypeIcon className="size-5" type="service_account" />}
+        avatar={<PersonAvatar person={serviceAccount} size="lg" />}
+        eyebrow="Service account"
+        identifier={
+          serviceAccount.username
+            ? formatUsername(serviceAccount.username, "handle")
+            : undefined
+        }
         title={title}
       />
-      <ServiceAccountDetail
-        key={serviceAccount.unique_id}
-        account={serviceAccount}
-        canChangePlatformRole={canChangePlatformRole}
-        mode={mode}
-        scope={administrationScope}
-      />
+      <ResourceSectionNavigation label="Service account sections">
+        <Link
+          activeOptions={{ exact: true, includeSearch: false }}
+          activeProps={resourceSectionActiveProps}
+          className={resourceSectionLinkClassName}
+          params={{ serviceAccountMfid }}
+          to="/admin/service-accounts/$serviceAccountMfid"
+          viewTransition
+        >
+          Overview
+        </Link>
+        <Link
+          activeOptions={{ includeSearch: false }}
+          activeProps={resourceSectionActiveProps}
+          className={resourceSectionLinkClassName}
+          params={{ serviceAccountMfid }}
+          to="/admin/service-accounts/$serviceAccountMfid/security"
+          viewTransition
+        >
+          Security
+        </Link>
+      </ResourceSectionNavigation>
+      <ResourceSectionPanel>
+        <Outlet />
+      </ResourceSectionPanel>
     </PageLayout>
   )
 }

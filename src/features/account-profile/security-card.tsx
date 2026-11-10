@@ -92,13 +92,16 @@ function SecurityCard({
     ["history", "Sign-in history"],
   ]
   const shown = tabs.filter(([value]) => panels[value])
+  const active = shown.some(([value]) => value === tab)
+    ? tab
+    : (shown.at(0)?.[0] ?? tab)
   return (
     <Card>
       <CardContent className="px-0">
         <Tabs
           className="gap-4"
           onValueChange={(value) => setTab(value as SecurityTab)}
-          value={tab}
+          value={active}
         >
           <div className="overflow-x-auto border-b px-(--card-spacing)">
             <TabsList aria-label="Security" className="gap-4" variant="line">
@@ -189,6 +192,38 @@ export function AccountSecurityCard({
           <ApiKeysSection owner={{ canCreate, kind: "self" }} scope={scope} />
         ),
         history: <SignInHistorySection scope={scope} />,
+      }}
+    />
+  )
+}
+
+export function ServiceAccountSecurityCard({
+  name,
+  rotateAction,
+  scope,
+  userId,
+}: {
+  name: string
+  rotateAction?: ReactNode
+  scope: IdentityScope
+  userId: string
+}) {
+  const keys = useInfiniteQuery(
+    apiKeysInfiniteQueryOptions(scope, userId, "active")
+  )
+  return (
+    <SecurityCard
+      counts={{ "api-keys": keys.data?.pages[0]?.total ?? null }}
+      panels={{
+        "api-keys": (
+          <ApiKeysSection
+            action={rotateAction}
+            emptyActiveText="This service account has no active API keys."
+            owner={{ kind: "person", name, userId }}
+            scope={scope}
+          />
+        ),
+        history: <SignInHistorySection scope={scope} userId={userId} />,
       }}
     />
   )

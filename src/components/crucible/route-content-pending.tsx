@@ -1,6 +1,5 @@
 import { Link } from "@tanstack/react-router"
 
-import { ApiCredentialCard } from "@/components/crucible/api-credential-card"
 import { ContentBoundary } from "@/components/crucible/content-layout"
 import {
   PageHeader,
@@ -75,38 +74,34 @@ export function IdentityDetailContentPending({
 }) {
   const serviceAccount = kind === "service_account"
   const fields = serviceAccount
-    ? ["Username", "Platform role", "Crucible ID", "Last active"]
-    : ["Username", "Platform role", "Email", "Crucible ID", "Last active"]
+    ? ["Name", "Username", "Platform role", "Last active", "Crucible ID"]
+    : [
+        "Name",
+        "Username",
+        "Email",
+        "Platform role",
+        "Last active",
+        "Crucible ID",
+      ]
   return (
     <div className="flex flex-col gap-6">
-      <div className="grid gap-4 @split/content:grid-cols-2 @split/content:items-start">
-        <Card aria-busy="true">
-          <CardHeader>
-            <CardTitle>Identity</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-5">
-            <PendingPrincipalIdentity />
-            <dl className="grid grid-cols-2 gap-4">
-              {fields.map((label) => (
-                <div
-                  className={
-                    label === "Email" || label.startsWith("Crucible ID")
-                      ? "col-span-2 grid gap-1 @fields:col-span-1"
-                      : "grid gap-1"
-                  }
-                  key={label}
-                >
-                  <dt className="text-label text-muted-foreground">{label}</dt>
-                  <dd>
-                    <Skeleton className="h-5 w-32" />
-                  </dd>
-                </div>
-              ))}
-            </dl>
-          </CardContent>
-        </Card>
-        <ApiCredentialCard lastActiveAt={undefined} loading />
-      </div>
+      <Card aria-busy="true">
+        <CardHeader>
+          <CardTitle>Profile</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <dl className="grid grid-cols-1 gap-4 @md:grid-cols-2 @3xl:grid-cols-3">
+            {fields.map((label) => (
+              <div className="grid min-w-0 gap-1" key={label}>
+                <dt className="text-label text-muted-foreground">{label}</dt>
+                <dd>
+                  <Skeleton className="h-5 w-32" />
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </CardContent>
+      </Card>
       {!serviceAccount ? (
         <Card aria-busy="true">
           <CardHeader>
@@ -121,18 +116,6 @@ export function IdentityDetailContentPending({
           </CardContent>
         </Card>
       ) : null}
-    </div>
-  )
-}
-
-function PendingPrincipalIdentity() {
-  return (
-    <div className="flex items-center gap-3">
-      <Skeleton className="size-12 rounded-full" />
-      <div className="grid flex-1 gap-2">
-        <Skeleton className="h-5 w-40 max-w-full" />
-        <Skeleton className="h-4 w-28 max-w-full" />
-      </div>
     </div>
   )
 }

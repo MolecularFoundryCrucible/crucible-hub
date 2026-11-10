@@ -1,3 +1,4 @@
+import type { ReactNode } from "react"
 import { useEffect, useId, useRef, useState } from "react"
 import {
   useInfiniteQuery,
@@ -100,9 +101,13 @@ function keyName(key: WorkspaceApiKey) {
 }
 
 export function ApiKeysSection({
+  action,
+  emptyActiveText,
   owner,
   scope,
 }: {
+  action?: ReactNode
+  emptyActiveText?: string
   owner: ApiKeyOwner
   scope: IdentityScope
 }) {
@@ -138,6 +143,7 @@ export function ApiKeysSection({
           {owner.kind === "self" && owner.canCreate ? (
             <NewApiKeyAction scope={scope} />
           ) : null}
+          {action}
         </>
       }
       id={anchorId}
@@ -163,9 +169,10 @@ export function ApiKeysSection({
       ) : keys.length === 0 ? (
         <SecuritySectionMessage>
           {active
-            ? owner.kind === "self"
-              ? "You have no active API keys."
-              : "This person has no active API keys."
+            ? (emptyActiveText ??
+              (owner.kind === "self"
+                ? "You have no active API keys."
+                : "This person has no active API keys."))
             : "No expired or revoked API keys."}
         </SecuritySectionMessage>
       ) : (
