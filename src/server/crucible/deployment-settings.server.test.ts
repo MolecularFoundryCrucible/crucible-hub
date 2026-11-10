@@ -5,6 +5,7 @@ import { join } from "node:path"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import {
+  assertSecretSettingsGivenOnce,
   clearSecretSettingCache,
   clientAddress,
   readSecretSetting,
@@ -18,18 +19,70 @@ afterEach(() => {
 })
 
 describe("secret settings", () => {
-  it("prefers NAME_FILE over the environment variable", () => {
-    const file = join(mkdtempSync(join(tmpdir(), "hub-secret-")), "secret")
-    writeFileSync(file, "from-file\n")
-    vi.stubEnv("HUB_TEST_SECRET", "from-env")
-    expect(readSecretSetting("HUB_TEST_SECRET")).toBe("from-env")
-    vi.stubEnv("HUB_TEST_SECRET_FILE", file)
-    expect(readSecretSetting("HUB_TEST_SECRET")).toBe("from-file")
+  function secretFile(name: string, value: string) {
+    const directory = mkdtempSync(join(tmpdir(), "hub-secret-"))
+    writeFileSync(join(directory, name), value)
+    return { directory, file: join(directory, name) }
+  }
+
+  it.each([
+    [
+      "the variable",
+      () => vi.stubEnv("HUB_TEST_SECRET", "from-env"),
+      undefined,
+    ],
+    [
+      "NAME_FILE",
+      () =>
+        vi.stubEnv(
+          "HUB_TEST_SECRET_FILE",
+          secretFile("pointed", "from-file\n").file
+        ),
+      undefined,
+    ],
+    [
+      "the secrets directory",
+      () => undefined,
+      secretFile("HUB_TEST_SECRET", "from-mount\n").directory,
+    ],
+  ])("reads a secret given only as %s", (_label, give, directory) => {
+    give()
+    expect(readSecretSetting("HUB_TEST_SECRET", directory)).toMatch(/^from-/)
+    expect(readSecretSetting("HUB_TEST_SECRET", directory)).not.toMatch(/\n$/)
   })
 
-  it("treats an empty variable as unset", () => {
-    vi.stubEnv("HUB_TEST_SECRET", "")
-    expect(readSecretSetting("HUB_TEST_SECRET")).toBeUndefined()
+  it("refuses a secret given more than one way, naming the ways", () => {
+    vi.stubEnv("HUB_TEST_SECRET", "from-env")
+    vi.stubEnv("HUB_TEST_SECRET_FILE", secretFile("pointed", "from-file").file)
+    expect(() => readSecretSetting("HUB_TEST_SECRET")).toThrow(
+      "HUB_TEST_SECRET is given more than one way (HUB_TEST_SECRET, HUB_TEST_SECRET_FILE); give it one way only."
+    )
+    vi.unstubAllEnvs()
+    const { directory } = secretFile("HUB_TEST_SECRET", "from-mount")
+    vi.stubEnv("HUB_TEST_SECRET", "from-env")
+    expect(() => readSecretSetting("HUB_TEST_SECRET", directory)).toThrow(
+      /given more than one way/
+    )
+  })
+
+  it("treats blank values as not given and refuses an empty NAME_FILE", () => {
+    const { directory } = secretFile("HUB_TEST_SECRET", "  \n")
+    vi.stubEnv("HUB_TEST_SECRET", " ")
+    expect(readSecretSetting("HUB_TEST_SECRET", directory)).toBeUndefined()
+    vi.stubEnv("HUB_TEST_SECRET", "from-env")
+    expect(readSecretSetting("HUB_TEST_SECRET", directory)).toBe("from-env")
+    vi.stubEnv("HUB_TEST_SECRET_FILE", secretFile("empty", "").file)
+    expect(() => readSecretSetting("HUB_TEST_SECRET")).toThrow(
+      "HUB_TEST_SECRET_FILE names an empty file."
+    )
+  })
+
+  it("checks every secret setting at startup", () => {
+    vi.stubEnv("HUB_SESSION_KEYS", "k1:abc")
+    vi.stubEnv("HUB_SESSION_KEYS_FILE", secretFile("keys", "k1:abc").file)
+    expect(() => assertSecretSettingsGivenOnce()).toThrow(
+      /HUB_SESSION_KEYS is given more than one way/
+    )
   })
 })
 

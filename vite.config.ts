@@ -104,6 +104,7 @@ const config = defineConfig({
       baseURL: "/hub/",
       compressPublicAssets: { gzip: true, brotli: true },
       traceDeps: ["pg", "@google-cloud/cloud-sql-connector"],
+      plugins: ["./src/server/plugins/check-secret-settings.ts"],
     }),
     viteReact(),
   ],

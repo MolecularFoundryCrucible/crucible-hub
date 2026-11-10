@@ -3,8 +3,15 @@ import "@tanstack/react-start/server-only"
 import { existsSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 
-const secretsDirectory = "/run/secrets"
 const fileContents = new Map<string, string>()
+
+const secretSettingNames = [
+  "CRUCIBLE_API_KEY",
+  "HUB_AUTH_CLIENT_SECRET",
+  "HUB_SESSION_DATABASE_PASSWORD",
+  "HUB_SESSION_DATABASE_URL",
+  "HUB_SESSION_KEYS",
+] as const
 
 function readSecretFile(path: string) {
   let value = fileContents.get(path)
@@ -16,18 +23,40 @@ function readSecretFile(path: string) {
 }
 
 /**
- * A secret setting read the way the Crucible API reads its own: the file named
- * by NAME_FILE, then /run/secrets/NAME (Docker and Kubernetes secrets), then
- * the NAME environment variable.
+ * A secret setting read the way the Crucible API reads its own: from exactly
+ * one of the file named by NAME_FILE, /run/secrets/NAME (Docker and Kubernetes
+ * secrets), or the NAME environment variable. A blank value counts as not
+ * given, and a setting given more than one way is refused.
  */
-export function readSecretSetting(name: string): string | undefined {
-  const file = process.env[`${name}_FILE`]
-  if (file) return readSecretFile(file)
+export function readSecretSetting(
+  name: string,
+  secretsDirectory = "/run/secrets"
+): string | undefined {
+  const ways = new Map<string, string>()
+  const variable = process.env[name]
+  if (variable?.trim()) ways.set(name, variable)
+  const pointer = process.env[`${name}_FILE`]?.trim()
+  if (pointer) {
+    const value = readSecretFile(pointer)
+    if (!value.trim()) throw new Error(`${name}_FILE names an empty file.`)
+    ways.set(`${name}_FILE`, value)
+  }
   const mounted = join(secretsDirectory, name)
   if (fileContents.has(mounted) || existsSync(mounted)) {
-    return readSecretFile(mounted)
+    const value = readSecretFile(mounted)
+    if (value.trim()) ways.set(`${mounted}`, value)
   }
-  return process.env[name] || undefined
+  if (ways.size > 1) {
+    throw new Error(
+      `${name} is given more than one way (${[...ways.keys()].join(", ")}); give it one way only.`
+    )
+  }
+  return ways.values().next().value
+}
+
+/** Refuses to start when any secret setting is given more than one way. */
+export function assertSecretSettingsGivenOnce() {
+  for (const name of secretSettingNames) readSecretSetting(name)
 }
 
 export function clearSecretSettingCache() {

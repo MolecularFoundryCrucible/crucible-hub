@@ -4,6 +4,8 @@ import { fileURLToPath } from "node:url"
 
 import pg from "pg"
 
+import { readSecretSetting } from "./secret-settings.mjs"
+
 const migrationsDirectory = resolve(
   fileURLToPath(new URL("..", import.meta.url)),
   "migrations/session-store"
@@ -64,7 +66,7 @@ export async function applySessionStoreMigrations(client) {
 async function connect() {
   const instance = process.env.HUB_SESSION_DATABASE_INSTANCE
   if (!instance) {
-    const url = process.env.HUB_SESSION_DATABASE_URL
+    const url = readSecretSetting("HUB_SESSION_DATABASE_URL")
     if (!url) {
       throw new Error(
         "Set HUB_SESSION_DATABASE_INSTANCE or HUB_SESSION_DATABASE_URL."
@@ -74,7 +76,7 @@ async function connect() {
     await client.connect()
     return { client, close: () => client.end() }
   }
-  const password = process.env.HUB_SESSION_DATABASE_PASSWORD
+  const password = readSecretSetting("HUB_SESSION_DATABASE_PASSWORD")
   if (!password) throw new Error("Set HUB_SESSION_DATABASE_PASSWORD.")
   const { AuthTypes, Connector, IpAddressTypes } =
     await import("@google-cloud/cloud-sql-connector")

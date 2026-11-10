@@ -34,7 +34,7 @@ chmod 444 secrets/hub_*
 
 To rotate session keys without signing everyone out, put the new key first and keep the old one after a comma until the old sessions expire: `k2:<new>,k1:<old>`.
 
-Every Hub secret can also come from an environment variable or a `NAME_FILE` path; the Hub reads `NAME_FILE`, then `/run/secrets/NAME`, then `NAME`, as the API does.
+Every Hub secret can also come from an environment variable or a `NAME_FILE` path. Give each secret exactly one way, as the API requires: the Hub refuses to start when a secret is set in more than one of `NAME_FILE`, `/run/secrets/NAME`, and `NAME`, and a blank value counts as not set.
 
 ## Same machine as the API
 
