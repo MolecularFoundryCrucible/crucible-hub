@@ -6,6 +6,7 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- Creating a project makes you its lead; only an administrator in Administrator view can choose someone else, as Crucible API 4.0.0 requires. A refused lead explains that leadership can be transferred from the project's Manage tab afterwards.
 - On a Crucible server with uploads switched off, each file in the upload list now says File uploads aren't turned on for this Crucible server.
 - The Processing tab of a dataset lists its post-processing runs, refreshing while one is queued or running, and people who can edit the dataset can start a pipeline from Run pipeline. Fixed lists and pages retrying errors that cannot succeed, such as no permission or not found, which delayed the error by several seconds.
 - Sign-in now uses the API's standard OAuth routes: `GET /oauth/authorize`, and `POST /oauth/token` and `POST /oauth/revoke` with form-encoded requests, instead of the deprecated `/auth/hub/` routes. Register each provider's `<API>/oauth/callback/<provider>` address with the provider, or keep ORCID's older callback with the API's `ORCID_LEGACY_CALLBACK=true`. Pinned the contract to crucible-api main `0443fdd`.

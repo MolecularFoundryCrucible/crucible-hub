@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import type { AnyFormApi } from "@tanstack/react-form"
 import { useStore } from "@tanstack/react-form"
 import {
@@ -12,7 +12,11 @@ import { z } from "zod"
 import { ContentBoundary } from "@/components/crucible/content-layout"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
-import { personDisplayName } from "@/components/crucible/person-identity"
+import {
+  PersonIdentity,
+  personDisplayName,
+} from "@/components/crucible/person-identity"
+import { useWorkspacePrivilegeMode } from "@/components/crucible/workspace-provider"
 import { ResourceChooser } from "@/components/crucible/resource-chooser"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -24,6 +28,7 @@ import {
   FieldError,
   FieldGroup,
   FieldLabel,
+  FieldTitle,
 } from "@/components/ui/field"
 import { fieldErrors, shouldShowFieldError } from "@/features/forms/field-state"
 import { useAppForm } from "@/features/forms/app-form"
@@ -77,6 +82,12 @@ function accountAsSearchResult(
 }
 
 function projectCreationError(error: unknown) {
+  if (
+    error instanceof HubApiClientError &&
+    error.details.conflictCode === "lead_must_be_caller"
+  ) {
+    return "Only an administrator in Administrator view can make someone else the lead. Create the project with yourself as lead, then transfer it from the project's Manage tab."
+  }
   return hubErrorMessage(
     error,
     "The project could not be created. Your entries are still here."
@@ -88,6 +99,7 @@ export function ProjectCreationForm({ scope }: { scope: IdentityScope }) {
   const queryClient = useQueryClient()
   const { data: account } = useSuspenseQuery(accountQueryOptions(scope))
   const accountLead = accountAsSearchResult(account)
+  const canChooseLead = useWorkspacePrivilegeMode() === "elevated"
   const [selectedLead, setSelectedLead] = useState<
     WorkspaceSearchResult | undefined
   >(accountLead)
@@ -137,6 +149,11 @@ export function ProjectCreationForm({ scope }: { scope: IdentityScope }) {
     }
   )
   const isSubmitting = useStore(form.store, (state) => state.isSubmitting)
+  useEffect(() => {
+    if (canChooseLead) return
+    setSelectedLead(accountAsSearchResult(account))
+    form.setFieldValue("project_lead", account.unique_id)
+  }, [account, canChooseLead, form])
   const discard = useDiscardProtection(
     () => form.state.isDirty,
     () => {
@@ -195,8 +212,19 @@ export function ProjectCreationForm({ scope }: { scope: IdentityScope }) {
                       />
                     )}
                   </form.Field>
+                  {canChooseLead ? null : (
+                    <Field>
+                      <FieldTitle>Project lead</FieldTitle>
+                      <PersonIdentity
+                        person={account}
+                        presentation="avatar"
+                        size="sm"
+                      />
+                    </Field>
+                  )}
                   <form.Field name="project_lead">
                     {(field) => {
+                      if (!canChooseLead) return null
                       const invalid = shouldShowFieldError(field)
                       const errorId = `${formId}-${field.name}-error`
                       return (

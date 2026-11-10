@@ -43,6 +43,7 @@ function readConflictCode(body: unknown) {
 }
 
 const hubConflictCodes = new Set<string>([
+  "lead_must_be_caller",
   "storage_location_invalid",
   "replace_in_progress",
   "file_changed",

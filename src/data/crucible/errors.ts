@@ -38,6 +38,7 @@ export type HubConflictCode =
   | "account_disabled"
   | "account_pending"
   | "feature_disabled"
+  | "lead_must_be_caller"
 
 export type HubApiError = {
   kind: HubApiErrorKind

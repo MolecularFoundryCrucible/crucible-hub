@@ -88,7 +88,9 @@ export async function createWorkspaceProjectResource(
     body: { ...project, status: "active" },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (!result.data) throw new CrucibleResponseError(result.response)
+  if (!result.data) {
+    throw new CrucibleResponseError(result.response, result.error)
+  }
   return toWorkspaceProject(result.data)
 }
 
