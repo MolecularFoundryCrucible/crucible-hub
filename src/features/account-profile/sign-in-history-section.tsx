@@ -1,4 +1,5 @@
 import { useInfiniteQuery } from "@tanstack/react-query"
+import { useId, useState } from "react"
 import { Link } from "@tanstack/react-router"
 
 import { ActivityTime } from "@/components/crucible/activity-time"
@@ -52,6 +53,8 @@ const eventLabels: Record<string, string> = {
   sign_in_failed: "Sign-in failed",
 }
 
+const recentEventCount = 5
+
 const warningEvents = new Set(["locked", "provider_refused", "sign_in_failed"])
 
 const clientNames: Record<string, string> = {
@@ -86,6 +89,10 @@ export function SignInHistorySection({
   const query = useInfiniteQuery(authEventsInfiniteQueryOptions(scope, userId))
   const events = query.data?.pages.flatMap((page) => page.items) ?? []
   const total = query.data?.pages[0]?.total ?? null
+  const [expanded, setExpanded] = useState(false)
+  const tableBodyId = useId()
+  const canExpand = events.length > recentEventCount || query.hasNextPage
+  const visibleEvents = expanded ? events : events.slice(0, recentEventCount)
 
   return (
     <SecuritySection title="Sign-in history">
@@ -122,24 +129,40 @@ export function SignInHistorySection({
                 </TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
-              {events.map((event) => (
+            <TableBody id={tableBodyId}>
+              {visibleEvents.map((event) => (
                 <SignInHistoryRow event={event} key={event.id} />
               ))}
             </TableBody>
           </Table>
-          {query.hasNextPage || query.isFetchNextPageError ? (
-            <div className="px-(--card-spacing)">
-              <CollectionPagination
-                disabled={query.isFetching}
-                hasNextPage={query.hasNextPage}
-                isError={query.isFetchNextPageError}
-                isLoading={query.isFetchingNextPage}
-                label="events"
-                loaded={events.length}
-                onLoadMore={() => void query.fetchNextPage()}
-                total={total}
-              />
+          {canExpand ? (
+            <div className="flex flex-col gap-3 px-(--card-spacing)">
+              {expanded && (query.hasNextPage || query.isFetchNextPageError) ? (
+                <CollectionPagination
+                  disabled={query.isFetching}
+                  hasNextPage={query.hasNextPage}
+                  isError={query.isFetchNextPageError}
+                  isLoading={query.isFetchingNextPage}
+                  label="events"
+                  loaded={events.length}
+                  onLoadMore={() => void query.fetchNextPage()}
+                  total={total}
+                />
+              ) : null}
+              <Button
+                aria-controls={tableBodyId}
+                aria-expanded={expanded}
+                className="self-start"
+                onClick={() => setExpanded((value) => !value)}
+                size="sm"
+                variant="outline"
+              >
+                {expanded
+                  ? "Show fewer"
+                  : total !== null && total > recentEventCount
+                    ? `Show all ${total}`
+                    : "Show more"}
+              </Button>
             </div>
           ) : null}
         </>
