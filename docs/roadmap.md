@@ -125,6 +125,10 @@ The bounded graph workspace now owns typed topology, ELK layout, direct expansio
 
 The first service-account administration slice is implemented locally. Add broader review queues, people administration, audit, pins, activity, API-backed bulk operations, saved views, and exports only with the corresponding API, privacy, and operational contracts. The proposed route and capability model is in [administration workspace](administration-workspace.md).
 
+#### Deferred: sign-in history
+
+Crucible API 4.0.0 records each person's sign-in history and serves it to administrators at `GET /users/{user_ref}/auth-events` (elevated mode, cursor pages, newest first). Each entry has a time, an event, the provider or the API itself as issuer, the client, and the acting person, never an address. Events are sign-ins and failed sign-ins, refusals and locks, password set, changed, reset, and removed, password links, linked and removed logins, created and revoked API keys, registration, approval and rejection, disabling and enabling, role changes, and ended sessions. A later release can add a history table to a person's Security card for administrators. A person's own history needs an API route the API does not offer yet.
+
 ## External dependencies
 
 | Dependency                      | Required outcome                                                                                                                                                                                                                                                                                                                                 |
