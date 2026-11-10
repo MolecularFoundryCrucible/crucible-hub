@@ -238,6 +238,10 @@ export const crucibleKeys = {
   datasetPostprocessingRuns: (scope: IdentityScope, datasetMfid: string) =>
     [...scope, "datasets", "postprocessing-runs", datasetMfid] as const,
   pipelines: (scope: IdentityScope) => [...scope, "pipelines"] as const,
+  joinRequestQueries: (scope: IdentityScope) =>
+    [...scope, "join-requests"] as const,
+  joinRequests: (scope: IdentityScope, filters: ListFilters) =>
+    [...scope, "join-requests", normalizeFilters(filters)] as const,
   ingestionClasses: (scope: IdentityScope) =>
     [...scope, "ingestion", "classes"] as const,
   datasetThumbnails: (scope: IdentityScope, datasetMfid: string) =>

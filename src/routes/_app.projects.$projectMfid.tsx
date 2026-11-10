@@ -31,6 +31,9 @@ import {
 } from "@/components/ui/card"
 import { projectQueryOptions } from "@/data/crucible/projects.queries"
 import { projectMembershipActions } from "@/features/project-membership/project-membership-access"
+import { accountQueryOptions } from "@/data/crucible/account.queries"
+import { isProjectMember } from "@/features/join-requests/join-request-messages"
+import { RequestToJoinProject } from "@/features/join-requests/request-to-join"
 import { hubPageTitle } from "@/lib/page-title"
 import { resourceDisplayName } from "@/lib/resource-name"
 import { useRememberRecentlyViewed } from "@/features/recently-viewed/recently-viewed"
@@ -91,6 +94,7 @@ function ProjectWorkspace() {
   const scope = useWorkspaceScope()
   const projectOptions = projectQueryOptions(scope, projectMfid)
   const { data: project, dataUpdatedAt } = useSuspenseQuery(projectOptions)
+  const { data: account } = useSuspenseQuery(accountQueryOptions(scope))
   const displayName = project
     ? resourceDisplayName("project", project.title, {
         identifier: project.project_id,
@@ -147,6 +151,15 @@ function ProjectWorkspace() {
       </Breadcrumb>
 
       <PageHeader
+        actions={
+          !account.is_service_account &&
+          !isProjectMember(project, account.unique_id) ? (
+            <RequestToJoinProject
+              projectMfid={project.unique_id}
+              projectName={displayName}
+            />
+          ) : null
+        }
         icon={<ResourceTypeIcon className="size-5" type="project" />}
         identifier={
           project.title && project.title !== project.project_id

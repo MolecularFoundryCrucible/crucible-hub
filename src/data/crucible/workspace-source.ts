@@ -770,3 +770,15 @@ export type WorkspacePostprocessingRunPage = {
   items: WorkspacePostprocessingRun[]
   total: number | null
 }
+
+export type WorkspaceJoinRequest = Schema<"JoinRequestRead">
+
+export type WorkspaceJoinRequestRole = Schema<"JoinRequestRole">
+
+export type WorkspaceJoinRequestStatus = Schema<"JoinRequestStatus">
+
+export type WorkspaceJoinRequestPage = {
+  items: WorkspaceJoinRequest[]
+  nextCursor: string | null
+  total: number | null
+}

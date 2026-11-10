@@ -17,6 +17,7 @@ import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AppAccountRouteImport } from './routes/_app.account'
 import { Route as AppDataRouteImport } from './routes/_app.data'
 import { Route as AppDeletionRequestsRouteImport } from './routes/_app.deletion-requests'
+import { Route as AppJoinRequestsRouteImport } from './routes/_app.join-requests'
 import { Route as AppPreferencesRouteImport } from './routes/_app.preferences'
 import { Route as AppSearchRouteImport } from './routes/_app.search'
 import { Route as AccountSetupRouteImport } from './routes/account.setup'
@@ -111,6 +112,11 @@ const AppDataRoute = AppDataRouteImport.update({
 const AppDeletionRequestsRoute = AppDeletionRequestsRouteImport.update({
   id: '/deletion-requests',
   path: '/deletion-requests',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppJoinRequestsRoute = AppJoinRequestsRouteImport.update({
+  id: '/join-requests',
+  path: '/join-requests',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPreferencesRoute = AppPreferencesRouteImport.update({
@@ -430,6 +436,7 @@ export interface FileRoutesByFullPath {
   '/account': typeof AppAccountRouteWithChildren
   '/data': typeof AppDataRoute
   '/deletion-requests': typeof AppDeletionRequestsRoute
+  '/join-requests': typeof AppJoinRequestsRoute
   '/preferences': typeof AppPreferencesRoute
   '/search': typeof AppSearchRoute
   '/account/setup': typeof AccountSetupRoute
@@ -493,6 +500,7 @@ export interface FileRoutesByTo {
   '/reauthenticated': typeof ReauthenticatedRoute
   '/data': typeof AppDataRoute
   '/deletion-requests': typeof AppDeletionRequestsRoute
+  '/join-requests': typeof AppJoinRequestsRoute
   '/preferences': typeof AppPreferencesRoute
   '/search': typeof AppSearchRoute
   '/account/setup': typeof AccountSetupRoute
@@ -553,6 +561,7 @@ export interface FileRoutesById {
   '/_app/account': typeof AppAccountRouteWithChildren
   '/_app/data': typeof AppDataRoute
   '/_app/deletion-requests': typeof AppDeletionRequestsRoute
+  '/_app/join-requests': typeof AppJoinRequestsRoute
   '/_app/preferences': typeof AppPreferencesRoute
   '/_app/search': typeof AppSearchRoute
   '/account/setup': typeof AccountSetupRoute
@@ -621,6 +630,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/data'
     | '/deletion-requests'
+    | '/join-requests'
     | '/preferences'
     | '/search'
     | '/account/setup'
@@ -684,6 +694,7 @@ export interface FileRouteTypes {
     | '/reauthenticated'
     | '/data'
     | '/deletion-requests'
+    | '/join-requests'
     | '/preferences'
     | '/search'
     | '/account/setup'
@@ -743,6 +754,7 @@ export interface FileRouteTypes {
     | '/_app/account'
     | '/_app/data'
     | '/_app/deletion-requests'
+    | '/_app/join-requests'
     | '/_app/preferences'
     | '/_app/search'
     | '/account/setup'
@@ -876,6 +888,13 @@ declare module '@tanstack/react-router' {
       path: '/deletion-requests'
       fullPath: '/deletion-requests'
       preLoaderRoute: typeof AppDeletionRequestsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/join-requests': {
+      id: '/_app/join-requests'
+      path: '/join-requests'
+      fullPath: '/join-requests'
+      preLoaderRoute: typeof AppJoinRequestsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/preferences': {
@@ -1435,6 +1454,7 @@ interface AppRouteChildren {
   AppAccountRoute: typeof AppAccountRouteWithChildren
   AppDataRoute: typeof AppDataRoute
   AppDeletionRequestsRoute: typeof AppDeletionRequestsRoute
+  AppJoinRequestsRoute: typeof AppJoinRequestsRoute
   AppPreferencesRoute: typeof AppPreferencesRoute
   AppSearchRoute: typeof AppSearchRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -1459,6 +1479,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAccountRoute: AppAccountRouteWithChildren,
   AppDataRoute: AppDataRoute,
   AppDeletionRequestsRoute: AppDeletionRequestsRoute,
+  AppJoinRequestsRoute: AppJoinRequestsRoute,
   AppPreferencesRoute: AppPreferencesRoute,
   AppSearchRoute: AppSearchRoute,
   AppIndexRoute: AppIndexRoute,

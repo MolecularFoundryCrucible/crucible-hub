@@ -97,6 +97,7 @@ export {
   ChevronDown as ListExpansionIcon,
   Clock3 as DeletionRequestedIcon,
   Trash2 as DeletionRequestsIcon,
+  UserPlus as JoinRequestsIcon,
   Trash2 as RequestDeletionIcon,
   GitBranchPlus as AddRelationshipIcon,
   Plus as AddMetadataFieldIcon,

@@ -95,9 +95,9 @@ Implemented with fixture and unit coverage for local development. Route-backed s
 
 Implemented locally against pinned API revision `f9fb3c723308e56a33804d5cf4306e4f3e3db7ce`. One shared route presents newest-first request-time ordering in submitted history and pending review with URL-backed project scope and opaque cursor continuation. Approved history uses the permanent audit's submitted or administrator-wide scope, embedded actors, canonical project links when retained, and opaque cursor continuation. Project Manage reuses a bounded project-filtered queue. Normal and global Administrator authority remain distinct, approval and rejection are confirmed and server-owned, and submission or review refreshes every affected discovery representation. Production mutation exposure remains gated on the Hub session boundary.
 
-#### Deferred: join requests
+#### Join requests
 
-Join submission and review remain deferred pending the API-owned workflow described in [Crucible API handoff](crucible-api-handoff.md). Hub must not scan an account-wide request history or issue N+1 identity lookups to construct project-level state and review queues.
+Built on the API's join request workflow. A signed-in person who is not a member sees Request to join on the project page, with an optional reason (`POST /projects/{project_ref}/join_requests`), and then Request pending with Withdraw. Project Manage lists the project's pending requests for those who may review them, and Join requests (`/join-requests`, with a sidebar count of requests awaiting your review) lists everything you may review across projects plus your own requests. Approving picks a role (contributor by default, at most your own) and an optional note. The API's refusal codes each get their own message. The Hub reads only `GET /join_requests` with `scope`, `status` and `project_mfid`, never an account-wide history.
 
 #### Instrument lifecycle
 

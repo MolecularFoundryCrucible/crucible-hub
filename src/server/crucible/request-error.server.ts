@@ -44,6 +44,13 @@ function readConflictCode(body: unknown) {
 
 const hubConflictCodes = new Set<string>([
   "lead_must_be_caller",
+  "already_member",
+  "join_request_pending",
+  "too_many_pending_requests",
+  "project_not_accepting_requests",
+  "service_account_cannot_request",
+  "join_request_closed",
+  "project_not_found",
   "filename_exists",
   "filename_immutable",
   "pending_deletion",

@@ -80,6 +80,7 @@ Home presents Recently added data (toggling between All and Mine by authenticate
 | `/account/security`                               | Your sign-in methods, sessions, API keys and history.        |
 | `/account/setup`                                  | ORCID account completion.                                    |
 | `/deletion-requests`                              | Submitted requests, review work, and approved audit history. |
+| `/join-requests`                                  | Requests to join projects you may review, and your own.      |
 | `/activity`                                       | Future account-relevant activity workflows.                  |
 | `/admin/users`                                    | Capability-gated user directory and creation.                |
 | `/admin/service-accounts`                         | Capability-gated service-account directory and creation.     |

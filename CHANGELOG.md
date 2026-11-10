@@ -6,6 +6,7 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- Join requests: on a project you're not a member of, Request to join sends a request with an optional reason, which you can withdraw while it waits. People who may review see the project's pending requests on its Manage tab and approve them with a role, or reject them, with an optional note. A new Join requests page, with a sidebar count of requests awaiting your review, lists them across projects together with your own requests.
 - People who can edit a dataset can rename its stored files from the file's menu on Overview. A name already used in the dataset, a file stored outside Crucible, or a dataset with a deletion request each get their own message.
 - Creating a project makes you its lead; only an administrator in Administrator view can choose someone else, as Crucible API 4.0.0 requires. A refused lead explains that leadership can be transferred from the project's Manage tab afterwards.
 - On a Crucible server with uploads switched off, each file in the upload list now says File uploads aren't turned on for this Crucible server.

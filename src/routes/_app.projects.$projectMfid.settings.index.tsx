@@ -25,6 +25,7 @@ import { ProjectMembershipCard } from "@/features/project-membership/project-mem
 import { OwnershipTransferCard } from "@/features/resource-ownership/ownership-transfer-card"
 import { ResourceForcedDeletionCard } from "@/features/resource-deletion/resource-forced-deletion"
 import { DeletionRequestQueue } from "@/features/deletion-requests/deletion-request-queue"
+import { ProjectJoinRequestsCard } from "@/features/join-requests/join-request-review"
 
 export const Route = createFileRoute("/_app/projects/$projectMfid/settings/")({
   loader: async ({ context, parentMatchPromise }) => {
@@ -77,6 +78,11 @@ function ProjectManagePage() {
             project={{ ...project, members: project.members ?? null }}
             scope={scope}
           />
+        </ContentBoundary>
+      ) : null}
+      {canManageMembers ? (
+        <ContentBoundary width="reading">
+          <ProjectJoinRequestsCard projectMfid={projectMfid} />
         </ContentBoundary>
       ) : null}
       {canManageMembers ? (

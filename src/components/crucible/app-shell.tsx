@@ -41,6 +41,7 @@ import {
   PreferencesIcon,
   CreateResourceIcon,
   DeletionRequestsIcon,
+  JoinRequestsIcon,
   ExpandSidebarIcon,
   RecentResourcesIcon,
   SignOutIcon,
@@ -106,6 +107,7 @@ import {
   canUseAdministratorView,
 } from "@/data/crucible/administration"
 import { pendingDeletionRequestsCountQueryOptions } from "@/data/crucible/deletion-requests.queries"
+import { pendingJoinRequestsCountQueryOptions } from "@/data/crucible/join-requests.queries"
 import { identityScope } from "@/data/crucible/query-keys"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import {
@@ -144,6 +146,7 @@ export function AppShell({
   })
   const pathname = location.pathname
   const deletionRequestsActive = pathname === "/deletion-requests"
+  const joinRequestsActive = pathname === "/join-requests"
   const projectMfid = activeProjectMfid(pathname, location.search)
   const [shortcuts] = useState(createDialogHandle)
   const windowClass = useWindowClass()
@@ -161,6 +164,13 @@ export function AppShell({
     enabled: Boolean(account && scope),
   })
   const pendingReviewCount = pendingCountQuery.data ?? 0
+  const joinCountQuery = useQuery({
+    ...pendingJoinRequestsCountQueryOptions(
+      scope ?? identityScope("anonymous", "anonymous", "normal")
+    ),
+    enabled: Boolean(account && scope),
+  })
+  const pendingJoinCount = joinCountQuery.data ?? 0
   const { preferences } = useAccountPreferences()
   const defaultDataSearch =
     preferences.default_record_kind === "datasets"
@@ -446,6 +456,30 @@ export function AppShell({
                             aria-label={`${pendingReviewCount} pending deletion requests`}
                           >
                             {pendingReviewCount}
+                          </SidebarMenuBadge>
+                        ) : null}
+                      </SidebarMenuItem>
+                      <SidebarMenuItem>
+                        <SidebarMenuButton
+                          isActive={joinRequestsActive}
+                          tooltip="Join requests"
+                          render={
+                            <Link
+                              aria-current={
+                                joinRequestsActive ? "page" : undefined
+                              }
+                              to="/join-requests"
+                            />
+                          }
+                        >
+                          <JoinRequestsIcon aria-hidden="true" />
+                          <span>Join requests</span>
+                        </SidebarMenuButton>
+                        {pendingJoinCount > 0 ? (
+                          <SidebarMenuBadge
+                            aria-label={`${pendingJoinCount} pending join requests`}
+                          >
+                            {pendingJoinCount}
                           </SidebarMenuBadge>
                         ) : null}
                       </SidebarMenuItem>
