@@ -6,6 +6,7 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- The Processing tab of a dataset lists its post-processing runs, refreshing while one is queued or running, and people who can edit the dataset can start a pipeline from Run pipeline. Fixed lists and pages retrying errors that cannot succeed, such as no permission or not found, which delayed the error by several seconds.
 - Sign-in now uses the API's standard OAuth routes: `GET /oauth/authorize`, and `POST /oauth/token` and `POST /oauth/revoke` with form-encoded requests, instead of the deprecated `/auth/hub/` routes. Register each provider's `<API>/oauth/callback/<provider>` address with the provider, or keep ORCID's older callback with the API's `ORCID_LEGACY_CALLBACK=true`. Pinned the contract to crucible-api main `0443fdd`.
 - Projects has a Sync from proposals button that adds you to the projects of your Molecular Foundry proposals, found through your linked ORCID, and says which projects it added. A feature switched off on the connected API now reads as not turned on for this server.
 - Administrators can disable a person's account from the menu on their Profile card, which signs them out everywhere and stops their sign-in methods and API keys, and enable it again from the Disabled notice on their page. The Users list marks disabled accounts.

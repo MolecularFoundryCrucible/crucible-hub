@@ -235,6 +235,9 @@ export const crucibleKeys = {
     [...scope, "datasets", "files", datasetMfid] as const,
   datasetIngestionRequests: (scope: IdentityScope, datasetMfid: string) =>
     [...scope, "datasets", "ingestion-requests", datasetMfid] as const,
+  datasetPostprocessingRuns: (scope: IdentityScope, datasetMfid: string) =>
+    [...scope, "datasets", "postprocessing-runs", datasetMfid] as const,
+  pipelines: (scope: IdentityScope) => [...scope, "pipelines"] as const,
   ingestionClasses: (scope: IdentityScope) =>
     [...scope, "ingestion", "classes"] as const,
   datasetThumbnails: (scope: IdentityScope, datasetMfid: string) =>

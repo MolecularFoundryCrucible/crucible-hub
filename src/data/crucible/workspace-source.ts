@@ -751,3 +751,22 @@ export type WorkspaceProjectSyncResult = {
   projectsAlreadyMember: string[]
   projectsNotFound: string[]
 }
+
+export type WorkspacePipeline = Omit<
+  Schema<"PipelineRead">,
+  "parameters_schema"
+> & { parameters_schema: WorkspaceScientificMetadata }
+
+export type WorkspacePostprocessingParameters = Readonly<
+  Record<string, boolean | number | string | null>
+>
+
+export type WorkspacePostprocessingRun = Omit<
+  Schema<"PostprocessingRunRead">,
+  "parameters"
+> & { parameters: WorkspaceScientificMetadata }
+
+export type WorkspacePostprocessingRunPage = {
+  items: WorkspacePostprocessingRun[]
+  total: number | null
+}
