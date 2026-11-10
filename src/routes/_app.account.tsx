@@ -9,11 +9,16 @@ import {
 } from "@/components/crucible/content-layout"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
+import {
+  PersonAvatar,
+  personDisplayName,
+} from "@/components/crucible/person-identity"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
 import { AccountCapabilitiesCard } from "@/features/account-profile/account-capabilities-card"
 import { AccountProfileForm } from "@/features/account-profile/account-profile-form"
 import { AccountSecurityCard } from "@/features/account-profile/security-card"
+import { formatUsername } from "@/lib/username"
 
 export const Route = createFileRoute("/_app/account")({
   head: () => ({ meta: [{ title: "Profile | Crucible Hub" }] }),
@@ -37,19 +42,26 @@ function AccountPage() {
 
   return (
     <PageLayout>
-      <PageHeader title="My profile" />
-      <ContentBoundary>
-        <ContentGrid variant="split">
-          <div className="flex min-w-0 flex-col gap-page-section">
-            <AccountProfileForm account={account} scope={scope} />
-            <AccountSecurityCard
-              linkOutcome={link}
-              onLinkOutcomeHandled={clearLinkOutcome}
-              scope={scope}
-            />
-          </div>
+      <PageHeader
+        avatar={<PersonAvatar person={account} size="lg" />}
+        eyebrow="My profile"
+        identifier={
+          account.username
+            ? formatUsername(account.username, "handle")
+            : undefined
+        }
+        title={personDisplayName(account)}
+      />
+      <ContentBoundary className="flex flex-col gap-page-section">
+        <ContentGrid className="items-start" variant="split">
+          <AccountProfileForm account={account} scope={scope} />
           <AccountCapabilitiesCard account={account} />
         </ContentGrid>
+        <AccountSecurityCard
+          linkOutcome={link}
+          onLinkOutcomeHandled={clearLinkOutcome}
+          scope={scope}
+        />
       </ContentBoundary>
     </PageLayout>
   )

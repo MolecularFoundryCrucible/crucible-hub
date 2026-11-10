@@ -89,21 +89,7 @@ export function PersonIdentity({
     )
   }
 
-  const avatar = (
-    <Avatar size={size}>
-      <AvatarFallback
-        className={cn(
-          "ring-2",
-          isServiceAccount
-            ? "bg-muted text-foreground ring-(--resource-service-account)"
-            : "bg-muted text-foreground ring-(--resource-person)"
-        )}
-        data-account-type={isServiceAccount ? "service-account" : "person"}
-      >
-        {personInitials(person)}
-      </AvatarFallback>
-    </Avatar>
-  )
+  const avatar = <PersonAvatar person={person} size={size} />
 
   if (presentation === "tooltip") {
     return (
@@ -160,6 +146,31 @@ export function PersonIdentity({
       {avatar}
       {details}
     </span>
+  )
+}
+
+export function PersonAvatar({
+  person,
+  size = "default",
+}: {
+  person: PersonIdentityProfile
+  size?: PersonIdentitySize
+}) {
+  const isServiceAccount = personIsServiceAccount(person)
+  return (
+    <Avatar size={size}>
+      <AvatarFallback
+        className={cn(
+          "ring-2",
+          isServiceAccount
+            ? "bg-muted text-foreground ring-(--resource-service-account)"
+            : "bg-muted text-foreground ring-(--resource-person)"
+        )}
+        data-account-type={isServiceAccount ? "service-account" : "person"}
+      >
+        {personInitials(person)}
+      </AvatarFallback>
+    </Avatar>
   )
 }
 

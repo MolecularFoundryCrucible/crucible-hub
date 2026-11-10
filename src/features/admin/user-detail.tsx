@@ -15,10 +15,7 @@ import {
 } from "@/components/crucible/editable-card-actions"
 import { MfidValue } from "@/components/crucible/mfid-value"
 import { notifySuccess } from "@/components/crucible/notifications"
-import {
-  PersonIdentity,
-  personDisplayName,
-} from "@/components/crucible/person-identity"
+import { personDisplayName } from "@/components/crucible/person-identity"
 import { PersonLink } from "@/components/crucible/person-link"
 import { PlatformRoleBadge } from "@/components/crucible/platform-role-badge"
 import { PlatformRoleDialog } from "@/components/crucible/platform-role-dialog"
@@ -78,7 +75,6 @@ import {
 import { EmailField, UsernameField } from "@/features/forms/identifier-fields"
 import { useSlugConflict } from "@/features/forms/slug-availability"
 import { resourceDisplayName } from "@/lib/resource-name"
-import { formatUsername } from "@/lib/username"
 import { PendingUserActions } from "@/features/admin/pending-users-card"
 import { PersonSecurityCard } from "@/features/account-profile/security-card"
 import { EmailValue } from "@/components/crucible/email-value"
@@ -169,19 +165,17 @@ export function UserDetailView({
       {user.pending_at ? (
         <PendingApprovalBanner scope={scope} user={user} />
       ) : null}
-      <div className="grid gap-4 @split/content:grid-cols-2 @split/content:items-start">
-        <UserProfileCard scope={scope} user={user} />
-        <PersonSecurityCard
-          canManageApiKeys={canManageApiKeys}
-          password={{
-            canHavePassword: !user.is_service_account && !user.pending_at,
-            signInMethods: user.sign_in_methods,
-          }}
-          personName={personDisplayName(user)}
-          scope={scope}
-          userId={user.unique_id}
-        />
-      </div>
+      <UserProfileCard scope={scope} user={user} />
+      <PersonSecurityCard
+        canManageApiKeys={canManageApiKeys}
+        password={{
+          canHavePassword: !user.is_service_account && !user.pending_at,
+          signInMethods: user.sign_in_methods,
+        }}
+        personName={personDisplayName(user)}
+        scope={scope}
+        userId={user.unique_id}
+      />
       <UserProjectsSection scope={scope} user={user} />
     </div>
   )
@@ -392,12 +386,15 @@ function UserProfileCard({
                 propagate.
               </p>
             ) : null}
-            <PersonIdentity person={user} presentation="avatar" size="lg" />
-            <dl className="grid grid-cols-2 gap-4">
+            <dl className="grid grid-cols-1 gap-4 @fields-wide:grid-cols-2 @3xl:grid-cols-4">
               <div className="min-w-0">
-                <dt className="text-label text-muted-foreground">Username</dt>
-                <dd className="mt-1 font-mono text-body break-words">
-                  {formatUsername(user.username, "raw")}
+                <dt className="text-label text-muted-foreground">Email</dt>
+                <dd className="mt-1 text-body">
+                  {user.email ? (
+                    <EmailValue email={user.email} />
+                  ) : (
+                    <span className="text-muted-foreground">None</span>
+                  )}
                 </dd>
               </div>
               <div className="min-w-0">
@@ -409,22 +406,12 @@ function UserProfileCard({
                     <PlatformRoleBadge role={user.platform_role} />
                   ) : (
                     <span className="text-body text-muted-foreground">
-                      None
+                      No platform role
                     </span>
                   )}
                 </dd>
               </div>
-              <div className="col-span-2 min-w-0 @fields:col-span-1">
-                <dt className="text-label text-muted-foreground">Email</dt>
-                <dd className="mt-1 text-body break-words">
-                  {user.email ? (
-                    <EmailValue email={user.email} />
-                  ) : (
-                    <span className="text-muted-foreground">None</span>
-                  )}
-                </dd>
-              </div>
-              <div className="col-span-2 min-w-0 @fields:col-span-1">
+              <div className="min-w-0">
                 <dt className="text-label text-muted-foreground">
                   Last active
                 </dt>
@@ -432,7 +419,7 @@ function UserProfileCard({
                   <ActivityTime fallback="Never" value={user.last_active_at} />
                 </dd>
               </div>
-              <div className="col-span-2 min-w-0">
+              <div className="min-w-0">
                 <dt className="text-label text-muted-foreground">
                   Crucible ID
                 </dt>

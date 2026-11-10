@@ -241,7 +241,9 @@ test("lists the account's sign-in methods and keeps the only one", async ({
   page,
 }) => {
   await page.goto("/hub/account")
-  await expect(page.getByText("Sign-in methods", { exact: true })).toBeVisible()
+  await expect(
+    page.getByRole("tab", { name: /Sign-in methods/ })
+  ).toHaveAttribute("aria-selected", "true")
   await expect(
     page.getByRole("link", { name: "0000-0000-0000-000X" })
   ).toBeVisible()

@@ -8,7 +8,6 @@ import {
 } from "@/components/crucible/editable-card-actions"
 import { MfidValue } from "@/components/crucible/mfid-value"
 import { notifySuccess } from "@/components/crucible/notifications"
-import { PersonIdentity } from "@/components/crucible/person-identity"
 import {
   Card,
   CardAction,
@@ -44,10 +43,8 @@ import {
   profileNameMissing,
   ProfileNameHint,
 } from "./account-profile-fields"
-import { ActivityTime } from "@/components/crucible/activity-time"
 import { UsernameField } from "@/features/forms/identifier-fields"
 import { useSlugConflict } from "@/features/forms/slug-availability"
-import { formatUsername } from "@/lib/username"
 import { EmailValue } from "@/components/crucible/email-value"
 import { useAppForm } from "@/features/forms/app-form"
 
@@ -136,7 +133,7 @@ export function AccountProfileForm({
     return (
       <Card>
         <CardHeader>
-          <PersonIdentity person={account} presentation="avatar" size="lg" />
+          <CardTitle>Profile</CardTitle>
           <CardAction>
             <EditableCardTrigger
               label="Edit profile"
@@ -145,10 +142,10 @@ export function AccountProfileForm({
           </CardAction>
         </CardHeader>
         <CardContent>
-          <dl className="grid grid-cols-2 gap-4">
-            <div className="col-span-2 min-w-0 @fields:col-span-1">
+          <dl className="grid grid-cols-1 gap-4 @fields-wide:grid-cols-2">
+            <div className="min-w-0">
               <dt className="text-label text-muted-foreground">Email</dt>
-              <dd className="mt-1 text-body break-words">
+              <dd className="mt-1 text-body">
                 {account.email ? (
                   <EmailValue email={account.email} />
                 ) : (
@@ -156,25 +153,7 @@ export function AccountProfileForm({
                 )}
               </dd>
             </div>
-            <div className="col-span-2 min-w-0 @fields:col-span-1">
-              <dt className="text-label text-muted-foreground">Username</dt>
-              <dd className="mt-1 text-body break-words">
-                {account.username ? (
-                  <span className="font-mono">
-                    {formatUsername(account.username, "raw")}
-                  </span>
-                ) : (
-                  "Not provided"
-                )}
-              </dd>
-            </div>
-            <div className="col-span-2 min-w-0 @fields:col-span-1">
-              <dt className="text-label text-muted-foreground">Last active</dt>
-              <dd className="mt-1 text-body">
-                <ActivityTime fallback="Never" value={account.last_active_at} />
-              </dd>
-            </div>
-            <div className="col-span-2 min-w-0">
+            <div className="min-w-0">
               <dt className="text-label text-muted-foreground">Crucible ID</dt>
               <dd className="mt-1">
                 <MfidValue value={account.unique_id} />

@@ -233,7 +233,7 @@ describe("UserDetailView projects table sorting", () => {
     renderUserDetail()
 
     expect(screen.getByText("Crucible ID")).toBeTruthy()
-    expect(screen.getByText("Username")).toBeTruthy()
+    expect(screen.queryByText("Username")).toBeNull()
     expect(screen.getByText("Platform role")).toBeTruthy()
     expect(screen.getByText("Email")).toBeTruthy()
     expect(screen.getByText("Last active")).toBeTruthy()
@@ -244,7 +244,9 @@ describe("UserDetailView projects table sorting", () => {
   it("lists the person's sign-in methods and keeps their only one", async () => {
     renderUserDetail()
 
-    expect(await screen.findByText("Sign-in methods")).toBeTruthy()
+    expect(
+      await screen.findByRole("tab", { name: /Sign-in methods/ })
+    ).toBeTruthy()
     expect(
       await screen.findByRole("link", { name: "0000-0002-1825-0097" })
     ).toBeTruthy()
@@ -445,6 +447,22 @@ describe("UserDetailView projects table sorting", () => {
 describe("UserDetailView API keys", () => {
   afterEach(cleanup)
 
+  it("opens the API keys tab from #api-keys and counts each tab", async () => {
+    vi.mocked(getWorkspaceApiKeys).mockResolvedValue({
+      data: { items: [], nextCursor: null, total: 3 },
+      status: "ok",
+    })
+    window.history.replaceState(null, "", "#api-keys")
+    renderUserDetail()
+
+    const keysTab = await screen.findByRole("tab", { name: /API keys/ })
+    await waitFor(() =>
+      expect(keysTab.getAttribute("aria-selected")).toBe("true")
+    )
+    await waitFor(() => expect(keysTab.textContent).toContain("3"))
+    window.history.replaceState(null, "", window.location.pathname)
+  })
+
   it("lists a person's keys and asks for a fresh sign-in to revoke one", async () => {
     vi.mocked(getWorkspaceApiKeys).mockResolvedValue({
       data: {
@@ -477,6 +495,7 @@ describe("UserDetailView API keys", () => {
     })
     renderUserDetail()
 
+    fireEvent.click(await screen.findByRole("tab", { name: /API keys/ }))
     const table = await screen.findByRole("table", { name: "Active API keys" })
     expect(within(table).getByText("Beamline laptop")).toBeTruthy()
     expect(screen.queryByRole("button", { name: "New key" })).toBeNull()

@@ -8,6 +8,7 @@ import {
 } from "@tanstack/react-router"
 import {
   cleanup,
+  fireEvent,
   render,
   screen,
   waitFor,
@@ -122,6 +123,62 @@ describe("SignInHistorySection", () => {
         data: expect.objectContaining({ limit: 20, userId: undefined }),
       })
     )
+  })
+
+  it("shows the five most recent events until expanded", async () => {
+    vi.mocked(getWorkspaceAuthEvents).mockResolvedValue({
+      data: {
+        items: Array.from({ length: 8 }, (_, index) => ({
+          actor_unique_id: null,
+          at: `2026-11-0${9 - index}T10:00:00Z`,
+          client_id: "crucible-hub",
+          event: "sign_in",
+          id: 8 - index,
+          issuer: "https://orcid.org",
+        })),
+        nextCursor: null,
+        total: 8,
+      },
+      status: "ok",
+    })
+    renderSection()
+
+    const table = await screen.findByRole("table", { name: "Sign-in history" })
+    expect(within(table).getAllByRole("row")).toHaveLength(6)
+
+    const expand = screen.getByRole("button", { name: "Show all 8" })
+    expect(expand.getAttribute("aria-expanded")).toBe("false")
+    fireEvent.click(expand)
+    expect(within(table).getAllByRole("row")).toHaveLength(9)
+
+    const collapse = screen.getByRole("button", { name: "Show fewer" })
+    expect(collapse.getAttribute("aria-expanded")).toBe("true")
+    fireEvent.click(collapse)
+    expect(within(table).getAllByRole("row")).toHaveLength(6)
+  })
+
+  it("offers no expand control when every event fits", async () => {
+    vi.mocked(getWorkspaceAuthEvents).mockResolvedValue({
+      data: {
+        items: [
+          {
+            actor_unique_id: null,
+            at: "2026-11-09T10:00:00Z",
+            client_id: null,
+            event: "sign_in",
+            id: 1,
+            issuer: null,
+          },
+        ],
+        nextCursor: null,
+        total: 1,
+      },
+      status: "ok",
+    })
+    renderSection()
+
+    await screen.findByRole("table", { name: "Sign-in history" })
+    expect(screen.queryByRole("button", { name: /^Show/ })).toBeNull()
   })
 
   it("asks for a person's history on their admin page", async () => {
