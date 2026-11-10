@@ -3,9 +3,8 @@ import type { ReactNode } from "react"
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 import { getRouteApi } from "@tanstack/react-router"
 
-import { SecurityIcon } from "@/components/crucible/icons"
 import { SecuritySectionInTab } from "@/components/crucible/security-section"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   accountIdentitiesQueryOptions,
@@ -30,11 +29,19 @@ import { SignInHistorySection } from "./sign-in-history-section"
 
 const workspaceRoute = getRouteApi("/_app")
 
+export const securityTabHashes: readonly string[] = [
+  "sign-in-methods",
+  "sessions",
+  "api-keys",
+  "history",
+] satisfies SecurityTab[]
+
 type SecurityTab = "sign-in-methods" | "sessions" | "api-keys" | "history"
 
 function tabFromHash(): SecurityTab | undefined {
   if (typeof window === "undefined") return undefined
-  return window.location.hash === "#api-keys" ? "api-keys" : undefined
+  const hash = window.location.hash.slice(1)
+  return securityTabHashes.includes(hash) ? (hash as SecurityTab) : undefined
 }
 
 function useSecurityTab() {
@@ -77,12 +84,6 @@ function SecurityCard({
   const shown = tabs.filter(([value]) => panels[value])
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <SecurityIcon aria-hidden="true" />
-          Security
-        </CardTitle>
-      </CardHeader>
       <CardContent className="px-0">
         <Tabs
           className="gap-4"

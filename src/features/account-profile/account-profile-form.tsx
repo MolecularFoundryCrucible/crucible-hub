@@ -47,6 +47,7 @@ import { UsernameField } from "@/features/forms/identifier-fields"
 import { useSlugConflict } from "@/features/forms/slug-availability"
 import { EmailValue } from "@/components/crucible/email-value"
 import { useAppForm } from "@/features/forms/app-form"
+import { formatUsername } from "@/lib/username"
 
 export function AccountProfileForm({
   account,
@@ -143,6 +144,27 @@ export function AccountProfileForm({
         </CardHeader>
         <CardContent>
           <dl className="grid grid-cols-1 gap-4 @fields-wide:grid-cols-2">
+            <div className="min-w-0">
+              <dt className="text-label text-muted-foreground">Name</dt>
+              <dd className="mt-1 text-body break-words">
+                {[account.first_name, account.last_name]
+                  .map((part) => part.trim())
+                  .filter(Boolean)
+                  .join(" ") || "Not provided"}
+              </dd>
+            </div>
+            <div className="min-w-0">
+              <dt className="text-label text-muted-foreground">Username</dt>
+              <dd className="mt-1 text-body break-words">
+                {account.username ? (
+                  <span className="font-mono">
+                    {formatUsername(account.username, "raw")}
+                  </span>
+                ) : (
+                  "Not provided"
+                )}
+              </dd>
+            </div>
             <div className="min-w-0">
               <dt className="text-label text-muted-foreground">Email</dt>
               <dd className="mt-1 text-body">

@@ -27,8 +27,7 @@ export function AccountCapabilitiesCard({
 }: {
   account: WorkspaceAccount
 }) {
-  const { can_elevate, effective_privilege_mode, platform_role } =
-    account.authorization
+  const { platform_role } = account.authorization
   return (
     <Card>
       <CardHeader>
@@ -38,13 +37,6 @@ export function AccountCapabilitiesCard({
         </CardAction>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
-        {can_elevate ? (
-          <p className="text-body text-muted-foreground">
-            {effective_privilege_mode === "elevated"
-              ? "Administrator view is on."
-              : "You can turn on Administrator view from the sidebar."}
-          </p>
-        ) : null}
         <ul className="grid gap-3 @fields-wide:grid-cols-2">
           {capabilityDefinitions.map(([capability, label]) => {
             const available = account.capabilities[capability]

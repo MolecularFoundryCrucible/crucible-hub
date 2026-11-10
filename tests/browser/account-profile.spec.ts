@@ -32,7 +32,9 @@ test("opens profile management from the account avatar and saves changes", async
   await expect(
     page.getByRole("heading", { level: 1, name: "Avery Chen" })
   ).toBeVisible()
-  await expect(page.getByText("My profile", { exact: true })).toBeVisible()
+  await expect(
+    page.getByRole("main").getByText("My profile", { exact: true })
+  ).toBeVisible()
   await expect(page.getByLabel("First name")).toHaveCount(0)
   await expect(page.getByText("avery.chen@example.invalid")).toBeVisible()
   await page.getByRole("button", { name: "Edit profile" }).click()
@@ -56,7 +58,12 @@ test("opens profile management from the account avatar and saves changes", async
   await page.getByRole("button", { name: "Save", exact: true }).click()
 
   await expect(page.getByText("Profile saved")).toBeVisible()
-  await expect(page.getByText("Averie Chen")).toHaveCount(2)
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Averie Chen" })
+  ).toBeVisible()
+  await expect(
+    page.getByRole("definition").filter({ hasText: /^Averie Chen$/ })
+  ).toBeVisible()
   await expect(
     page.getByRole("button", { name: "Open account menu" })
   ).toContainText("averie_chen")

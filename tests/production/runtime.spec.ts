@@ -240,7 +240,7 @@ test("offers to retry when sign-in is unavailable", async ({ page }) => {
 test("lists the account's sign-in methods and keeps the only one", async ({
   page,
 }) => {
-  await page.goto("/hub/account")
+  await page.goto("/hub/account/security")
   await expect(
     page.getByRole("tab", { name: /Sign-in methods/ })
   ).toHaveAttribute("aria-selected", "true")
@@ -255,7 +255,19 @@ test("lists the account's sign-in methods and keeps the only one", async ({
 })
 
 test("reports a sign-in method that was not added", async ({ page }) => {
-  await page.goto("/hub/account?link=retry")
+  await page.goto("/hub/account/security?link=retry")
   await expect(page.getByText("Sign-in method not added")).toBeVisible()
-  await expect(page).toHaveURL(/\/hub\/account$/)
+  await expect(page).toHaveURL(/\/hub\/account\/security$/)
+})
+
+test("sends an old API keys link to the Security tab", async ({ page }) => {
+  await page.goto("/hub/account#api-keys")
+  await expect(page).toHaveURL(/\/hub\/account\/security#api-keys$/)
+  await expect(page.getByRole("tab", { name: /API keys/ })).toHaveAttribute(
+    "aria-selected",
+    "true"
+  )
+  await expect(
+    page.getByRole("navigation", { name: "Profile sections" })
+  ).toBeVisible()
 })

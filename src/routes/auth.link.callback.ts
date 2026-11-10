@@ -36,8 +36,8 @@ export const Route = createFileRoute("/auth/link/callback")({
         }
         const destination =
           outcome === "signed-out"
-            ? "/hub/auth/sign-in?returnTo=%2Fhub%2Faccount"
-            : `/hub/account?link=${outcome}`
+            ? "/hub/auth/sign-in?returnTo=%2Fhub%2Faccount%2Fsecurity"
+            : `/hub/account/security?link=${outcome}`
         return new Response(null, {
           status: 303,
           headers: {

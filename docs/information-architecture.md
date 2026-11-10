@@ -75,7 +75,9 @@ Home presents Recently added data (toggling between All and Mine by authenticate
 | `/datasets/:datasetMfid/access`                   | Compatibility redirect to dataset Manage.                    |
 | `/resources/:resourceMfid`                        | Legacy type-resolving redirect to a canonical entity.        |
 | `/users/:userId`                                  | Public-safe user profile and administrative detail.          |
+| `/users/:userId/security`                         | A person's sign-in methods, sessions, keys and history.      |
 | `/account`                                        | Authenticated self-service profile management.               |
+| `/account/security`                               | Your sign-in methods, sessions, API keys and history.        |
 | `/account/setup`                                  | ORCID account completion.                                    |
 | `/deletion-requests`                              | Submitted requests, review work, and approved audit history. |
 | `/activity`                                       | Future account-relevant activity workflows.                  |

@@ -80,6 +80,7 @@ import { PersonSecurityCard } from "@/features/account-profile/security-card"
 import { EmailValue } from "@/components/crucible/email-value"
 import { formatSignInMethods } from "@/lib/sign-in-methods"
 import { useAppForm } from "@/features/forms/app-form"
+import { formatUsername } from "@/lib/username"
 
 const platformRoleDescriptions = {
   admin: "Full platform administration.",
@@ -153,21 +154,17 @@ function userChanges(
 
 export function UserDetailView({
   scope,
+  section = "overview",
   user,
 }: {
   scope: IdentityScope
+  section?: "overview" | "security"
   user: WorkspaceAdminUser
 }) {
-  const canManageApiKeys = user.user_capabilities?.can_manage_api_key !== false
-
-  return (
-    <div className="flex flex-col gap-6">
-      {user.pending_at ? (
-        <PendingApprovalBanner scope={scope} user={user} />
-      ) : null}
-      <UserProfileCard scope={scope} user={user} />
+  if (section === "security") {
+    return (
       <PersonSecurityCard
-        canManageApiKeys={canManageApiKeys}
+        canManageApiKeys={user.user_capabilities?.can_manage_api_key !== false}
         password={{
           canHavePassword: !user.is_service_account && !user.pending_at,
           signInMethods: user.sign_in_methods,
@@ -176,6 +173,15 @@ export function UserDetailView({
         scope={scope}
         userId={user.unique_id}
       />
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      {user.pending_at ? (
+        <PendingApprovalBanner scope={scope} user={user} />
+      ) : null}
+      <UserProfileCard scope={scope} user={user} />
       <UserProjectsSection scope={scope} user={user} />
     </div>
   )
@@ -357,7 +363,7 @@ function UserProfileCard({
       <>
         <Card>
           <CardHeader>
-            <CardTitle>Identity</CardTitle>
+            <CardTitle>Profile</CardTitle>
             <CardAction>
               <div className="flex flex-wrap justify-end gap-2">
                 {user.user_capabilities?.can_change_platform_role === true ? (
@@ -386,7 +392,30 @@ function UserProfileCard({
                 propagate.
               </p>
             ) : null}
-            <dl className="grid grid-cols-1 gap-4 @fields-wide:grid-cols-2 @3xl:grid-cols-4">
+            <dl className="grid grid-cols-1 gap-4 @fields-wide:grid-cols-2 @3xl:grid-cols-3">
+              <div className="min-w-0">
+                <dt className="text-label text-muted-foreground">Name</dt>
+                <dd className="mt-1 text-body break-words">
+                  {[user.first_name, user.last_name]
+                    .map((part) => part.trim())
+                    .filter(Boolean)
+                    .join(" ") || (
+                    <span className="text-muted-foreground">None</span>
+                  )}
+                </dd>
+              </div>
+              <div className="min-w-0">
+                <dt className="text-label text-muted-foreground">Username</dt>
+                <dd className="mt-1 text-body break-words">
+                  {user.username ? (
+                    <span className="font-mono">
+                      {formatUsername(user.username, "raw")}
+                    </span>
+                  ) : (
+                    <span className="text-muted-foreground">None</span>
+                  )}
+                </dd>
+              </div>
               <div className="min-w-0">
                 <dt className="text-label text-muted-foreground">Email</dt>
                 <dd className="mt-1 text-body">
@@ -447,7 +476,7 @@ function UserProfileCard({
     <>
       <Card aria-busy={isSubmitting}>
         <CardHeader>
-          <CardTitle>Edit identity</CardTitle>
+          <CardTitle>Edit profile</CardTitle>
         </CardHeader>
         <CardContent>
           <form
