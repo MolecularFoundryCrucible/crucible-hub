@@ -210,6 +210,28 @@ export interface paths {
         patch: operations["rename_account_apikey_account_apikeys__key_id__patch"];
         trace?: never;
     };
+    "/account/auth-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Account Auth Events
+         * @description Your sign-in history, newest first: sign-ins, failed passwords and locks, password and login
+         *     changes, keys and sessions ended, so you can spot activity that was not yours. Never an address.
+         *     Kept CRUCIBLE_AUTH_EVENT_RETENTION_DAYS.
+         */
+        get: operations["list_account_auth_events_account_auth_events_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/account/identities": {
         parameters: {
             query?: never;
@@ -3612,6 +3634,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/users/{user_ref}/auth-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List User Auth Events
+         * @description A person's sign-in history, as GET /account/auth-events shows their own. Platform administrators
+         *     only; waiting accounts included.
+         */
+        get: operations["list_user_auth_events_users__user_ref__auth_events_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/users/{user_ref}/datasets": {
         parameters: {
             query?: never;
@@ -4077,7 +4120,7 @@ export interface components {
             platform_role?: components["schemas"]["PlatformRole"] | null;
             /**
              * Sign In Methods
-             * @description Administrators only, on GET /users/{user_ref} and GET /users?pending=true: how this person signs in, as `password` and the providers' display names.
+             * @description How this person signs in, as `password` and the providers' display names. Filled for the person themselves (GET /account/profile, GET /users/{user_ref}) and for administrators (GET /users/{user_ref}, GET /users?pending=true); null elsewhere.
              */
             sign_in_methods?: string[] | null;
             /** Unique Id */
@@ -4307,6 +4350,39 @@ export interface components {
             source_mfid: string;
             /** Target Mfid */
             target_mfid: string;
+        };
+        /**
+         * AuthEventRead
+         * @description One entry of a person's sign-in history. Never an address, a password or a token.
+         */
+        AuthEventRead: {
+            /**
+             * Actor Unique Id
+             * @description Who made the change, when it was someone else, such as an administrator
+             */
+            actor_unique_id?: string | null;
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /**
+             * Client Id
+             * @description The program the sign-in went through
+             */
+            client_id?: string | null;
+            /**
+             * Event
+             * @description sign_in, sign_in_failed, locked, password_set, password_changed, password_reset, password_removed, link_issued, identity_linked, identity_unlinked, api_key_created, api_key_revoked, registered, approved, rejected, disabled, enabled, role_changed, sessions_ended, provider_refused
+             */
+            event: string;
+            /** Id */
+            id: number;
+            /**
+             * Issuer
+             * @description The provider involved, or the API itself for passwords
+             */
+            issuer?: string | null;
         };
         /** AuthMethodRead */
         AuthMethodRead: {
@@ -5703,6 +5779,19 @@ export interface components {
             /** Total */
             total?: number | null;
         };
+        /** PaginatedResponse[AuthEventRead] */
+        PaginatedResponse_AuthEventRead_: {
+            /** Items */
+            items: components["schemas"]["AuthEventRead"][];
+            /** Limit */
+            limit: number;
+            /** Next Cursor */
+            next_cursor?: string | null;
+            /** Offset */
+            offset?: number | null;
+            /** Total */
+            total?: number | null;
+        };
         /** PaginatedResponse[DatasetRead] */
         PaginatedResponse_DatasetRead_: {
             /** Items */
@@ -7031,7 +7120,7 @@ export interface components {
             platform_role?: components["schemas"]["PlatformRole"] | null;
             /**
              * Sign In Methods
-             * @description Administrators only, on GET /users/{user_ref} and GET /users?pending=true: how this person signs in, as `password` and the providers' display names.
+             * @description How this person signs in, as `password` and the providers' display names. Filled for the person themselves (GET /account/profile, GET /users/{user_ref}) and for administrators (GET /users/{user_ref}, GET /users?pending=true); null elsewhere.
              */
             sign_in_methods?: string[] | null;
             /** Unique Id */
@@ -7545,6 +7634,44 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    list_account_auth_events_account_auth_events_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                /** @description Opaque continuation cursor from next_cursor. */
+                cursor?: string | null;
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_AuthEventRead_"];
+                };
+            };
+            /** @description Invalid cursor */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -16515,6 +16642,20 @@ export interface operations {
                     "application/json": components["schemas"]["UserRead"];
                 };
             };
+            /** @description A session needs a recent sign-in (`insufficient_user_authentication`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not a platform administrator, or `browser_sign_in_required` for a session approved with a device code */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             /** @description No such account */
             404: {
                 headers: {
@@ -16537,6 +16678,54 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    list_user_auth_events_users__user_ref__auth_events_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                /** @description Opaque continuation cursor from next_cursor. */
+                cursor?: string | null;
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
+                user_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_AuthEventRead_"];
+                };
+            };
+            /** @description Not a platform administrator */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid cursor */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -17088,6 +17277,20 @@ export interface operations {
                     "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
                     Vary: components["headers"]["PrivilegeModeVary"];
                     "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description A session needs a recent sign-in (`insufficient_user_authentication`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not a platform administrator, or `browser_sign_in_required` for a session approved with a device code */
+            403: {
+                headers: {
                     [name: string]: unknown;
                 };
                 content?: never;

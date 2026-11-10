@@ -481,7 +481,7 @@
                 "type": "null"
               }
             ],
-            "description": "Administrators only, on GET /users/{user_ref} and GET /users?pending=true: how this person signs in, as `password` and the providers' display names.",
+            "description": "How this person signs in, as `password` and the providers' display names. Filled for the person themselves (GET /account/profile, GET /users/{user_ref}) and for administrators (GET /users/{user_ref}, GET /users?pending=true); null elsewhere.",
             "title": "Sign In Methods"
           },
           "unique_id": {
@@ -1051,6 +1051,68 @@
           "relationship_type"
         ],
         "title": "AssociationGraphEdge",
+        "type": "object"
+      },
+      "AuthEventRead": {
+        "description": "One entry of a person's sign-in history. Never an address, a password or a token.",
+        "properties": {
+          "actor_unique_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Who made the change, when it was someone else, such as an administrator",
+            "title": "Actor Unique Id"
+          },
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "client_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The program the sign-in went through",
+            "title": "Client Id"
+          },
+          "event": {
+            "description": "sign_in, sign_in_failed, locked, password_set, password_changed, password_reset, password_removed, link_issued, identity_linked, identity_unlinked, api_key_created, api_key_revoked, registered, approved, rejected, disabled, enabled, role_changed, sessions_ended, provider_refused",
+            "title": "Event",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "issuer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The provider involved, or the API itself for passwords",
+            "title": "Issuer"
+          }
+        },
+        "required": [
+          "id",
+          "at",
+          "event"
+        ],
+        "title": "AuthEventRead",
         "type": "object"
       },
       "AuthMethodRead": {
@@ -5381,6 +5443,60 @@
         "title": "PaginatedResponse[AssociatedFileRead]",
         "type": "object"
       },
+      "PaginatedResponse_AuthEventRead_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AuthEventRead"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "offset": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offset"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
+          }
+        },
+        "required": [
+          "limit",
+          "items"
+        ],
+        "title": "PaginatedResponse[AuthEventRead]",
+        "type": "object"
+      },
       "PaginatedResponse_DatasetRead_": {
         "properties": {
           "items": {
@@ -9379,7 +9495,7 @@
                 "type": "null"
               }
             ],
-            "description": "Administrators only, on GET /users/{user_ref} and GET /users?pending=true: how this person signs in, as `password` and the providers' display names.",
+            "description": "How this person signs in, as `password` and the providers' display names. Filled for the person themselves (GET /account/profile, GET /users/{user_ref}) and for administrators (GET /users/{user_ref}, GET /users?pending=true); null elsewhere.",
             "title": "Sign In Methods"
           },
           "unique_id": {
@@ -10376,6 +10492,102 @@
           }
         ],
         "summary": "Rename Account Apikey",
+        "tags": [
+          "account"
+        ]
+      }
+    },
+    "/account/auth-events": {
+      "get": {
+        "description": "Your sign-in history, newest first: sign-ins, failed passwords and locks, password and login\nchanges, keys and sessions ended, so you can spot activity that was not yours. Never an address.\nKept CRUCIBLE_AUTH_EVENT_RETENTION_DAYS.",
+        "operationId": "list_account_auth_events_account_auth_events_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Opaque continuation cursor from next_cursor.",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 4096,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Opaque continuation cursor from next_cursor.",
+              "title": "Cursor"
+            }
+          },
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_AuthEventRead_"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid cursor"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Account Auth Events",
         "tags": [
           "account"
         ]
@@ -32344,6 +32556,12 @@
               }
             }
           },
+          "401": {
+            "description": "A session needs a recent sign-in (`insufficient_user_authentication`)"
+          },
+          "403": {
+            "description": "Not a platform administrator, or `browser_sign_in_required` for a session approved with a device code"
+          },
           "404": {
             "description": "No such account"
           },
@@ -32369,6 +32587,116 @@
         "summary": "Approve User",
         "tags": [
           "users"
+        ]
+      }
+    },
+    "/users/{user_ref}/auth-events": {
+      "get": {
+        "description": "A person's sign-in history, as GET /account/auth-events shows their own. Platform administrators\nonly; waiting accounts included.",
+        "operationId": "list_user_auth_events_users__user_ref__auth_events_get",
+        "parameters": [
+          {
+            "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
+            "in": "path",
+            "name": "user_ref",
+            "required": true,
+            "schema": {
+              "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
+              "title": "User Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Opaque continuation cursor from next_cursor.",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 4096,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Opaque continuation cursor from next_cursor.",
+              "title": "Cursor"
+            }
+          },
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_AuthEventRead_"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "403": {
+            "description": "Not a platform administrator"
+          },
+          "422": {
+            "description": "Invalid cursor"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List User Auth Events",
+        "tags": [
+          "account"
         ]
       }
     },
@@ -33450,6 +33778,12 @@
                 "$ref": "#/components/headers/CrucibleRequestId"
               }
             }
+          },
+          "401": {
+            "description": "A session needs a recent sign-in (`insufficient_user_authentication`)"
+          },
+          "403": {
+            "description": "Not a platform administrator, or `browser_sign_in_required` for a session approved with a device code"
           },
           "404": {
             "description": "No such account"
