@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import type { ReactNode } from "react"
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 import { getRouteApi } from "@tanstack/react-router"
@@ -44,18 +44,28 @@ function tabFromHash(): SecurityTab | undefined {
   return securityTabHashes.includes(hash) ? (hash as SecurityTab) : undefined
 }
 
+const defaultSecurityTab: SecurityTab = "sign-in-methods"
+
 function useSecurityTab() {
-  const [tab, setTab] = useState<SecurityTab>("sign-in-methods")
+  const [tab, setTab] = useState<SecurityTab>(defaultSecurityTab)
   useEffect(() => {
-    const follow = () => {
-      const fromHash = tabFromHash()
-      if (fromHash) setTab(fromHash)
-    }
+    const follow = () => setTab(tabFromHash() ?? defaultSecurityTab)
     follow()
     window.addEventListener("hashchange", follow)
     return () => window.removeEventListener("hashchange", follow)
   }, [])
-  return [tab, setTab] as const
+  const selectTab = useCallback((next: SecurityTab) => {
+    setTab(next)
+    const { pathname, search } = window.location
+    const hash = next === defaultSecurityTab ? "" : `#${next}`
+    // Keeps the router's history entry state; the router does not read the hash.
+    window.history.replaceState(
+      window.history.state,
+      "",
+      `${pathname}${search}${hash}`
+    )
+  }, [])
+  return [tab, selectTab] as const
 }
 
 function TabCount({ value }: { value: number | null | undefined }) {

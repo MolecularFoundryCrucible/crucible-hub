@@ -469,6 +469,19 @@ describe("UserDetailView API keys", () => {
     window.history.replaceState(null, "", window.location.pathname)
   })
 
+  it("keeps the chosen Security tab in the address", async () => {
+    window.history.replaceState(null, "", "/users/person-1")
+    renderUserDetail(testUser, "security")
+
+    fireEvent.click(await screen.findByRole("tab", { name: /Sessions/ }))
+    await waitFor(() => expect(window.location.hash).toBe("#sessions"))
+    expect(window.location.pathname).toBe("/users/person-1")
+
+    fireEvent.click(screen.getByRole("tab", { name: /Sign-in methods/ }))
+    await waitFor(() => expect(window.location.hash).toBe(""))
+    window.history.replaceState(null, "", "/")
+  })
+
   it("lists a person's keys and asks for a fresh sign-in to revoke one", async () => {
     vi.mocked(getWorkspaceApiKeys).mockResolvedValue({
       data: {
