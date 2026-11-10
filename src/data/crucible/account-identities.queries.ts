@@ -53,6 +53,6 @@ export function userIdentitiesQueryOptions(
       unwrapHubResult(
         await getWorkspaceUserIdentities({ data: { scenario, userId }, signal })
       ),
-    retry: scenario ? false : undefined,
+    ...(scenario ? { retry: false } : {}),
   })
 }

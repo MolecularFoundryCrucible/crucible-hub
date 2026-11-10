@@ -161,7 +161,7 @@ export function projectsCursorQueryOptions(
     getNextPageParam: (page) => page.nextCursor ?? undefined,
     placeholderData: (previousData, previousQuery) =>
       identityScopedPreviousData(scope, previousData, previousQuery),
-    retry: scenario ? false : undefined,
+    ...(scenario ? { retry: false } : {}),
   })
 }
 

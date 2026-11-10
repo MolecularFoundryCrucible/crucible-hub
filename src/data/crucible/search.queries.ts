@@ -93,7 +93,7 @@ function workspaceSearchQueryOptions(
         previousData,
         previousQuery
       ),
-    retry: scenario ? false : undefined,
+    ...(scenario ? { retry: false } : {}),
   })
 }
 
@@ -124,6 +124,6 @@ export function metadataSearchQueryOptions(
         previousData,
         previousQuery
       ),
-    retry: scenario ? false : undefined,
+    ...(scenario ? { retry: false } : {}),
   })
 }

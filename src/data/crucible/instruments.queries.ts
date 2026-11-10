@@ -52,7 +52,7 @@ export function instrumentsQueryOptions(
       ),
     placeholderData: (previousData, previousQuery) =>
       identityScopedPreviousData(scope, previousData, previousQuery),
-    retry: scenario ? false : undefined,
+    ...(scenario ? { retry: false } : {}),
   })
 }
 
@@ -114,7 +114,7 @@ export function instrumentsCursorQueryOptions(
     getNextPageParam: (page) => page.nextCursor ?? undefined,
     placeholderData: (previousData, previousQuery) =>
       identityScopedPreviousData(scope, previousData, previousQuery),
-    retry: scenario ? false : undefined,
+    ...(scenario ? { retry: false } : {}),
   })
 }
 
@@ -132,7 +132,7 @@ export function instrumentMembersQueryOptions(
           signal,
         })
       ),
-    retry: scenario ? false : undefined,
+    ...(scenario ? { retry: false } : {}),
   })
 }
 
@@ -150,6 +150,6 @@ export function instrumentOperatorsQueryOptions(
           signal,
         })
       ),
-    retry: scenario ? false : undefined,
+    ...(scenario ? { retry: false } : {}),
   })
 }
