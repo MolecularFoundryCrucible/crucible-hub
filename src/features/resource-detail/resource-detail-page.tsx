@@ -314,6 +314,7 @@ export function ResourceOverview({
       >
         {resource.kind === "dataset" ? (
           <DatasetFiles
+            canDelete={resource.capabilities?.can_delete_files === true}
             canEdit={resource.capabilities?.can_edit === true}
             datasetMfid={resource.unique_id}
           />

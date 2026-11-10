@@ -85,7 +85,10 @@ export type WorkspaceSignedInSessionPage = {
   total: number
 }
 
-export type WorkspaceResourceCapabilities = Schema<"ResourceCapabilities">
+// can_delete_files arrives with API 4.0.0, ahead of the pinned contract.
+export type WorkspaceResourceCapabilities = Schema<"ResourceCapabilities"> & {
+  can_delete_files?: boolean
+}
 
 export type WorkspaceProject = Pick<
   Schema<"ProjectWithLead">,
