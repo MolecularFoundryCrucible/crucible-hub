@@ -532,11 +532,11 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Redirect Exchange Deprecated
+         * Removed Browser Key Flow
          * @deprecated
-         * @description Deprecated: use GET /auth/callback.
+         * @description Removed: the browser pages that signed in with ORCID and handed out a single API key.
          */
-        get: operations["redirect_exchange_deprecated_auth_get"];
+        get: operations["removed_browser_key_flow_auth_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -553,10 +553,11 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get Apikey
-         * @description Exchange a valid ORCID browser session cookie for a Crucible API key.
+         * Removed Browser Key Flow
+         * @deprecated
+         * @description Removed: the browser pages that signed in with ORCID and handed out a single API key.
          */
-        get: operations["get_apikey_auth_apikey_get"];
+        get: operations["removed_browser_key_flow_auth_apikey_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -575,10 +576,11 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Regenerate Apikey
-         * @description Regenerate the caller's API key via browser ORCID session. Requires cookie auth.
+         * Removed Browser Key Flow
+         * @deprecated
+         * @description Removed: the browser pages that signed in with ORCID and handed out a single API key.
          */
-        post: operations["regenerate_apikey_auth_apikey_regenerate_post"];
+        post: operations["removed_browser_key_flow_auth_apikey_regenerate_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -593,10 +595,11 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Redirect Exchange
-         * @description Finish the ORCID sign-in and set a short-lived session cookie.
+         * Removed Browser Key Flow
+         * @deprecated
+         * @description Removed: the browser pages that signed in with ORCID and handed out a single API key.
          */
-        get: operations["redirect_exchange_auth_callback_get"];
+        get: operations["removed_browser_key_flow_auth_callback_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -612,7 +615,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Finish Hub Login */
+        /**
+         * Finish Hub Login
+         * @deprecated
+         * @description Deprecated: the provider callback for an ORCID application registered with this address (`legacy_callback`). New registrations use GET /oauth/callback/{key}.
+         */
         get: operations["finish_hub_login_auth_hub_callback_get"];
         put?: never;
         post?: never;
@@ -631,26 +638,10 @@ export interface paths {
         };
         /**
          * Begin Hub Login
-         * @description The Hub's sign-in start; the same as GET /oauth/authorize with response_type=code.
+         * @deprecated
+         * @description Deprecated: use GET /oauth/authorize with response_type=code, which this calls. Kept for Hub releases before 1.8.0.
          */
         get: operations["begin_hub_login_auth_hub_login_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/hub/oidc/{key}/callback": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Finish Provider Login */
-        get: operations["finish_provider_login_auth_hub_oidc__key__callback_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -668,7 +659,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Refresh Hub Credential */
+        /**
+         * Refresh Hub Credential
+         * @deprecated
+         * @description Deprecated: use POST /oauth/token with grant_type=refresh_token, which this calls. Kept for Hub releases before 1.8.0.
+         */
         post: operations["refresh_hub_credential_auth_hub_refresh_post"];
         delete?: never;
         options?: never;
@@ -687,6 +682,7 @@ export interface paths {
         put?: never;
         /**
          * Revoke Hub Credential
+         * @deprecated
          * @description Requires HTTP Basic Hub client authentication and JSON containing token. Revokes the entire login token family, including all access and refresh generations. A previously rotated refresh token can revoke the family. Repeated requests, unknown tokens, and tokens belonging to another client return 204 without disclosing token validity. Subsequent authentication checks reject revoked tokens; already-authorized requests may finish. Other login sessions, legacy API keys, and the ORCID session are unaffected. The Hub must also delete its own session and browser cookie.
          */
         post: operations["revoke_hub_credential_auth_hub_revoke_post"];
@@ -705,7 +701,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Exchange Hub Code */
+        /**
+         * Exchange Hub Code
+         * @deprecated
+         * @description Deprecated: use POST /oauth/token with grant_type=authorization_code, which this calls. Kept for Hub releases before 1.8.0.
+         */
         post: operations["exchange_hub_code_auth_hub_token_post"];
         delete?: never;
         options?: never;
@@ -721,10 +721,11 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Orcid Login
-         * @description Redirect the user to the ORCID login page to begin authentication.
+         * Removed Browser Key Flow
+         * @deprecated
+         * @description Removed: the browser pages that signed in with ORCID and handed out a single API key.
          */
-        get: operations["orcid_login_auth_login_get"];
+        get: operations["removed_browser_key_flow_auth_login_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -975,7 +976,7 @@ export interface paths {
          *     Repeating a filename with the same sha256_hash, size, and storage_backend returns the existing record unchanged
          *     (storage_path and access_note are not compared); any other difference returns 409 `filename_exists` with the
          *     existing file's MFID and ETag. Non-GCS filenames must be canonical relative POSIX paths (422 otherwise).
-         *     Use POST /datasets/{dataset_mfid}/files/{file_id}/ingest to trigger ingestion.
+         *     Use POST /files/{file_id}/ingest to trigger ingestion.
          *     Requires contributor access.
          */
         post: operations["add_associated_file_datasets__dataset_mfid__files_post"];
@@ -997,9 +998,7 @@ export interface paths {
         /**
          * Create Ds File Ingestion Request
          * @deprecated
-         * @description Creates an ingestion request for a file.
-         *     Returns error if the dataset associated with the file is not found, or the user does not have access.
-         *     Requires write access to the dataset.
+         * @description Removed: use POST /files/{file_id}/ingest.
          */
         post: operations["create_ds_file_ingestion_request_datasets__dataset_mfid__files__file_id__ingest_post"];
         delete?: never;
@@ -1156,8 +1155,7 @@ export interface paths {
         /**
          * Read Samples In Dataset
          * @deprecated
-         * @description Returns a paginated list of samples associated with the dataset ID provided.
-         *     Deprecated: use GET /samples?dataset_mfid={dataset_mfid}.
+         * @description Removed: use GET /samples?dataset_mfid={dataset_mfid}.
          */
         get: operations["read_samples_in_dataset_datasets__dataset_mfid__samples_get"];
         put?: never;
@@ -2124,11 +2122,11 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Orcid Login Deprecated
+         * Removed Browser Key Flow
          * @deprecated
-         * @description Deprecated: use GET /auth/login.
+         * @description Removed: the browser pages that signed in with ORCID and handed out a single API key.
          */
-        get: operations["orcid_login_deprecated_login_get"];
+        get: operations["removed_browser_key_flow_login_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2171,6 +2169,26 @@ export interface paths {
          *     redirect with `code` or `error`, `state`, and `iss` (RFC 9207).
          */
         get: operations["authorize_oauth_authorize_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/oauth/callback/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Finish Provider Login
+         * @description Where a provider sends the browser back after sign-in: register `<API address>/oauth/callback/{key}` with the provider.
+         */
+        get: operations["finish_provider_login_oauth_callback__key__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2275,10 +2293,10 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Confirm Hub Link
+         * Link Confirm
          * @description Add the login to the account of the person who started the link and is confirming it now.
          */
-        post: operations["confirm_hub_link_oauth_link_confirm_post"];
+        post: operations["link_confirm_oauth_link_confirm_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2295,10 +2313,10 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Preview Hub Link
+         * Link Preview
          * @description Name the login a link code would add, for the confirmation page. Changes nothing.
          */
-        post: operations["preview_hub_link_oauth_link_preview_post"];
+        post: operations["link_preview_oauth_link_preview_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2313,10 +2331,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Start Hub Link
+         * Link Start
          * @description Continue a link the Hub started: opened once, by the person's browser.
          */
-        get: operations["start_hub_link_oauth_link_start_get"];
+        get: operations["link_start_oauth_link_start_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3329,11 +3347,11 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get Apikey Deprecated
+         * Removed Browser Key Flow
          * @deprecated
-         * @description Deprecated: use GET /auth/apikey.
+         * @description Removed: the browser pages that signed in with ORCID and handed out a single API key.
          */
-        get: operations["get_apikey_deprecated_user_apikey_get"];
+        get: operations["removed_browser_key_flow_user_apikey_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3379,7 +3397,7 @@ export interface paths {
         /**
          * Get User By Username
          * @deprecated
-         * @description Deprecated: use GET /users/{user_ref}. Email is visible only to self and platform administrators.
+         * @description Removed: use GET /users/{user_ref}, which takes a username.
          */
         get: operations["get_user_by_username_users_by_username__username__get"];
         put?: never;
@@ -3665,7 +3683,7 @@ export interface paths {
         /**
          * Read User Datasets
          * @deprecated
-         * @description Deprecated compatibility route returning dataset MFIDs. Use GET /datasets?accessible_to_user={user_ref}.
+         * @description Removed: use GET /datasets?accessible_to_user={user_ref}.
          */
         get: operations["read_user_datasets_users__user_ref__datasets_get"];
         put?: never;
@@ -3902,7 +3920,7 @@ export interface paths {
         /**
          * Read User Samples
          * @deprecated
-         * @description Deprecated compatibility route returning sample MFIDs. Use GET /samples?accessible_to_user={user_ref}.
+         * @description Removed: use GET /samples?accessible_to_user={user_ref}.
          */
         get: operations["read_user_samples_users__user_ref__samples_get"];
         put?: never;
@@ -4233,11 +4251,6 @@ export interface components {
              * @enum {string}
              */
             status: "active" | "expired" | "revoked";
-        };
-        /** ApiKeyRead */
-        ApiKeyRead: {
-            /** Api Key */
-            api_key: string;
         };
         /** ApiKeyRename */
         ApiKeyRename: {
@@ -4688,12 +4701,12 @@ export interface components {
              */
             previous_instrument_name?: string | null;
         };
-        /** DatasetLink */
-        DatasetLink: {
-            /** Child Dataset Id */
-            child_dataset_id?: number | null;
-            /** Parent Dataset Id */
-            parent_dataset_id?: number | null;
+        /** DatasetLinkRead */
+        DatasetLinkRead: {
+            /** Child Dataset Mfid */
+            child_dataset_mfid: string;
+            /** Parent Dataset Mfid */
+            parent_dataset_mfid: string;
             /** Relationship Type */
             relationship_type?: string | null;
         };
@@ -5252,8 +5265,8 @@ export interface components {
              */
             verified_at?: string | null;
         };
-        /** IngestionRequest */
-        IngestionRequest: {
+        /** IngestionRequestRead */
+        IngestionRequestRead: {
             /** Dataset Mfid */
             dataset_mfid?: string | null;
             /** File Mfid */
@@ -5261,7 +5274,7 @@ export interface components {
             /** File To Upload */
             file_to_upload?: string | null;
             /** Id */
-            id?: number | null;
+            id: number;
             /** Ingestion Class */
             ingestion_class?: string | null;
             /** Ingestion Githash */
@@ -5548,19 +5561,12 @@ export interface components {
          * @enum {string}
          */
         JoinRequestStatus: "pending" | "approved" | "rejected" | "withdrawn";
-        /** Keyword */
-        Keyword: {
-            /** Id */
-            id?: number | null;
+        /** KeywordRead */
+        KeywordRead: {
             /** Keyword */
             keyword: string;
             /** Num Datasets */
-            num_datasets: number | null;
-        };
-        /** LegacyApiKeyRead */
-        LegacyApiKeyRead: {
-            /** Crucible Apikey */
-            crucible_apikey: string;
+            num_datasets?: number | null;
         };
         /** LineageGraphEdge */
         LineageGraphEdge: {
@@ -5844,10 +5850,10 @@ export interface components {
             /** Total */
             total?: number | null;
         };
-        /** PaginatedResponse[IngestionRequest] */
-        PaginatedResponse_IngestionRequest_: {
+        /** PaginatedResponse[IngestionRequestRead] */
+        PaginatedResponse_IngestionRequestRead_: {
             /** Items */
-            items: components["schemas"]["IngestionRequest"][];
+            items: components["schemas"]["IngestionRequestRead"][];
             /** Limit */
             limit: number;
             /** Next Cursor */
@@ -6395,8 +6401,11 @@ export interface components {
             /** Value */
             value: string | null;
         };
-        /** ResourceACL */
-        ResourceACL: {
+        /**
+         * ResourceAccessGroupRead
+         * @description The reply of the deprecated POST /resources/{mfid}/access_groups.
+         */
+        ResourceAccessGroupRead: {
             /** Accessgroup Id */
             accessgroup_id?: number | null;
             /** Mfid */
@@ -6573,14 +6582,14 @@ export interface components {
             /** Traversal Depth */
             traversal_depth: number;
         };
-        /** SampleLink */
-        SampleLink: {
-            /** Parent Sample Id */
-            parent_sample_id?: number | null;
+        /** SampleLinkRead */
+        SampleLinkRead: {
+            /** Child Sample Mfid */
+            child_sample_mfid: string;
+            /** Parent Sample Mfid */
+            parent_sample_mfid: string;
             /** Relationship Type */
             relationship_type?: string | null;
-            /** Sample Id */
-            sample_id?: number | null;
         };
         /**
          * SampleRead
@@ -8528,52 +8537,7 @@ export interface operations {
             };
         };
     };
-    redirect_exchange_deprecated_auth_get: {
-        parameters: {
-            query?: {
-                code?: string | null;
-                state?: string | null;
-                error?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Redirect back to the page that started sign-in, with a short-lived session cookie */
-            307: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Sign-in could not be matched to this browser, or ORCID reported an error */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-            /** @description ORCID sign-in failed */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    get_apikey_auth_apikey_get: {
+    removed_browser_key_flow_auth_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -8582,34 +8546,18 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description The API key as JSON, or an HTML page asking for an email when the profile has none */
-            200: {
+            /** @description This route was removed: `{"detail": {"code": "route_removed", "message": ...}}` names the replacement */
+            410: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LegacyApiKeyRead"];
-                    "text/html": unknown;
+                    "application/json": unknown;
                 };
-            };
-            /** @description Redirect to sign-in when there is no ORCID session cookie */
-            307: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description This ORCID cannot be used with this account */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
         };
     };
-    regenerate_apikey_auth_apikey_regenerate_post: {
+    removed_browser_key_flow_auth_apikey_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -8618,74 +8566,54 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Successful Response */
-            200: {
+            /** @description This route was removed: `{"detail": {"code": "route_removed", "message": ...}}` names the replacement */
+            410: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiKeyRead"];
+                    "application/json": unknown;
                 };
-            };
-            /** @description Redirect to sign-in when there is no ORCID session cookie */
-            307: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description This ORCID cannot be used with this account */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
         };
     };
-    redirect_exchange_auth_callback_get: {
+    removed_browser_key_flow_auth_apikey_regenerate_post: {
         parameters: {
-            query?: {
-                code?: string | null;
-                state?: string | null;
-                error?: string | null;
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Redirect back to the page that started sign-in, with a short-lived session cookie */
-            307: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Sign-in could not be matched to this browser, or ORCID reported an error */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
+            /** @description This route was removed: `{"detail": {"code": "route_removed", "message": ...}}` names the replacement */
+            410: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
+                    "application/json": unknown;
                 };
             };
-            /** @description ORCID sign-in failed */
-            502: {
+        };
+    };
+    removed_browser_key_flow_auth_callback_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description This route was removed: `{"detail": {"code": "route_removed", "message": ...}}` names the replacement */
+            410: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": unknown;
+                };
             };
         };
     };
@@ -8842,74 +8770,6 @@ export interface operations {
             };
             /** @description Hub sign-in unavailable */
             503: {
-                headers: {
-                    "Cache-Control"?: "no-store";
-                    Pragma?: "no-cache";
-                    "Referrer-Policy"?: "no-referrer";
-                    "X-Content-Type-Options"?: "nosniff";
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    finish_provider_login_auth_hub_oidc__key__callback_get: {
-        parameters: {
-            query?: {
-                code?: string | null;
-                state?: string | null;
-                error?: string | null;
-                iss?: string | null;
-            };
-            header?: never;
-            path: {
-                key: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Redirect to the Hub with a sign-in code, or with state and an RFC 6749 error */
-            302: {
-                headers: {
-                    "Cache-Control"?: "no-store";
-                    Pragma?: "no-cache";
-                    "Referrer-Policy"?: "no-referrer";
-                    "X-Content-Type-Options"?: "nosniff";
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description The sign-in cannot be matched to this browser, so nothing is trusted enough to redirect to */
-            400: {
-                headers: {
-                    "Cache-Control"?: "no-store";
-                    Pragma?: "no-cache";
-                    "Referrer-Policy"?: "no-referrer";
-                    "X-Content-Type-Options"?: "nosniff";
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Invalid authentication request; submitted values and validation context are omitted */
-            422: {
-                headers: {
-                    "Cache-Control"?: "no-store";
-                    Pragma?: "no-cache";
-                    "Referrer-Policy"?: "no-referrer";
-                    "X-Content-Type-Options"?: "nosniff";
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-            /** @description Authentication request failed; response contains no internal error details */
-            500: {
                 headers: {
                     "Cache-Control"?: "no-store";
                     Pragma?: "no-cache";
@@ -9157,7 +9017,7 @@ export interface operations {
             };
         };
     };
-    orcid_login_auth_login_get: {
+    removed_browser_key_flow_auth_login_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -9166,19 +9026,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Redirect to the ORCID sign-in page */
-            302: {
+            /** @description This route was removed: `{"detail": {"code": "route_removed", "message": ...}}` names the replacement */
+            410: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
-            };
-            /** @description ORCID cannot be reached */
-            502: {
-                headers: {
-                    [name: string]: unknown;
+                content: {
+                    "application/json": unknown;
                 };
-                content?: never;
             };
         };
     };
@@ -9863,17 +9718,9 @@ export interface operations {
     };
     create_ds_file_ingestion_request_datasets__dataset_mfid__files__file_id__ingest_post: {
         parameters: {
-            query?: {
-                /** @description An ingestor name, such as one from GET /ingestors */
-                ingestion_class?: string | null;
-                status?: "requested" | "not_requested";
-            };
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
+            query?: never;
+            header?: never;
             path: {
-                /** @description Dataset MFID. */
                 dataset_mfid: string;
                 file_id: string;
             };
@@ -9881,25 +9728,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Successful Response */
-            200: {
+            /** @description This route was removed: `{"detail": {"code": "route_removed", "message": ...}}` names the replacement */
+            410: {
                 headers: {
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["IngestionRequest"];
+                    "application/json": unknown;
                 };
-            };
-            /** @description Stored file location is outside the file's own dataset or an allowed bucket: `{"detail": {"code": "storage_location_invalid", "reason": ..., "message": ...}}` */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -9909,20 +9745,6 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
-            };
-            /** @description Ingestion is not enabled on this server (`feature_disabled`, only for `status=requested`) or file storage is not configured (`storage_not_configured`) */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description The request could not be queued (`ingestion_unavailable`); it is recorded as failed */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
         };
     };
@@ -10040,7 +9862,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Keyword"][];
+                    "application/json": components["schemas"]["KeywordRead"][];
                 };
             };
             /** @description Validation Error */
@@ -10081,7 +9903,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Keyword"];
+                    "application/json": components["schemas"]["KeywordRead"];
                 };
             };
             /** @description Validation Error */
@@ -10267,33 +10089,22 @@ export interface operations {
     };
     read_samples_in_dataset_datasets__dataset_mfid__samples_get: {
         parameters: {
-            query?: {
-                limit?: number;
-                offset?: number;
-            };
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
+            query?: never;
+            header?: never;
             path: {
-                /** @description Dataset MFID. */
                 dataset_mfid: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Successful Response */
-            200: {
+            /** @description This route was removed: `{"detail": {"code": "route_removed", "message": ...}}` names the replacement */
+            410: {
                 headers: {
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PaginatedResponse_SampleRead_"];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -10998,7 +10809,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["DatasetLink"];
+                    "application/json": components["schemas"]["DatasetLinkRead"];
                 };
             };
             /** @description Validation Error */
@@ -11655,7 +11466,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["IngestionRequest"];
+                    "application/json": components["schemas"]["IngestionRequestRead"];
                 };
             };
             /** @description Stored file location is outside the file's own dataset or an allowed bucket: `{"detail": {"code": "storage_location_invalid", "reason": ..., "message": ...}}` */
@@ -11873,7 +11684,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PaginatedResponse_IngestionRequest_"];
+                    "application/json": components["schemas"]["PaginatedResponse_IngestionRequestRead_"];
                 };
             };
             /** @description Validation Error */
@@ -11911,7 +11722,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["IngestionRequest"];
+                    "application/json": components["schemas"]["IngestionRequestRead"];
                 };
             };
             /** @description Validation Error */
@@ -11953,7 +11764,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["IngestionRequest"];
+                    "application/json": components["schemas"]["IngestionRequestRead"];
                 };
             };
             /** @description Validation Error */
@@ -12686,7 +12497,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Keyword"][];
+                    "application/json": components["schemas"]["KeywordRead"][];
                 };
             };
         };
@@ -12711,7 +12522,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Keyword"][];
+                    "application/json": components["schemas"]["KeywordRead"][];
                 };
             };
             /** @description Validation Error */
@@ -12725,7 +12536,7 @@ export interface operations {
             };
         };
     };
-    orcid_login_deprecated_login_get: {
+    removed_browser_key_flow_login_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -12734,19 +12545,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Redirect to the ORCID sign-in page */
-            302: {
+            /** @description This route was removed: `{"detail": {"code": "route_removed", "message": ...}}` names the replacement */
+            410: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
-            };
-            /** @description ORCID cannot be reached */
-            502: {
-                headers: {
-                    [name: string]: unknown;
+                content: {
+                    "application/json": unknown;
                 };
-                content?: never;
             };
         };
     };
@@ -12831,6 +12637,74 @@ export interface operations {
             /** @description Sign-in unavailable */
             503: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    finish_provider_login_oauth_callback__key__get: {
+        parameters: {
+            query?: {
+                code?: string | null;
+                state?: string | null;
+                error?: string | null;
+                iss?: string | null;
+            };
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Redirect to the Hub with a sign-in code, or with state and an RFC 6749 error */
+            302: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The sign-in cannot be matched to this browser, so nothing is trusted enough to redirect to */
+            400: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid authentication request; submitted values and validation context are omitted */
+            422: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Authentication request failed; response contains no internal error details */
+            500: {
+                headers: {
+                    "Cache-Control"?: "no-store";
+                    Pragma?: "no-cache";
+                    "Referrer-Policy"?: "no-referrer";
+                    "X-Content-Type-Options"?: "nosniff";
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content?: never;
@@ -13044,7 +12918,7 @@ export interface operations {
             };
         };
     };
-    confirm_hub_link_oauth_link_confirm_post: {
+    link_confirm_oauth_link_confirm_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -13099,7 +12973,7 @@ export interface operations {
             };
         };
     };
-    preview_hub_link_oauth_link_preview_post: {
+    link_preview_oauth_link_preview_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -13154,7 +13028,7 @@ export interface operations {
             };
         };
     };
-    start_hub_link_oauth_link_start_get: {
+    link_start_oauth_link_start_get: {
         parameters: {
             query: {
                 token: string;
@@ -13578,7 +13452,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Tokens: access_token, token_type Bearer, expires_in, refresh_token, and auth_time when known */
+            /** @description Tokens: access_token, token_type Bearer, expires_in, refresh_token, refresh_expires_in (seconds until the session ends), user_unique_id (who signed in), and auth_time when known */
             200: {
                 headers: {
                     "X-Request-ID": components["headers"]["CrucibleRequestId"];
@@ -14786,7 +14660,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ResourceACL"];
+                    "application/json": components["schemas"]["ResourceAccessGroupRead"];
                 };
             };
             /** @description Validation Error */
@@ -15544,7 +15418,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SampleLink"];
+                    "application/json": components["schemas"]["SampleLinkRead"];
                 };
             };
             /** @description Validation Error */
@@ -15901,7 +15775,7 @@ export interface operations {
             };
         };
     };
-    get_apikey_deprecated_user_apikey_get: {
+    removed_browser_key_flow_user_apikey_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -15910,30 +15784,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description The API key as JSON, or an HTML page asking for an email when the profile has none */
-            200: {
+            /** @description This route was removed: `{"detail": {"code": "route_removed", "message": ...}}` names the replacement */
+            410: {
                 headers: {
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LegacyApiKeyRead"];
-                    "text/html": unknown;
+                    "application/json": unknown;
                 };
-            };
-            /** @description Redirect to sign-in when there is no ORCID session cookie */
-            307: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description This ORCID cannot be used with this account */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
         };
     };
@@ -16061,10 +15919,7 @@ export interface operations {
     get_user_by_username_users_by_username__username__get: {
         parameters: {
             query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
+            header?: never;
             path: {
                 username: string;
             };
@@ -16072,17 +15927,13 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Successful Response */
-            200: {
+            /** @description This route was removed: `{"detail": {"code": "route_removed", "message": ...}}` names the replacement */
+            410: {
                 headers: {
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["UserRead"] | components["schemas"]["UserPublicRead"];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -16732,29 +16583,21 @@ export interface operations {
     read_user_datasets_users__user_ref__datasets_get: {
         parameters: {
             query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
+            header?: never;
             path: {
-                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
                 user_ref: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Successful Response */
-            200: {
+            /** @description This route was removed: `{"detail": {"code": "route_removed", "message": ...}}` names the replacement */
+            410: {
                 headers: {
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string[];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -17323,29 +17166,21 @@ export interface operations {
     read_user_samples_users__user_ref__samples_get: {
         parameters: {
             query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
+            header?: never;
             path: {
-                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
                 user_ref: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Successful Response */
-            200: {
+            /** @description This route was removed: `{"detail": {"code": "route_removed", "message": ...}}` names the replacement */
+            410: {
                 headers: {
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string[];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */

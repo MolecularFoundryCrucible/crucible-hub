@@ -778,19 +778,6 @@
         "title": "ApiKeyListItem",
         "type": "object"
       },
-      "ApiKeyRead": {
-        "properties": {
-          "api_key": {
-            "title": "Api Key",
-            "type": "string"
-          }
-        },
-        "required": [
-          "api_key"
-        ],
-        "title": "ApiKeyRead",
-        "type": "object"
-      },
       "ApiKeyRename": {
         "properties": {
           "name": {
@@ -1996,29 +1983,15 @@
         "title": "DatasetInstrumentRead",
         "type": "object"
       },
-      "DatasetLink": {
+      "DatasetLinkRead": {
         "properties": {
-          "child_dataset_id": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Child Dataset Id"
+          "child_dataset_mfid": {
+            "title": "Child Dataset Mfid",
+            "type": "string"
           },
-          "parent_dataset_id": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Parent Dataset Id"
+          "parent_dataset_mfid": {
+            "title": "Parent Dataset Mfid",
+            "type": "string"
           },
           "relationship_type": {
             "anyOf": [
@@ -2032,7 +2005,11 @@
             "title": "Relationship Type"
           }
         },
-        "title": "DatasetLink",
+        "required": [
+          "parent_dataset_mfid",
+          "child_dataset_mfid"
+        ],
+        "title": "DatasetLinkRead",
         "type": "object"
       },
       "DatasetRead": {
@@ -3676,7 +3653,7 @@
         "title": "IdentityRead",
         "type": "object"
       },
-      "IngestionRequest": {
+      "IngestionRequestRead": {
         "properties": {
           "dataset_mfid": {
             "anyOf": [
@@ -3712,15 +3689,8 @@
             "title": "File To Upload"
           },
           "id": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Id"
+            "title": "Id",
+            "type": "integer"
           },
           "ingestion_class": {
             "anyOf": [
@@ -3778,7 +3748,10 @@
             "title": "Time Created"
           }
         },
-        "title": "IngestionRequest",
+        "required": [
+          "id"
+        ],
+        "title": "IngestionRequestRead",
         "type": "object"
       },
       "IngestionRequestUpdate": {
@@ -4676,19 +4649,8 @@
         "title": "JoinRequestStatus",
         "type": "string"
       },
-      "Keyword": {
+      "KeywordRead": {
         "properties": {
-          "id": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Id"
-          },
           "keyword": {
             "title": "Keyword",
             "type": "string"
@@ -4706,23 +4668,9 @@
           }
         },
         "required": [
-          "keyword",
-          "num_datasets"
+          "keyword"
         ],
-        "title": "Keyword",
-        "type": "object"
-      },
-      "LegacyApiKeyRead": {
-        "properties": {
-          "crucible_apikey": {
-            "title": "Crucible Apikey",
-            "type": "string"
-          }
-        },
-        "required": [
-          "crucible_apikey"
-        ],
-        "title": "LegacyApiKeyRead",
+        "title": "KeywordRead",
         "type": "object"
       },
       "LineageGraphEdge": {
@@ -5713,11 +5661,11 @@
         "title": "PaginatedResponse[DeletionRequestRead]",
         "type": "object"
       },
-      "PaginatedResponse_IngestionRequest_": {
+      "PaginatedResponse_IngestionRequestRead_": {
         "properties": {
           "items": {
             "items": {
-              "$ref": "#/components/schemas/IngestionRequest"
+              "$ref": "#/components/schemas/IngestionRequestRead"
             },
             "title": "Items",
             "type": "array"
@@ -5764,7 +5712,7 @@
           "limit",
           "items"
         ],
-        "title": "PaginatedResponse[IngestionRequest]",
+        "title": "PaginatedResponse[IngestionRequestRead]",
         "type": "object"
       },
       "PaginatedResponse_InstrumentResponse_": {
@@ -7525,7 +7473,8 @@
         "title": "RequesterFacetBucket",
         "type": "object"
       },
-      "ResourceACL": {
+      "ResourceAccessGroupRead": {
+        "description": "The reply of the deprecated POST /resources/{mfid}/access_groups.",
         "properties": {
           "accessgroup_id": {
             "anyOf": [
@@ -7561,7 +7510,7 @@
           "write",
           "permission"
         ],
-        "title": "ResourceACL",
+        "title": "ResourceAccessGroupRead",
         "type": "object"
       },
       "ResourceAffiliation": {
@@ -8073,18 +8022,15 @@
         "title": "SampleGraphNode",
         "type": "object"
       },
-      "SampleLink": {
+      "SampleLinkRead": {
         "properties": {
-          "parent_sample_id": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Parent Sample Id"
+          "child_sample_mfid": {
+            "title": "Child Sample Mfid",
+            "type": "string"
+          },
+          "parent_sample_mfid": {
+            "title": "Parent Sample Mfid",
+            "type": "string"
           },
           "relationship_type": {
             "anyOf": [
@@ -8096,20 +8042,13 @@
               }
             ],
             "title": "Relationship Type"
-          },
-          "sample_id": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Sample Id"
           }
         },
-        "title": "SampleLink",
+        "required": [
+          "parent_sample_mfid",
+          "child_sample_mfid"
+        ],
+        "title": "SampleLinkRead",
         "type": "object"
       },
       "SampleRead": {
@@ -12080,80 +12019,19 @@
     "/auth": {
       "get": {
         "deprecated": true,
-        "description": "Deprecated: use GET /auth/callback.",
-        "operationId": "redirect_exchange_deprecated_auth_get",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "code",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Code"
-            }
-          },
-          {
-            "in": "query",
-            "name": "state",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "State"
-            }
-          },
-          {
-            "in": "query",
-            "name": "error",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Error"
-            }
-          }
-        ],
+        "description": "Removed: the browser pages that signed in with ORCID and handed out a single API key.",
+        "operationId": "removed_browser_key_flow_auth_get",
         "responses": {
-          "307": {
-            "description": "Redirect back to the page that started sign-in, with a short-lived session cookie"
-          },
-          "400": {
-            "description": "Sign-in could not be matched to this browser, or ORCID reported an error"
-          },
-          "422": {
+          "410": {
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
+                "schema": {}
               }
             },
-            "description": "Validation Error"
-          },
-          "502": {
-            "description": "ORCID sign-in failed"
+            "description": "This route was removed: `{\"detail\": {\"code\": \"route_removed\", \"message\": ...}}` names the replacement"
           }
         },
-        "summary": "Redirect Exchange Deprecated",
+        "summary": "Removed Browser Key Flow",
         "tags": [
           "auth"
         ]
@@ -12161,33 +12039,20 @@
     },
     "/auth/apikey": {
       "get": {
-        "description": "Exchange a valid ORCID browser session cookie for a Crucible API key.",
-        "operationId": "get_apikey_auth_apikey_get",
+        "deprecated": true,
+        "description": "Removed: the browser pages that signed in with ORCID and handed out a single API key.",
+        "operationId": "removed_browser_key_flow_auth_apikey_get",
         "responses": {
-          "200": {
+          "410": {
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LegacyApiKeyRead"
-                }
-              },
-              "text/html": {}
-            },
-            "description": "The API key as JSON, or an HTML page asking for an email when the profile has none",
-            "headers": {
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
+                "schema": {}
               }
-            }
-          },
-          "307": {
-            "description": "Redirect to sign-in when there is no ORCID session cookie"
-          },
-          "409": {
-            "description": "This ORCID cannot be used with this account"
+            },
+            "description": "This route was removed: `{\"detail\": {\"code\": \"route_removed\", \"message\": ...}}` names the replacement"
           }
         },
-        "summary": "Get Apikey",
+        "summary": "Removed Browser Key Flow",
         "tags": [
           "auth"
         ]
@@ -12195,32 +12060,20 @@
     },
     "/auth/apikey/regenerate": {
       "post": {
-        "description": "Regenerate the caller's API key via browser ORCID session. Requires cookie auth.",
-        "operationId": "regenerate_apikey_auth_apikey_regenerate_post",
+        "deprecated": true,
+        "description": "Removed: the browser pages that signed in with ORCID and handed out a single API key.",
+        "operationId": "removed_browser_key_flow_auth_apikey_regenerate_post",
         "responses": {
-          "200": {
+          "410": {
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiKeyRead"
-                }
+                "schema": {}
               }
             },
-            "description": "Successful Response",
-            "headers": {
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "307": {
-            "description": "Redirect to sign-in when there is no ORCID session cookie"
-          },
-          "409": {
-            "description": "This ORCID cannot be used with this account"
+            "description": "This route was removed: `{\"detail\": {\"code\": \"route_removed\", \"message\": ...}}` names the replacement"
           }
         },
-        "summary": "Regenerate Apikey",
+        "summary": "Removed Browser Key Flow",
         "tags": [
           "auth"
         ]
@@ -12228,80 +12081,20 @@
     },
     "/auth/callback": {
       "get": {
-        "description": "Finish the ORCID sign-in and set a short-lived session cookie.",
-        "operationId": "redirect_exchange_auth_callback_get",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "code",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Code"
-            }
-          },
-          {
-            "in": "query",
-            "name": "state",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "State"
-            }
-          },
-          {
-            "in": "query",
-            "name": "error",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Error"
-            }
-          }
-        ],
+        "deprecated": true,
+        "description": "Removed: the browser pages that signed in with ORCID and handed out a single API key.",
+        "operationId": "removed_browser_key_flow_auth_callback_get",
         "responses": {
-          "307": {
-            "description": "Redirect back to the page that started sign-in, with a short-lived session cookie"
-          },
-          "400": {
-            "description": "Sign-in could not be matched to this browser, or ORCID reported an error"
-          },
-          "422": {
+          "410": {
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
+                "schema": {}
               }
             },
-            "description": "Validation Error"
-          },
-          "502": {
-            "description": "ORCID sign-in failed"
+            "description": "This route was removed: `{\"detail\": {\"code\": \"route_removed\", \"message\": ...}}` names the replacement"
           }
         },
-        "summary": "Redirect Exchange",
+        "summary": "Removed Browser Key Flow",
         "tags": [
           "auth"
         ]
@@ -12309,6 +12102,8 @@
     },
     "/auth/hub/callback": {
       "get": {
+        "deprecated": true,
+        "description": "Deprecated: the provider callback for an ORCID application registered with this address (`legacy_callback`). New registrations use GET /oauth/callback/{key}.",
         "operationId": "finish_hub_login_auth_hub_callback_get",
         "parameters": [
           {
@@ -12525,7 +12320,8 @@
     },
     "/auth/hub/login": {
       "get": {
-        "description": "The Hub's sign-in start; the same as GET /oauth/authorize with response_type=code.",
+        "deprecated": true,
+        "description": "Deprecated: use GET /oauth/authorize with response_type=code, which this calls. Kept for Hub releases before 1.8.0.",
         "operationId": "begin_hub_login_auth_hub_login_get",
         "parameters": [
           {
@@ -12852,234 +12648,10 @@
         ]
       }
     },
-    "/auth/hub/oidc/{key}/callback": {
-      "get": {
-        "operationId": "finish_provider_login_auth_hub_oidc__key__callback_get",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "key",
-            "required": true,
-            "schema": {
-              "maxLength": 32,
-              "title": "Key",
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "code",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "maxLength": 2048,
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Code"
-            }
-          },
-          {
-            "in": "query",
-            "name": "state",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "maxLength": 128,
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "State"
-            }
-          },
-          {
-            "in": "query",
-            "name": "error",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "maxLength": 256,
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Error"
-            }
-          },
-          {
-            "in": "query",
-            "name": "iss",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "maxLength": 512,
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Iss"
-            }
-          }
-        ],
-        "responses": {
-          "302": {
-            "description": "Redirect to the Hub with a sign-in code, or with state and an RFC 6749 error",
-            "headers": {
-              "Cache-Control": {
-                "schema": {
-                  "const": "no-store",
-                  "type": "string"
-                }
-              },
-              "Pragma": {
-                "schema": {
-                  "const": "no-cache",
-                  "type": "string"
-                }
-              },
-              "Referrer-Policy": {
-                "schema": {
-                  "const": "no-referrer",
-                  "type": "string"
-                }
-              },
-              "X-Content-Type-Options": {
-                "schema": {
-                  "const": "nosniff",
-                  "type": "string"
-                }
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "400": {
-            "description": "The sign-in cannot be matched to this browser, so nothing is trusted enough to redirect to",
-            "headers": {
-              "Cache-Control": {
-                "schema": {
-                  "const": "no-store",
-                  "type": "string"
-                }
-              },
-              "Pragma": {
-                "schema": {
-                  "const": "no-cache",
-                  "type": "string"
-                }
-              },
-              "Referrer-Policy": {
-                "schema": {
-                  "const": "no-referrer",
-                  "type": "string"
-                }
-              },
-              "X-Content-Type-Options": {
-                "schema": {
-                  "const": "nosniff",
-                  "type": "string"
-                }
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Invalid authentication request; submitted values and validation context are omitted",
-            "headers": {
-              "Cache-Control": {
-                "schema": {
-                  "const": "no-store",
-                  "type": "string"
-                }
-              },
-              "Pragma": {
-                "schema": {
-                  "const": "no-cache",
-                  "type": "string"
-                }
-              },
-              "Referrer-Policy": {
-                "schema": {
-                  "const": "no-referrer",
-                  "type": "string"
-                }
-              },
-              "X-Content-Type-Options": {
-                "schema": {
-                  "const": "nosniff",
-                  "type": "string"
-                }
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "500": {
-            "description": "Authentication request failed; response contains no internal error details",
-            "headers": {
-              "Cache-Control": {
-                "schema": {
-                  "const": "no-store",
-                  "type": "string"
-                }
-              },
-              "Pragma": {
-                "schema": {
-                  "const": "no-cache",
-                  "type": "string"
-                }
-              },
-              "Referrer-Policy": {
-                "schema": {
-                  "const": "no-referrer",
-                  "type": "string"
-                }
-              },
-              "X-Content-Type-Options": {
-                "schema": {
-                  "const": "nosniff",
-                  "type": "string"
-                }
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          }
-        },
-        "summary": "Finish Provider Login",
-        "tags": [
-          "auth"
-        ]
-      }
-    },
     "/auth/hub/refresh": {
       "post": {
+        "deprecated": true,
+        "description": "Deprecated: use POST /oauth/token with grant_type=refresh_token, which this calls. Kept for Hub releases before 1.8.0.",
         "operationId": "refresh_hub_credential_auth_hub_refresh_post",
         "requestBody": {
           "content": {
@@ -13280,6 +12852,7 @@
     },
     "/auth/hub/revoke": {
       "post": {
+        "deprecated": true,
         "description": "Requires HTTP Basic Hub client authentication and JSON containing token. Revokes the entire login token family, including all access and refresh generations. A previously rotated refresh token can revoke the family. Repeated requests, unknown tokens, and tokens belonging to another client return 204 without disclosing token validity. Subsequent authentication checks reject revoked tokens; already-authorized requests may finish. Other login sessions, legacy API keys, and the ORCID session are unaffected. The Hub must also delete its own session and browser cookie.",
         "operationId": "revoke_hub_credential_auth_hub_revoke_post",
         "requestBody": {
@@ -13474,6 +13047,8 @@
     },
     "/auth/hub/token": {
       "post": {
+        "deprecated": true,
+        "description": "Deprecated: use POST /oauth/token with grant_type=authorization_code, which this calls. Kept for Hub releases before 1.8.0.",
         "operationId": "exchange_hub_code_auth_hub_token_post",
         "requestBody": {
           "content": {
@@ -13674,17 +13249,20 @@
     },
     "/auth/login": {
       "get": {
-        "description": "Redirect the user to the ORCID login page to begin authentication.",
-        "operationId": "orcid_login_auth_login_get",
+        "deprecated": true,
+        "description": "Removed: the browser pages that signed in with ORCID and handed out a single API key.",
+        "operationId": "removed_browser_key_flow_auth_login_get",
         "responses": {
-          "302": {
-            "description": "Redirect to the ORCID sign-in page"
-          },
-          "502": {
-            "description": "ORCID cannot be reached"
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "This route was removed: `{\"detail\": {\"code\": \"route_removed\", \"message\": ...}}` names the replacement"
           }
         },
-        "summary": "Orcid Login",
+        "summary": "Removed Browser Key Flow",
         "tags": [
           "auth"
         ]
@@ -16124,7 +15702,7 @@
         ]
       },
       "post": {
-        "description": "Adds a file record to a dataset.\nFilenames are unique within a dataset, so identical content under different filenames gets separate records.\nRepeating a filename with the same sha256_hash, size, and storage_backend returns the existing record unchanged\n(storage_path and access_note are not compared); any other difference returns 409 `filename_exists` with the\nexisting file's MFID and ETag. Non-GCS filenames must be canonical relative POSIX paths (422 otherwise).\nUse POST /datasets/{dataset_mfid}/files/{file_id}/ingest to trigger ingestion.\nRequires contributor access.",
+        "description": "Adds a file record to a dataset.\nFilenames are unique within a dataset, so identical content under different filenames gets separate records.\nRepeating a filename with the same sha256_hash, size, and storage_backend returns the existing record unchanged\n(storage_path and access_note are not compared); any other difference returns 409 `filename_exists` with the\nexisting file's MFID and ETag. Non-GCS filenames must be canonical relative POSIX paths (422 otherwise).\nUse POST /files/{file_id}/ingest to trigger ingestion.\nRequires contributor access.",
         "operationId": "add_associated_file_datasets__dataset_mfid__files_post",
         "parameters": [
           {
@@ -16220,16 +15798,14 @@
     "/datasets/{dataset_mfid}/files/{file_id}/ingest": {
       "post": {
         "deprecated": true,
-        "description": "Creates an ingestion request for a file.\nReturns error if the dataset associated with the file is not found, or the user does not have access.\nRequires write access to the dataset.",
+        "description": "Removed: use POST /files/{file_id}/ingest.",
         "operationId": "create_ds_file_ingestion_request_datasets__dataset_mfid__files__file_id__ingest_post",
         "parameters": [
           {
-            "description": "Dataset MFID.",
             "in": "path",
             "name": "dataset_mfid",
             "required": true,
             "schema": {
-              "description": "Dataset MFID.",
               "title": "Dataset Mfid",
               "type": "string"
             }
@@ -16242,86 +15818,16 @@
               "title": "File Id",
               "type": "string"
             }
-          },
-          {
-            "description": "An ingestor name, such as one from GET /ingestors",
-            "in": "query",
-            "name": "ingestion_class",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "pattern": "^[A-Za-z0-9_.-]{1,128}$",
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "An ingestor name, such as one from GET /ingestors",
-              "title": "Ingestion Class"
-            }
-          },
-          {
-            "in": "query",
-            "name": "status",
-            "required": false,
-            "schema": {
-              "default": "requested",
-              "enum": [
-                "requested",
-                "not_requested"
-              ],
-              "title": "Status",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-            "in": "header",
-            "name": "Crucible-Privilege-Mode",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/PrivilegeMode"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-              "title": "Crucible-Privilege-Mode"
-            }
           }
         ],
         "responses": {
-          "200": {
+          "410": {
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IngestionRequest"
-                }
+                "schema": {}
               }
             },
-            "description": "Successful Response",
-            "headers": {
-              "Cache-Control": {
-                "$ref": "#/components/headers/PrivateCacheControl"
-              },
-              "Crucible-Privilege-Mode": {
-                "$ref": "#/components/headers/CruciblePrivilegeMode"
-              },
-              "Vary": {
-                "$ref": "#/components/headers/PrivilegeModeVary"
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "409": {
-            "description": "Stored file location is outside the file's own dataset or an allowed bucket: `{\"detail\": {\"code\": \"storage_location_invalid\", \"reason\": ..., \"message\": ...}}`"
+            "description": "This route was removed: `{\"detail\": {\"code\": \"route_removed\", \"message\": ...}}` names the replacement"
           },
           "422": {
             "content": {
@@ -16332,19 +15838,8 @@
               }
             },
             "description": "Validation Error"
-          },
-          "501": {
-            "description": "Ingestion is not enabled on this server (`feature_disabled`, only for `status=requested`) or file storage is not configured (`storage_not_configured`)"
-          },
-          "503": {
-            "description": "The request could not be queued (`ingestion_unavailable`); it is recorded as failed"
           }
         },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
         "summary": "Create Ds File Ingestion Request",
         "tags": [
           "datasets"
@@ -16569,7 +16064,7 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/Keyword"
+                    "$ref": "#/components/schemas/KeywordRead"
                   },
                   "title": "Response List Keywords For Dataset Datasets  Dataset Mfid  Keywords Get",
                   "type": "array"
@@ -16661,7 +16156,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Keyword"
+                  "$ref": "#/components/schemas/KeywordRead"
                 }
               }
             },
@@ -16998,86 +16493,27 @@
     "/datasets/{dataset_mfid}/samples": {
       "get": {
         "deprecated": true,
-        "description": "Returns a paginated list of samples associated with the dataset ID provided.\nDeprecated: use GET /samples?dataset_mfid={dataset_mfid}.",
+        "description": "Removed: use GET /samples?dataset_mfid={dataset_mfid}.",
         "operationId": "read_samples_in_dataset_datasets__dataset_mfid__samples_get",
         "parameters": [
           {
-            "description": "Dataset MFID.",
             "in": "path",
             "name": "dataset_mfid",
             "required": true,
             "schema": {
-              "description": "Dataset MFID.",
               "title": "Dataset Mfid",
               "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "limit",
-            "required": false,
-            "schema": {
-              "default": 100,
-              "maximum": 1000,
-              "minimum": 1,
-              "title": "Limit",
-              "type": "integer"
-            }
-          },
-          {
-            "in": "query",
-            "name": "offset",
-            "required": false,
-            "schema": {
-              "default": 0,
-              "minimum": 0,
-              "title": "Offset",
-              "type": "integer"
-            }
-          },
-          {
-            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-            "in": "header",
-            "name": "Crucible-Privilege-Mode",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/PrivilegeMode"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-              "title": "Crucible-Privilege-Mode"
             }
           }
         ],
         "responses": {
-          "200": {
+          "410": {
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PaginatedResponse_SampleRead_"
-                }
+                "schema": {}
               }
             },
-            "description": "Successful Response",
-            "headers": {
-              "Cache-Control": {
-                "$ref": "#/components/headers/PrivateCacheControl"
-              },
-              "Crucible-Privilege-Mode": {
-                "$ref": "#/components/headers/CruciblePrivilegeMode"
-              },
-              "Vary": {
-                "$ref": "#/components/headers/PrivilegeModeVary"
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
+            "description": "This route was removed: `{\"detail\": {\"code\": \"route_removed\", \"message\": ...}}` names the replacement"
           },
           "422": {
             "content": {
@@ -17090,11 +16526,6 @@
             "description": "Validation Error"
           }
         },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
         "summary": "Read Samples In Dataset",
         "tags": [
           "datasets"
@@ -18725,7 +18156,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DatasetLink"
+                  "$ref": "#/components/schemas/DatasetLinkRead"
                 }
               }
             },
@@ -20380,7 +19811,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/IngestionRequest"
+                  "$ref": "#/components/schemas/IngestionRequestRead"
                 }
               }
             },
@@ -20789,7 +20220,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PaginatedResponse_IngestionRequest_"
+                  "$ref": "#/components/schemas/PaginatedResponse_IngestionRequestRead_"
                 }
               }
             },
@@ -20869,7 +20300,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/IngestionRequest"
+                  "$ref": "#/components/schemas/IngestionRequestRead"
                 }
               }
             },
@@ -20957,7 +20388,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/IngestionRequest"
+                  "$ref": "#/components/schemas/IngestionRequestRead"
                 }
               }
             },
@@ -23203,7 +22634,7 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/Keyword"
+                    "$ref": "#/components/schemas/KeywordRead"
                   },
                   "title": "Response List All Keywords Keywords Get",
                   "type": "array"
@@ -23255,7 +22686,7 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/Keyword"
+                    "$ref": "#/components/schemas/KeywordRead"
                   },
                   "title": "Response Read Keyword Keywords  Keyword  Get",
                   "type": "array"
@@ -23289,17 +22720,19 @@
     "/login": {
       "get": {
         "deprecated": true,
-        "description": "Deprecated: use GET /auth/login.",
-        "operationId": "orcid_login_deprecated_login_get",
+        "description": "Removed: the browser pages that signed in with ORCID and handed out a single API key.",
+        "operationId": "removed_browser_key_flow_login_get",
         "responses": {
-          "302": {
-            "description": "Redirect to the ORCID sign-in page"
-          },
-          "502": {
-            "description": "ORCID cannot be reached"
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "This route was removed: `{\"detail\": {\"code\": \"route_removed\", \"message\": ...}}` names the replacement"
           }
         },
-        "summary": "Orcid Login Deprecated",
+        "summary": "Removed Browser Key Flow",
         "tags": [
           "auth"
         ]
@@ -23533,6 +22966,233 @@
           }
         },
         "summary": "Authorize",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/oauth/callback/{key}": {
+      "get": {
+        "description": "Where a provider sends the browser back after sign-in: register `<API address>/oauth/callback/{key}` with the provider.",
+        "operationId": "finish_provider_login_oauth_callback__key__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "maxLength": 32,
+              "title": "Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "code",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 2048,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Code"
+            }
+          },
+          {
+            "in": "query",
+            "name": "state",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "State"
+            }
+          },
+          {
+            "in": "query",
+            "name": "error",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 256,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Error"
+            }
+          },
+          {
+            "in": "query",
+            "name": "iss",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Iss"
+            }
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirect to the Hub with a sign-in code, or with state and an RFC 6749 error",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store",
+                  "type": "string"
+                }
+              },
+              "Pragma": {
+                "schema": {
+                  "const": "no-cache",
+                  "type": "string"
+                }
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "const": "no-referrer",
+                  "type": "string"
+                }
+              },
+              "X-Content-Type-Options": {
+                "schema": {
+                  "const": "nosniff",
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "400": {
+            "description": "The sign-in cannot be matched to this browser, so nothing is trusted enough to redirect to",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store",
+                  "type": "string"
+                }
+              },
+              "Pragma": {
+                "schema": {
+                  "const": "no-cache",
+                  "type": "string"
+                }
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "const": "no-referrer",
+                  "type": "string"
+                }
+              },
+              "X-Content-Type-Options": {
+                "schema": {
+                  "const": "nosniff",
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Invalid authentication request; submitted values and validation context are omitted",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store",
+                  "type": "string"
+                }
+              },
+              "Pragma": {
+                "schema": {
+                  "const": "no-cache",
+                  "type": "string"
+                }
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "const": "no-referrer",
+                  "type": "string"
+                }
+              },
+              "X-Content-Type-Options": {
+                "schema": {
+                  "const": "nosniff",
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "500": {
+            "description": "Authentication request failed; response contains no internal error details",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store",
+                  "type": "string"
+                }
+              },
+              "Pragma": {
+                "schema": {
+                  "const": "no-cache",
+                  "type": "string"
+                }
+              },
+              "Referrer-Policy": {
+                "schema": {
+                  "const": "no-referrer",
+                  "type": "string"
+                }
+              },
+              "X-Content-Type-Options": {
+                "schema": {
+                  "const": "nosniff",
+                  "type": "string"
+                }
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          }
+        },
+        "summary": "Finish Provider Login",
         "tags": [
           "auth"
         ]
@@ -23845,7 +23505,7 @@
     "/oauth/link/confirm": {
       "post": {
         "description": "Add the login to the account of the person who started the link and is confirming it now.",
-        "operationId": "confirm_hub_link_oauth_link_confirm_post",
+        "operationId": "link_confirm_oauth_link_confirm_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -23897,7 +23557,7 @@
             "HTTPBasic": []
           }
         ],
-        "summary": "Confirm Hub Link",
+        "summary": "Link Confirm",
         "tags": [
           "auth"
         ]
@@ -23906,7 +23566,7 @@
     "/oauth/link/preview": {
       "post": {
         "description": "Name the login a link code would add, for the confirmation page. Changes nothing.",
-        "operationId": "preview_hub_link_oauth_link_preview_post",
+        "operationId": "link_preview_oauth_link_preview_post",
         "requestBody": {
           "content": {
             "application/json": {
@@ -23958,7 +23618,7 @@
             "HTTPBasic": []
           }
         ],
-        "summary": "Preview Hub Link",
+        "summary": "Link Preview",
         "tags": [
           "auth"
         ]
@@ -23967,7 +23627,7 @@
     "/oauth/link/start": {
       "get": {
         "description": "Continue a link the Hub started: opened once, by the person's browser.",
-        "operationId": "start_hub_link_oauth_link_start_get",
+        "operationId": "link_start_oauth_link_start_get",
         "parameters": [
           {
             "in": "query",
@@ -23999,7 +23659,7 @@
             "description": "Validation Error"
           }
         },
-        "summary": "Start Hub Link",
+        "summary": "Link Start",
         "tags": [
           "auth"
         ]
@@ -24429,7 +24089,7 @@
                 }
               }
             },
-            "description": "Tokens: access_token, token_type Bearer, expires_in, refresh_token, and auth_time when known",
+            "description": "Tokens: access_token, token_type Bearer, expires_in, refresh_token, refresh_expires_in (seconds until the session ends), user_unique_id (who signed in), and auth_time when known",
             "headers": {
               "X-Request-ID": {
                 "$ref": "#/components/headers/CrucibleRequestId"
@@ -27388,7 +27048,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ResourceACL"
+                  "$ref": "#/components/schemas/ResourceAccessGroupRead"
                 }
               }
             },
@@ -30067,7 +29727,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SampleLink"
+                  "$ref": "#/components/schemas/SampleLinkRead"
                 }
               }
             },
@@ -30775,33 +30435,19 @@
     "/user_apikey": {
       "get": {
         "deprecated": true,
-        "description": "Deprecated: use GET /auth/apikey.",
-        "operationId": "get_apikey_deprecated_user_apikey_get",
+        "description": "Removed: the browser pages that signed in with ORCID and handed out a single API key.",
+        "operationId": "removed_browser_key_flow_user_apikey_get",
         "responses": {
-          "200": {
+          "410": {
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LegacyApiKeyRead"
-                }
-              },
-              "text/html": {}
-            },
-            "description": "The API key as JSON, or an HTML page asking for an email when the profile has none",
-            "headers": {
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
+                "schema": {}
               }
-            }
-          },
-          "307": {
-            "description": "Redirect to sign-in when there is no ORCID session cookie"
-          },
-          "409": {
-            "description": "This ORCID cannot be used with this account"
+            },
+            "description": "This route was removed: `{\"detail\": {\"code\": \"route_removed\", \"message\": ...}}` names the replacement"
           }
         },
-        "summary": "Get Apikey Deprecated",
+        "summary": "Removed Browser Key Flow",
         "tags": [
           "auth"
         ]
@@ -31312,7 +30958,7 @@
     "/users/by-username/{username}": {
       "get": {
         "deprecated": true,
-        "description": "Deprecated: use GET /users/{user_ref}. Email is visible only to self and platform administrators.",
+        "description": "Removed: use GET /users/{user_ref}, which takes a username.",
         "operationId": "get_user_by_username_users_by_username__username__get",
         "parameters": [
           {
@@ -31323,58 +30969,16 @@
               "title": "Username",
               "type": "string"
             }
-          },
-          {
-            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-            "in": "header",
-            "name": "Crucible-Privilege-Mode",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/PrivilegeMode"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-              "title": "Crucible-Privilege-Mode"
-            }
           }
         ],
         "responses": {
-          "200": {
+          "410": {
             "content": {
               "application/json": {
-                "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/UserRead"
-                    },
-                    {
-                      "$ref": "#/components/schemas/UserPublicRead"
-                    }
-                  ],
-                  "title": "Response Get User By Username Users By Username  Username  Get"
-                }
+                "schema": {}
               }
             },
-            "description": "Successful Response",
-            "headers": {
-              "Cache-Control": {
-                "$ref": "#/components/headers/PrivateCacheControl"
-              },
-              "Crucible-Privilege-Mode": {
-                "$ref": "#/components/headers/CruciblePrivilegeMode"
-              },
-              "Vary": {
-                "$ref": "#/components/headers/PrivilegeModeVary"
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
+            "description": "This route was removed: `{\"detail\": {\"code\": \"route_removed\", \"message\": ...}}` names the replacement"
           },
           "422": {
             "content": {
@@ -31387,11 +30991,6 @@
             "description": "Validation Error"
           }
         },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
         "summary": "Get User By Username",
         "tags": [
           "users"
@@ -32703,67 +32302,27 @@
     "/users/{user_ref}/datasets": {
       "get": {
         "deprecated": true,
-        "description": "Deprecated compatibility route returning dataset MFIDs. Use GET /datasets?accessible_to_user={user_ref}.",
+        "description": "Removed: use GET /datasets?accessible_to_user={user_ref}.",
         "operationId": "read_user_datasets_users__user_ref__datasets_get",
         "parameters": [
           {
-            "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
             "in": "path",
             "name": "user_ref",
             "required": true,
             "schema": {
-              "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
               "title": "User Ref",
               "type": "string"
-            }
-          },
-          {
-            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-            "in": "header",
-            "name": "Crucible-Privilege-Mode",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/PrivilegeMode"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-              "title": "Crucible-Privilege-Mode"
             }
           }
         ],
         "responses": {
-          "200": {
+          "410": {
             "content": {
               "application/json": {
-                "schema": {
-                  "items": {
-                    "type": "string"
-                  },
-                  "title": "Response Read User Datasets Users  User Ref  Datasets Get",
-                  "type": "array"
-                }
+                "schema": {}
               }
             },
-            "description": "Successful Response",
-            "headers": {
-              "Cache-Control": {
-                "$ref": "#/components/headers/PrivateCacheControl"
-              },
-              "Crucible-Privilege-Mode": {
-                "$ref": "#/components/headers/CruciblePrivilegeMode"
-              },
-              "Vary": {
-                "$ref": "#/components/headers/PrivilegeModeVary"
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
+            "description": "This route was removed: `{\"detail\": {\"code\": \"route_removed\", \"message\": ...}}` names the replacement"
           },
           "422": {
             "content": {
@@ -32776,11 +32335,6 @@
             "description": "Validation Error"
           }
         },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
         "summary": "Read User Datasets",
         "tags": [
           "users"
@@ -33816,67 +33370,27 @@
     "/users/{user_ref}/samples": {
       "get": {
         "deprecated": true,
-        "description": "Deprecated compatibility route returning sample MFIDs. Use GET /samples?accessible_to_user={user_ref}.",
+        "description": "Removed: use GET /samples?accessible_to_user={user_ref}.",
         "operationId": "read_user_samples_users__user_ref__samples_get",
         "parameters": [
           {
-            "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
             "in": "path",
             "name": "user_ref",
             "required": true,
             "schema": {
-              "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
               "title": "User Ref",
               "type": "string"
-            }
-          },
-          {
-            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-            "in": "header",
-            "name": "Crucible-Privilege-Mode",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/PrivilegeMode"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior.",
-              "title": "Crucible-Privilege-Mode"
             }
           }
         ],
         "responses": {
-          "200": {
+          "410": {
             "content": {
               "application/json": {
-                "schema": {
-                  "items": {
-                    "type": "string"
-                  },
-                  "title": "Response Read User Samples Users  User Ref  Samples Get",
-                  "type": "array"
-                }
+                "schema": {}
               }
             },
-            "description": "Successful Response",
-            "headers": {
-              "Cache-Control": {
-                "$ref": "#/components/headers/PrivateCacheControl"
-              },
-              "Crucible-Privilege-Mode": {
-                "$ref": "#/components/headers/CruciblePrivilegeMode"
-              },
-              "Vary": {
-                "$ref": "#/components/headers/PrivilegeModeVary"
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
+            "description": "This route was removed: `{\"detail\": {\"code\": \"route_removed\", \"message\": ...}}` names the replacement"
           },
           "422": {
             "content": {
@@ -33889,11 +33403,6 @@
             "description": "Validation Error"
           }
         },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
         "summary": "Read User Samples",
         "tags": [
           "users"
