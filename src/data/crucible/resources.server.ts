@@ -12,6 +12,7 @@ import {
 
 import { createCrucibleClient } from "../../server/crucible/client.server"
 import { crucibleRequestSignal } from "../../server/crucible/request-signal.server"
+import { fixtureResourceGraph } from "./fixture-resource-graph.server"
 import { readWorkspaceConfiguration } from "./workspace-config.server"
 import { readWorkspaceFixture } from "./workspace-fixture.server"
 import { apiDatasetFileSchema } from "./dataset-files.schema"
@@ -48,7 +49,6 @@ import type {
   WorkspaceRelationshipOperation,
   WorkspaceResourceDetail,
   WorkspaceResourceGraph,
-  WorkspaceResourceGraphEdge,
   WorkspaceResourceGraphRequest,
   WorkspaceSampleDescriptiveUpdate,
   WorkspaceScientificMetadataUpdate,
@@ -979,145 +979,6 @@ export async function mutateWorkspaceDatasetThumbnails(
   )
 }
 
-function fixtureResourceGraph(
-  resource: Extract<WorkspaceResourceDetail, { kind: "dataset" | "sample" }>,
-  requestedDepth: number,
-  scenario?: FixtureScenario
-): WorkspaceResourceGraph {
-  const fixture = readWorkspaceFixture(scenario)
-  const samplesByMfid = new Map(
-    fixture.status === "ready"
-      ? fixture.workspace.samples.map((sample) => [sample.unique_id, sample])
-      : []
-  )
-  const datasetsByMfid = new Map(
-    fixture.status === "ready"
-      ? fixture.workspace.datasets.map((dataset) => [
-          dataset.unique_id,
-          dataset,
-        ])
-      : []
-  )
-  const nodes = new Map([
-    [
-      resource.unique_id,
-      {
-        context:
-          resource.kind === "sample"
-            ? resource.sample_type
-            : resource.measurement,
-        dataFormat: resource.kind === "dataset" ? resource.data_format : null,
-        expansionAvailability: {
-          ancestors: false,
-          associations: false,
-          descendants: false,
-        },
-        hasMoreRelationships: false,
-        instrument: resource.kind === "dataset" ? resource.instrument : null,
-        kind: resource.kind,
-        name: resource.name,
-        project: resource.project,
-        traversalDepth: 0,
-        unique_id: resource.unique_id,
-      },
-    ],
-  ])
-  const edges = (requestedDepth === 0 ? [] : (resource.links ?? [])).flatMap(
-    (link): WorkspaceResourceGraphEdge[] => {
-      if (link.resource_type !== "dataset" && link.resource_type !== "sample") {
-        return []
-      }
-      const linkedSample =
-        link.resource_type === "sample"
-          ? samplesByMfid.get(link.unique_id)
-          : undefined
-      const linkedDataset =
-        link.resource_type === "dataset"
-          ? datasetsByMfid.get(link.unique_id)
-          : undefined
-      nodes.set(link.unique_id, {
-        context:
-          (link.resource_type === "sample"
-            ? linkedSample?.sample_type
-            : linkedDataset?.measurement) ?? null,
-        dataFormat: linkedDataset?.data_format ?? null,
-        expansionAvailability: {
-          ancestors: false,
-          associations: false,
-          descendants: false,
-        },
-        hasMoreRelationships: false,
-        instrument: linkedDataset?.instrument ?? null,
-        kind: link.resource_type,
-        name: link.name || link.unique_id,
-        project: linkedSample?.project ?? linkedDataset?.project ?? null,
-        traversalDepth: 1,
-        unique_id: link.unique_id,
-      })
-      if (link.relationship === "parent") {
-        return [
-          {
-            directed: true,
-            id: `fixture:lineage:${link.unique_id}:${resource.unique_id}`,
-            relationship: "parent" as const,
-            relationshipType:
-              link.relationship_type === "is_derived_from" ||
-              link.relationship_type === "is_part_of"
-                ? link.relationship_type
-                : null,
-            source: link.unique_id,
-            target: resource.unique_id,
-          },
-        ]
-      }
-      if (link.relationship === "child") {
-        return [
-          {
-            directed: true,
-            id: `fixture:lineage:${resource.unique_id}:${link.unique_id}`,
-            relationship: "parent" as const,
-            relationshipType:
-              link.relationship_type === "is_derived_from" ||
-              link.relationship_type === "is_part_of"
-                ? link.relationship_type
-                : null,
-            source: resource.unique_id,
-            target: link.unique_id,
-          },
-        ]
-      }
-      return [
-        {
-          directed: false,
-          id: `fixture:association:${
-            resource.kind === "sample" ? resource.unique_id : link.unique_id
-          }:${
-            resource.kind === "sample" ? link.unique_id : resource.unique_id
-          }`,
-          relationship: "associated" as const,
-          relationshipType: null,
-          source:
-            resource.kind === "sample" ? resource.unique_id : link.unique_id,
-          target:
-            resource.kind === "sample" ? link.unique_id : resource.unique_id,
-        },
-      ]
-    }
-  )
-  return {
-    edgeLimit: 1_000,
-    edges,
-    hasMore: false,
-    nodeLimit: 500,
-    nodes: [...nodes.values()],
-    requestedDepth,
-    returnedDepth: edges.length > 0 ? 1 : 0,
-    rootMfid: resource.unique_id,
-    truncated: false,
-    truncationReasons: [],
-  }
-}
-
 function normalizeApiResourceGraph(
   value: unknown,
   rootMfid: string,
@@ -1238,7 +1099,13 @@ export async function readWorkspaceResourceGraph(
     ) {
       throw new CrucibleResponseError(404)
     }
-    return fixtureResourceGraph(resource, graphRequest.depth ?? 1, scenario)
+    const fixture = readWorkspaceFixture(scenario)
+    if (fixture.status === "unavailable") throw new Error(fixture.reason)
+    return fixtureResourceGraph(
+      resource.unique_id,
+      graphRequest,
+      fixture.workspace
+    )
   }
 
   const client = createCrucibleClient(configuration)
