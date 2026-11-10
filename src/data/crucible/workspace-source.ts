@@ -71,6 +71,14 @@ export type WorkspaceCreatedApiKey = Schema<"ApiKeyCreated">
 
 export type WorkspaceSignedInSession = Schema<"SessionRead">
 
+export type WorkspaceAuthEvent = Schema<"AuthEventRead">
+
+export type WorkspaceAuthEventPage = {
+  items: WorkspaceAuthEvent[]
+  nextCursor: string | null
+  total: number | null
+}
+
 export type WorkspaceSignedInSessionPage = {
   items: WorkspaceSignedInSession[]
   nextCursor: string | null

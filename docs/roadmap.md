@@ -125,6 +125,10 @@ The bounded graph workspace now owns typed topology, ELK layout, direct expansio
 
 The first service-account administration slice is implemented locally. Add broader review queues, people administration, audit, pins, activity, API-backed bulk operations, saved views, and exports only with the corresponding API, privacy, and operational contracts. The proposed route and capability model is in [administration workspace](administration-workspace.md).
 
+#### Sign-in history
+
+The Security card shows sign-in history from Crucible API 4.0.0: your own on My profile (`GET /account/auth-events`) and a person's on their page for administrators (`GET /users/{user_ref}/auth-events`, elevated). Both list events newest first with the provider, the app, and a link to whoever else made a change, and never an address. Unknown events show as readable text, since the API's list can grow.
+
 ## External dependencies
 
 | Dependency                      | Required outcome                                                                                                                                                                                                                                                                                                                                 |

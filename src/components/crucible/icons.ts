@@ -177,6 +177,8 @@ export {
   RectangleEllipsis as PasswordIcon,
   Pencil as ChangePasswordIcon,
   Link as PasswordLinkIcon,
+  History as SignInHistoryIcon,
+  CircleAlert as SignInHistoryWarningIcon,
 } from "lucide-react"
 
 export type { IconNode } from "lucide-react"

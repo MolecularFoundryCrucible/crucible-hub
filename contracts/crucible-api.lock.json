@@ -1,10 +1,10 @@
 {
   "sourceRepository": "crucible-api",
   "sourceRelease": null,
-  "sourceAsset": "openapi-70a57b8c321f55bed6e00ca8cfa2e6d6361fb24a/crucible-api.json",
-  "sourceRevision": "70a57b8c321f55bed6e00ca8cfa2e6d6361fb24a",
+  "sourceAsset": "export of feat/own-sign-in-history (API PR #483) on main f2f136b, scripts/export_openapi.py",
+  "sourceRevision": "f7481c5",
   "minimumRelease": null,
-  "sha256": "55555862afa7d72c4c7b01529ca03693897607c4ed808a0b9a71537c2efd3469",
+  "sha256": "7398033ec9e5a3ed5231654b57bda9668a8a70e2b9855e46e56ad0266109b15e",
   "openapi": "3.1.0",
-  "generatedAt": "2026-11-09T21:26:58.000Z"
+  "generatedAt": "2026-11-10T00:47:00.000Z"
 }

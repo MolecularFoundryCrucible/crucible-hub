@@ -1,24 +1,12 @@
-import { existsSync, readFileSync } from "node:fs"
-import { join } from "node:path"
 import { fileURLToPath } from "node:url"
 
 import pg from "pg"
 
 import { applySessionStoreMigrations } from "./migrate-session-store.mjs"
+import { readSecretSetting } from "./secret-settings.mjs"
 
 const ownerRole = "crucible_hub_owner"
 const appRole = "crucible_hub_app"
-
-// Same order as the Hub server and the Crucible API.
-export function readSecretSetting(name) {
-  const file = process.env[`${name}_FILE`]
-  if (file) return readFileSync(file, "utf8").replace(/\r?\n$/, "")
-  const mounted = join("/run/secrets", name)
-  if (existsSync(mounted)) {
-    return readFileSync(mounted, "utf8").replace(/\r?\n$/, "")
-  }
-  return process.env[name] || undefined
-}
 
 /**
  * Creates the Hub's session roles and schema in the connected database and

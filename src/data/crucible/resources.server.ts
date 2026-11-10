@@ -627,7 +627,7 @@ export async function readWorkspaceDatasetIngestionRequests(
   const client = createCrucibleClient(configuration)
   const result = await client.GET("/ingestion_requests", {
     params: {
-      query: { dataset_id: datasetMfid, limit: 100, offset: 0 },
+      query: { dataset_mfid: datasetMfid, limit: 100, offset: 0 },
     },
     signal: crucibleRequestSignal(requestSignal),
   })

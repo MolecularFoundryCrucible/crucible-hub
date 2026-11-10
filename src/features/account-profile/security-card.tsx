@@ -15,6 +15,7 @@ import type {
 } from "./account-sign-in-methods-card"
 import { ApiKeysSection } from "./api-keys-section"
 import { SessionsSection } from "./sessions-section"
+import { SignInHistorySection } from "./sign-in-history-section"
 
 const workspaceRoute = getRouteApi("/_app")
 
@@ -54,6 +55,7 @@ export function AccountSecurityCard({
       />
       <SessionsSection owner={{ kind: "self" }} scope={scope} />
       <ApiKeysSection owner={{ canCreate, kind: "self" }} scope={scope} />
+      <SignInHistorySection scope={scope} />
     </SecurityCard>
   )
 }
@@ -89,6 +91,7 @@ export function PersonSecurityCard({
           scope={scope}
         />
       ) : null}
+      <SignInHistorySection scope={scope} userId={userId} />
     </SecurityCard>
   )
 }

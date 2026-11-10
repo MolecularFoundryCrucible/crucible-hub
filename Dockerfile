@@ -16,7 +16,7 @@ ENV PORT=3000
 WORKDIR /app
 COPY --from=build --chown=node:node /app/.output ./.output
 COPY --chown=node:node migrations/session-store ./migrations/session-store
-COPY --chown=node:node scripts/migrate-session-store.mjs scripts/setup-session-store.mjs ./scripts/
+COPY --chown=node:node scripts/migrate-session-store.mjs scripts/secret-settings.mjs scripts/setup-session-store.mjs ./scripts/
 RUN ln -s .output/server/node_modules node_modules
 USER node
 EXPOSE 3000
