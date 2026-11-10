@@ -42,7 +42,7 @@ import type {
   GraphExpansionState,
 } from "./resource-graph-expansion"
 import { mergeResourceGraphs } from "./resource-graph-merge"
-import { graphWithoutAssociations } from "./resource-graph-display"
+import { filterResourceGraph } from "./resource-graph-display"
 import type { ResourceGraphDisplay } from "./resource-graph-display"
 import { ResourceGraphCanvas } from "./resource-graph-warmup"
 
@@ -186,10 +186,14 @@ export function ResourceGraphPage({
     if (expansions.graphs.length === 0) return rootGraph
     return mergeResourceGraphs(rootGraph, expansions.graphs)
   }, [expansions.graphs, rootGraph])
-  const canvasGraph = useMemo(() => {
-    if (!displayedGraph || display.associations) return displayedGraph
-    return graphWithoutAssociations(displayedGraph)
-  }, [display.associations, displayedGraph])
+  const filtered = useMemo(
+    () =>
+      displayedGraph
+        ? filterResourceGraph(displayedGraph, display)
+        : { graph: undefined, hiddenCount: 0 },
+    [display, displayedGraph]
+  )
+  const canvasGraph = filtered.graph
   const graphThumbnailBatches = useMemo(() => {
     if (!display.thumbnails || !canvasGraph) return []
     const datasetMfids = canvasGraph.nodes
@@ -417,6 +421,7 @@ export function ResourceGraphPage({
         <Suspense fallback={<ResourceGraphCanvasSkeleton />}>
           <ResourceGraphCanvas
             display={display}
+            hiddenCount={filtered.hiddenCount}
             expansionStates={expansionStates}
             expansionModesByNode={expansionModesByNode}
             graph={canvasGraph ?? displayedGraph}

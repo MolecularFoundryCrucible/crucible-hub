@@ -32,19 +32,11 @@ import type {
 import "@xyflow/react/dist/style.css"
 
 import {
-  ExploreGraphFocusIcon,
-  EnterGraphFullscreenIcon,
-  ExitGraphFullscreenIcon,
-  FitGraphIcon,
   GraphAncestorsIcon,
   GraphAncestorsVerticalIcon,
   GraphAssociationsIcon,
   GraphDescendantsIcon,
   GraphDescendantsVerticalIcon,
-  GraphDisplayOptionsIcon,
-  ResetGraphLayoutIcon,
-  ZoomInGraphIcon,
-  ZoomOutGraphIcon,
 } from "@/components/crucible/icons"
 import { BreakableText } from "@/components/crucible/breakable-text"
 import { DatasetThumbnailImage } from "@/components/crucible/dataset-thumbnail"
@@ -52,19 +44,6 @@ import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { useTheme } from "@/components/theme-provider"
 import { Button } from "@/components/ui/button"
 import { TruncatedText } from "@/components/ui/truncation-tooltip"
-import { ButtonGroup } from "@/components/ui/button-group"
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import {
   Tooltip,
   TooltipContent,
@@ -93,6 +72,11 @@ import type {
   GraphExpansionState,
 } from "./resource-graph-expansion"
 import { PendingIcon } from "@/components/crucible/pending-icon"
+import {
+  GraphFilterMenu,
+  GraphViewToolbar,
+  ResourceGraphLegend,
+} from "./resource-graph-controls"
 
 type ResourceFlowNodeData = {
   context: string | null
@@ -213,6 +197,7 @@ export const ResourceGraphCanvas = memo(function ResourceGraphCanvasComponent({
   expansionModesByNode,
   focusRequest = null,
   graph,
+  hiddenCount = 0,
   highlightedMfid = null,
   inspectedMfid = null,
   loading,
@@ -227,6 +212,7 @@ export const ResourceGraphCanvas = memo(function ResourceGraphCanvasComponent({
   expansionModesByNode: ReadonlyMap<string, readonly GraphExpansionMode[]>
   focusRequest?: { mfid: string; nonce: number } | null
   graph: WorkspaceResourceGraph
+  hiddenCount?: number
   highlightedMfid?: string | null
   inspectedMfid?: string | null
   loading: boolean
@@ -244,6 +230,7 @@ export const ResourceGraphCanvas = memo(function ResourceGraphCanvasComponent({
         expansionModesByNode={expansionModesByNode}
         focusRequest={focusRequest}
         graph={graph}
+        hiddenCount={hiddenCount}
         highlightedMfid={highlightedMfid}
         inspectedMfid={inspectedMfid}
         loading={loading}
@@ -263,6 +250,7 @@ function ResourceGraphFlow({
   expansionModesByNode,
   focusRequest,
   graph,
+  hiddenCount,
   highlightedMfid,
   inspectedMfid,
   loading,
@@ -277,6 +265,7 @@ function ResourceGraphFlow({
   expansionModesByNode: ReadonlyMap<string, readonly GraphExpansionMode[]>
   focusRequest: { mfid: string; nonce: number } | null
   graph: WorkspaceResourceGraph
+  hiddenCount: number
   highlightedMfid: string | null
   inspectedMfid: string | null
   loading: boolean
@@ -856,6 +845,31 @@ function ResourceGraphFlow({
     setLayoutRevision((current) => current + 1)
   }, [])
 
+  const portalContainer = fullscreen ? surface : undefined
+  const zoomIn = useCallback(
+    () => void flow.zoomIn(graphViewportOptions(surface.current)),
+    [flow]
+  )
+  const zoomOut = useCallback(
+    () => void flow.zoomOut(graphViewportOptions(surface.current)),
+    [flow]
+  )
+  const fitAll = useCallback(
+    () =>
+      void flow.fitView({
+        ...graphViewportOptions(surface.current),
+        maxZoom: 1,
+        padding: 0.16,
+      }),
+    [flow]
+  )
+  const centerCurrent = useCallback(() => {
+    const element = surface.current
+    if (element) {
+      centerResourceGraph(flow, element, graph.rootMfid, layoutPositions, true)
+    }
+  }, [flow, graph.rootMfid, layoutPositions])
+
   const toggleFullscreen = useCallback(() => {
     const element = surface.current
     if (!element) return
@@ -1133,16 +1147,22 @@ function ResourceGraphFlow({
       data-resource-preview-trigger=""
       ref={surface}
     >
-      <GraphViewportControls
+      <GraphFilterMenu
         display={display}
-        flow={flow}
-        fullscreen={fullscreen}
-        graph={graph}
-        onResetLayout={resetLayout}
         onDisplayChange={onDisplayChange}
+        portalContainer={portalContainer}
+      />
+      <GraphViewToolbar
+        display={display}
+        fullscreen={fullscreen}
+        onCenter={centerCurrent}
+        onDisplayChange={onDisplayChange}
+        onFit={fitAll}
+        onResetLayout={resetLayout}
         onToggleFullscreen={toggleFullscreen}
-        positions={layoutPositions}
-        surface={surface}
+        onZoomIn={zoomIn}
+        onZoomOut={zoomOut}
+        portalContainer={portalContainer}
       />
       <ReactFlow<ResourceFlowNode, ResourceFlowEdge>
         aria-describedby="resource-graph-instructions"
@@ -1221,7 +1241,7 @@ function ResourceGraphFlow({
           {loading ? "Loading" : "Arranging"}
         </div>
       ) : null}
-      <ResourceGraphLegend associationsVisible={display.associations} />
+      <ResourceGraphLegend display={display} hiddenCount={hiddenCount} />
     </div>
   )
 }
@@ -1463,294 +1483,6 @@ function graphExpansionIcon(
   if (mode === "ancestors") return GraphAncestorsIcon
   if (mode === "descendants") return GraphDescendantsIcon
   return GraphAssociationsIcon
-}
-
-function GraphViewportControls({
-  display,
-  flow,
-  fullscreen,
-  graph,
-  onResetLayout,
-  onDisplayChange,
-  onToggleFullscreen,
-  positions,
-  surface,
-}: {
-  display: ResourceGraphDisplay
-  flow: ReactFlowInstance<ResourceFlowNode, ResourceFlowEdge>
-  fullscreen: boolean
-  graph: WorkspaceResourceGraph
-  onResetLayout: () => void
-  onDisplayChange: (changes: Partial<ResourceGraphDisplay>) => void
-  onToggleFullscreen: () => void
-  positions: ReadonlyMap<string, LayoutPosition>
-  surface: React.RefObject<HTMLDivElement | null>
-}) {
-  const portalContainer = fullscreen ? surface : undefined
-  return (
-    <div className="resource-graph-controls absolute top-3 right-3 flex gap-2">
-      <ButtonGroup aria-label="Graph viewport controls">
-        <GraphControl
-          label="Zoom graph out"
-          onClick={() =>
-            void flow.zoomOut(graphViewportOptions(surface.current))
-          }
-          portalContainer={portalContainer}
-        >
-          <ZoomOutGraphIcon aria-hidden="true" />
-        </GraphControl>
-        <GraphControl
-          label="Zoom graph in"
-          onClick={() =>
-            void flow.zoomIn(graphViewportOptions(surface.current))
-          }
-          portalContainer={portalContainer}
-        >
-          <ZoomInGraphIcon aria-hidden="true" />
-        </GraphControl>
-        <GraphControl
-          label="Fit all resources"
-          onClick={() =>
-            void flow.fitView({
-              ...graphViewportOptions(surface.current),
-              maxZoom: 1,
-              padding: 0.16,
-            })
-          }
-          portalContainer={portalContainer}
-        >
-          <FitGraphIcon aria-hidden="true" />
-        </GraphControl>
-        <GraphControl
-          label="Center current resource"
-          onClick={() => {
-            const element = surface.current
-            if (element) {
-              centerResourceGraph(
-                flow,
-                element,
-                graph.rootMfid,
-                positions,
-                true
-              )
-            }
-          }}
-          portalContainer={portalContainer}
-        >
-          <ExploreGraphFocusIcon aria-hidden="true" />
-        </GraphControl>
-      </ButtonGroup>
-      <GraphDisplayMenu
-        display={display}
-        flow={flow}
-        graph={graph}
-        onDisplayChange={onDisplayChange}
-        onResetLayout={onResetLayout}
-        portalContainer={portalContainer}
-        positions={positions}
-        surface={surface}
-      />
-      <GraphControl
-        label={fullscreen ? "Exit fullscreen graph" : "View graph fullscreen"}
-        onClick={onToggleFullscreen}
-        portalContainer={portalContainer}
-        pressed={fullscreen}
-      >
-        {fullscreen ? (
-          <ExitGraphFullscreenIcon aria-hidden="true" />
-        ) : (
-          <EnterGraphFullscreenIcon aria-hidden="true" />
-        )}
-      </GraphControl>
-    </div>
-  )
-}
-
-function GraphDisplayMenu({
-  display,
-  flow,
-  graph,
-  onDisplayChange,
-  onResetLayout,
-  portalContainer,
-  positions,
-  surface,
-}: {
-  display: ResourceGraphDisplay
-  flow: ReactFlowInstance<ResourceFlowNode, ResourceFlowEdge>
-  graph: WorkspaceResourceGraph
-  onDisplayChange: (changes: Partial<ResourceGraphDisplay>) => void
-  onResetLayout: () => void
-  portalContainer?: React.RefObject<HTMLDivElement | null>
-  positions: ReadonlyMap<string, LayoutPosition>
-  surface: React.RefObject<HTMLDivElement | null>
-}) {
-  return (
-    <DropdownMenu>
-      <Tooltip>
-        <TooltipTrigger
-          render={
-            <DropdownMenuTrigger
-              render={
-                <Button
-                  aria-label="Graph options"
-                  size="icon-sm"
-                  type="button"
-                  variant="outline"
-                />
-              }
-            />
-          }
-        >
-          <GraphDisplayOptionsIcon aria-hidden="true" />
-        </TooltipTrigger>
-        <TooltipContent portalContainer={portalContainer}>
-          Graph options
-        </TooltipContent>
-      </Tooltip>
-      <DropdownMenuContent
-        align="end"
-        className="min-w-44"
-        portalContainer={portalContainer}
-      >
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>Layout</DropdownMenuLabel>
-          <DropdownMenuItem
-            onClick={() => {
-              const element = surface.current
-              if (element) {
-                centerResourceGraph(
-                  flow,
-                  element,
-                  graph.rootMfid,
-                  positions,
-                  true
-                )
-              }
-            }}
-          >
-            <ExploreGraphFocusIcon aria-hidden="true" />
-            Center current resource
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={onResetLayout}>
-            <ResetGraphLayoutIcon aria-hidden="true" />
-            Reset layout
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>Show</DropdownMenuLabel>
-          <DropdownMenuCheckboxItem
-            checked={display.associations}
-            onCheckedChange={(checked) =>
-              onDisplayChange({ associations: checked })
-            }
-          >
-            Associations
-          </DropdownMenuCheckboxItem>
-          <DropdownMenuCheckboxItem
-            checked={display.thumbnails}
-            onCheckedChange={(checked) =>
-              onDisplayChange({ thumbnails: checked })
-            }
-          >
-            Dataset thumbnails
-          </DropdownMenuCheckboxItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuRadioGroup
-          onValueChange={(value) => {
-            if (value === "horizontal" || value === "vertical") {
-              onDisplayChange({ orientation: value })
-            }
-          }}
-          value={display.orientation}
-        >
-          <DropdownMenuLabel>Orientation</DropdownMenuLabel>
-          <DropdownMenuRadioItem value="horizontal">
-            Horizontal
-          </DropdownMenuRadioItem>
-          <DropdownMenuRadioItem value="vertical">
-            Vertical
-          </DropdownMenuRadioItem>
-        </DropdownMenuRadioGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
-}
-
-function GraphControl({
-  children,
-  label,
-  onClick,
-  portalContainer,
-  pressed,
-}: {
-  children: React.ReactNode
-  label: string
-  onClick: () => void
-  portalContainer?: React.RefObject<HTMLDivElement | null>
-  pressed?: boolean
-}) {
-  return (
-    <Tooltip>
-      <TooltipTrigger
-        render={
-          <Button
-            aria-label={label}
-            aria-pressed={pressed}
-            onClick={onClick}
-            size="icon-sm"
-            type="button"
-            variant="outline"
-          />
-        }
-      >
-        {children}
-      </TooltipTrigger>
-      <TooltipContent portalContainer={portalContainer}>{label}</TooltipContent>
-    </Tooltip>
-  )
-}
-
-function ResourceGraphLegend({
-  associationsVisible,
-}: {
-  associationsVisible: boolean
-}) {
-  return (
-    <div
-      aria-label="Graph legend"
-      className="resource-graph-legend absolute bottom-3 left-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-supporting text-muted-foreground"
-    >
-      <span className="flex items-center gap-1.5">
-        <ResourceTypeIcon type="sample" /> Sample
-      </span>
-      <span className="flex items-center gap-1.5">
-        <ResourceTypeIcon type="dataset" /> Dataset
-      </span>
-      <span className="flex items-center gap-1.5">
-        <span aria-hidden="true" className="resource-graph-legend-current" />{" "}
-        Current
-      </span>
-      <span className="flex items-center gap-1.5">
-        <span
-          aria-hidden="true"
-          className="resource-graph-legend-edge resource-graph-legend-edge-lineage"
-        />{" "}
-        Lineage
-      </span>
-      {associationsVisible ? (
-        <span className="flex items-center gap-1.5">
-          <span
-            aria-hidden="true"
-            className="resource-graph-legend-edge resource-graph-legend-edge-associated"
-          />{" "}
-          Associated
-        </span>
-      ) : null}
-    </div>
-  )
 }
 
 export function resolveAssociationHandleIds(

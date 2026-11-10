@@ -1,4 +1,4 @@
-import { useCallback } from "react"
+import { useCallback, useMemo } from "react"
 import { createFileRoute } from "@tanstack/react-router"
 
 import { ResourceGraphPage } from "@/features/resource-graph/resource-graph-page"
@@ -16,7 +16,8 @@ export const Route = createFileRoute("/_app/datasets/$datasetMfid/graph")({
 
 function DatasetGraphPage() {
   const { datasetMfid } = Route.useParams()
-  const display = resolveResourceGraphDisplay(Route.useSearch())
+  const search = Route.useSearch()
+  const display = useMemo(() => resolveResourceGraphDisplay(search), [search])
   const navigate = Route.useNavigate()
   const updateDisplay = useCallback(
     (changes: Partial<ResourceGraphDisplay>) => {
