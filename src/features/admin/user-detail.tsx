@@ -77,6 +77,10 @@ import { EmailField, UsernameField } from "@/features/forms/identifier-fields"
 import { useSlugConflict } from "@/features/forms/slug-availability"
 import { resourceDisplayName } from "@/lib/resource-name"
 import { PendingUserActions } from "@/features/admin/pending-users-card"
+import {
+  DisabledAccountBanner,
+  UserAccountActions,
+} from "@/features/admin/user-account-status"
 import { PersonSecurityCard } from "@/features/account-profile/security-card"
 import { formatSignInMethods } from "@/lib/sign-in-methods"
 import { useAppForm } from "@/features/forms/app-form"
@@ -179,6 +183,9 @@ export function UserDetailView({
     <div className="flex flex-col gap-6">
       {user.pending_at ? (
         <PendingApprovalBanner scope={scope} user={user} />
+      ) : null}
+      {user.disabled_at ? (
+        <DisabledAccountBanner scope={scope} user={user} />
       ) : null}
       <UserProfileCard scope={scope} user={user} />
       <UserProjectsSection scope={scope} user={user} />
@@ -381,6 +388,7 @@ function UserProfileCard({
                     onClick={() => setEditing(true)}
                   />
                 ) : null}
+                <UserAccountActions scope={scope} user={user} />
               </div>
             </CardAction>
           </CardHeader>

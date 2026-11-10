@@ -6,6 +6,7 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- Administrators can disable a person's account from the menu on their Profile card, which signs them out everywhere and stops their sign-in methods and API keys, and enable it again from the Disabled notice on their page. The Users list marks disabled accounts.
 - When the connected Crucible API is older and lacks a feature, the Hub now says it isn't available on this server yet instead of a generic error, and logs a warning rather than a server failure. Switching Security tabs keeps the tab in the address (`#sessions`, `#api-keys`, `#history`).
 - Grouped the keyboard shortcuts dialog so it lists only what works on the current page, and redesigned the system status popover with flat rows.
 - Fixed sign-in failing as expired when the Hub was opened through a different address than its configured callback: the sign-in button now starts on the configured address. Sign-in failure logs now give a specific reason, and `expired-transaction` now means only that the login timed out.

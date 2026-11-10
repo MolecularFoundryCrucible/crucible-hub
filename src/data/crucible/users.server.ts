@@ -42,6 +42,7 @@ export function toWorkspaceAdminUser(
   return {
     api_key_status:
       "api_key_status" in user ? (user.api_key_status ?? null) : null,
+    disabled_at: "disabled_at" in user ? (user.disabled_at ?? null) : null,
     email: "email" in user ? (user.email ?? null) : null,
     first_name: user.first_name,
     is_service_account: user.is_service_account ?? false,
@@ -316,6 +317,40 @@ export async function updateWorkspaceUserPlatformRole(
     signal: crucibleRequestSignal(requestSignal),
   })
   if (!result.data) throw new CrucibleResponseError(result.response)
+  return toWorkspaceAdminUser(result.data)
+}
+
+export async function setWorkspaceUserDisabled(
+  userId: string,
+  disabled: boolean,
+  scenario?: FixtureScenario,
+  requestSignal?: AbortSignal
+): Promise<WorkspaceAdminUser> {
+  const configuration = readWorkspaceConfiguration()
+  if (configuration.mode === "unavailable") {
+    throw new Error(configuration.reason)
+  }
+  if (configuration.mode === "fixture") {
+    const existing = fixtureUsers(scenario).find((u) => u.unique_id === userId)
+    if (!existing) throw new CrucibleResponseError(404)
+    return {
+      ...existing,
+      disabled_at: disabled ? new Date().toISOString() : null,
+    }
+  }
+
+  const client = createCrucibleClient(configuration, {
+    privilegeMode: requireAdministratorView(),
+  })
+  const options = {
+    params: { path: { user_ref: userId } },
+    signal: crucibleRequestSignal(requestSignal),
+  }
+  const result = disabled
+    ? await client.POST("/users/{user_ref}/disable", options)
+    : await client.POST("/users/{user_ref}/enable", options)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
   return toWorkspaceAdminUser(result.data)
 }
 

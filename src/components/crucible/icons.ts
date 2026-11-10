@@ -169,6 +169,7 @@ export {
   Plus as CreateApiKeyIcon,
   Pencil as RenameApiKeyIcon,
   Ban as RevokeApiKeyIcon,
+  UserX as DisableAccountIcon,
   KeyRound as ApiKeyIcon,
   MonitorSmartphone as SignedInSessionIcon,
   Trash2 as RemoveSignInMethodIcon,
