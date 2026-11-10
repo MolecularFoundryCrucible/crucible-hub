@@ -22,6 +22,15 @@ const publicationFailureSchema = z.object({
   detail: z.string().regex(/^Upload could not be published: [a-z_]+$/),
 })
 
+function isFrameworkNotFound(body: unknown) {
+  return (
+    typeof body === "object" &&
+    body !== null &&
+    "detail" in body &&
+    body.detail === "Not Found"
+  )
+}
+
 function readConflictCode(body: unknown) {
   const parsed = conflictCodeBodySchema.safeParse(body)
   if (parsed.success) return parsed.data.detail.code
@@ -87,6 +96,7 @@ export class CrucibleResponseError extends Error {
   readonly conflictFields?: HubConflictField[]
   readonly conflictCode?: string
   readonly reauthenticationRequired: boolean = false
+  readonly routeMissing: boolean = false
   readonly valueIssues?: { field: string; kind: ValueIssueKind }[]
 
   constructor(source: number | Response, body?: unknown) {
@@ -99,6 +109,9 @@ export class CrucibleResponseError extends Error {
     this.status = source.status
     this.retryAfterSeconds = readRetryAfterSeconds(source.headers)
     this.reauthenticationRequired = isStepUpChallenge(source)
+    this.routeMissing =
+      source.status === 405 ||
+      (source.status === 404 && isFrameworkNotFound(body))
     if (source.status === 409) this.conflictFields = readConflictFields(body)
     if ([403, 404, 409, 429, 501].includes(source.status)) {
       this.conflictCode = readConflictCode(body)

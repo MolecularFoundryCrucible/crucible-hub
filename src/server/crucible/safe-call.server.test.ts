@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 
 import { CrucibleResponseError } from "./request-error.server"
 import { safeCrucibleCall } from "./safe-call.server"
@@ -24,6 +24,42 @@ describe("safe Crucible calls", () => {
         retryable: false,
       },
     })
+  })
+
+  it("says a route this API version lacks is not available, without an error log", async () => {
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {})
+    const warnings = vi.spyOn(console, "warn").mockImplementation(() => {})
+    const missing = (status: number) =>
+      safeCrucibleCall("missing", async () => {
+        throw new CrucibleResponseError(new Response(null, { status }), {
+          detail: status === 404 ? "Not Found" : "Method Not Allowed",
+        })
+      })
+
+    for (const status of [404, 405]) {
+      expect(await missing(status)).toMatchObject({
+        status: "error",
+        error: {
+          kind: "unavailable",
+          message: "This isn't available on this Crucible server yet.",
+          retryable: false,
+        },
+      })
+    }
+    expect(errors).not.toHaveBeenCalled()
+    expect(warnings).toHaveBeenCalledTimes(2)
+    errors.mockRestore()
+    warnings.mockRestore()
+  })
+
+  it("keeps a missing record as not found", async () => {
+    const result = await safeCrucibleCall("record", async () => {
+      throw new CrucibleResponseError(new Response(null, { status: 404 }), {
+        detail: "User not found",
+      })
+    })
+
+    expect(result).toMatchObject({ error: { kind: "not-found" } })
   })
 
   it("surfaces a numeric Retry-After from a rate-limited response", async () => {

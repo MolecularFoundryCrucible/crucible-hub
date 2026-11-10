@@ -9,6 +9,7 @@ export type HubApiErrorKind =
   | "cancelled"
   | "timeout"
   | "upstream"
+  | "unavailable"
   | "unexpected"
 
 export type HubConflictField = "email" | "username"

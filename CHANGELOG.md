@@ -6,6 +6,7 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- When the connected Crucible API is older and lacks a feature, the Hub now says it isn't available on this server yet instead of a generic error, and logs a warning rather than a server failure. Switching Security tabs keeps the tab in the address (`#sessions`, `#api-keys`, `#history`).
 - Grouped the keyboard shortcuts dialog so it lists only what works on the current page, and redesigned the system status popover with flat rows.
 - Fixed sign-in failing as expired when the Hub was opened through a different address than its configured callback: the sign-in button now starts on the configured address. Sign-in failure logs now give a specific reason, and `expired-transaction` now means only that the login timed out.
 - Fixed sign-in being refused as too many requests on a single-instance Hub after many abandoned sign-ins: expired sign-ins no longer count toward the pending limit.
