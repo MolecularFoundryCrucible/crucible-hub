@@ -52,6 +52,22 @@ describe("safe Crucible calls", () => {
     warnings.mockRestore()
   })
 
+  it("says a feature turned off on this server is not on, keeping its code", async () => {
+    const result = await safeCrucibleCall("off", async () => {
+      throw new CrucibleResponseError(new Response(null, { status: 501 }), {
+        detail: { code: "feature_disabled", message: "off" },
+      })
+    })
+
+    expect(result).toMatchObject({
+      error: {
+        conflictCode: "feature_disabled",
+        kind: "unavailable",
+        message: "This isn't turned on for this Crucible server.",
+      },
+    })
+  })
+
   it("keeps a missing record as not found", async () => {
     const result = await safeCrucibleCall("record", async () => {
       throw new CrucibleResponseError(new Response(null, { status: 404 }), {

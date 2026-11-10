@@ -6,6 +6,7 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- Projects has a Sync from proposals button that adds you to the projects of your Molecular Foundry proposals, found through your linked ORCID, and says which projects it added. A feature switched off on the connected API now reads as not turned on for this server.
 - Administrators can disable a person's account from the menu on their Profile card, which signs them out everywhere and stops their sign-in methods and API keys, and enable it again from the Disabled notice on their page. The Users list marks disabled accounts.
 - When the connected Crucible API is older and lacks a feature, the Hub now says it isn't available on this server yet instead of a generic error, and logs a warning rather than a server failure. Switching Security tabs keeps the tab in the address (`#sessions`, `#api-keys`, `#history`).
 - Grouped the keyboard shortcuts dialog so it lists only what works on the current page, and redesigned the system status popover with flat rows.

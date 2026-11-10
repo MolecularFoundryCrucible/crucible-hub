@@ -744,3 +744,10 @@ export type WorkspaceSource =
       reason: string
       authRequired?: boolean
     }
+
+export type WorkspaceProjectSyncResult = {
+  orcid: string | null
+  projectsAdded: string[]
+  projectsAlreadyMember: string[]
+  projectsNotFound: string[]
+}

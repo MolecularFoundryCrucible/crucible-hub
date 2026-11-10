@@ -54,7 +54,7 @@ export function toHubApiError(input: ErrorInput): HubApiError {
       ? "timeout"
       : input.reauthenticationRequired
         ? "reauthentication-required"
-        : input.unavailable
+        : input.unavailable || input.status === 501
           ? "unavailable"
           : input.status
             ? (statusKinds[input.status] ?? "upstream")
@@ -62,7 +62,11 @@ export function toHubApiError(input: ErrorInput): HubApiError {
 
   return {
     kind,
-    message: input.message ?? messages[kind],
+    message:
+      input.message ??
+      (kind === "unavailable" && input.status === 501
+        ? "This isn't turned on for this Crucible server."
+        : messages[kind]),
     correlationId: input.correlationId,
     retryable: ["rate-limited", "timeout", "upstream", "unexpected"].includes(
       kind

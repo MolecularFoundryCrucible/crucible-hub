@@ -42,6 +42,8 @@ import { ResourceCreationLink } from "@/components/crucible/resource-creation-ac
 import { ResourceDirectoryNameCell } from "@/components/crucible/resource-directory-name-cell"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
+import type { IdentityScope } from "@/data/crucible/query-keys"
+import { SyncProjectsButton } from "@/features/project-membership/sync-projects-button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
   Empty,
@@ -236,7 +238,11 @@ function ProjectsPage() {
 
   return (
     <PageLayout>
-      <ProjectsPageHeader canCreate={account.capabilities.can_create_project} />
+      <ProjectsPageHeader
+        canCreate={account.capabilities.can_create_project}
+        canSync={!account.is_service_account}
+        scope={scope}
+      />
       <CollectionSection>
         <CollectionToolbar
           actions={
@@ -295,6 +301,8 @@ function ProjectsRoutePending() {
     <PageLayout>
       <ProjectsPageHeader
         canCreate={account?.capabilities.can_create_project === true}
+        canSync={account?.is_service_account === false}
+        scope={scope}
       />
       <CollectionSection>
         <CollectionToolbar
@@ -313,16 +321,29 @@ function ProjectsRoutePending() {
   )
 }
 
-function ProjectsPageHeader({ canCreate }: { canCreate: boolean }) {
+function ProjectsPageHeader({
+  canCreate,
+  canSync,
+  scope,
+}: {
+  canCreate: boolean
+  canSync: boolean
+  scope: IdentityScope
+}) {
   return (
     <PageHeader
       actions={
-        canCreate ? (
-          <ResourceCreationLink
-            kind="project"
-            label="Create project"
-            render={<Link to="/projects/new" />}
-          />
+        canCreate || canSync ? (
+          <div className="flex flex-wrap gap-2">
+            {canSync ? <SyncProjectsButton scope={scope} /> : null}
+            {canCreate ? (
+              <ResourceCreationLink
+                kind="project"
+                label="Create project"
+                render={<Link to="/projects/new" />}
+              />
+            ) : null}
+          </div>
         ) : null
       }
       divider={false}
