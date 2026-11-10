@@ -31,7 +31,7 @@ import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
 import { setWorkspaceUserDisabledFn } from "@/data/crucible/users.functions"
 import type { WorkspaceAdminUser } from "@/data/crucible/workspace-source"
 
-export function canSwitchAccount(user: WorkspaceAdminUser) {
+function canSwitchAccount(user: WorkspaceAdminUser) {
   return (
     user.user_capabilities?.can_change_platform_role === true &&
     !user.pending_at
