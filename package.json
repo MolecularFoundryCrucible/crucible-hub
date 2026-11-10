@@ -108,5 +108,8 @@
     "skills": [
       "@tanstack/*"
     ]
+  },
+  "overrides": {
+    "glob": "^14.0.2"
   }
 }
