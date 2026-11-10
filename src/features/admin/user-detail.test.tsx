@@ -203,7 +203,10 @@ const testUser: WorkspaceAdminUser = {
   username: "testuser",
 }
 
-function renderUserDetail(user: WorkspaceAdminUser = testUser) {
+function renderUserDetail(
+  user: WorkspaceAdminUser = testUser,
+  section?: "overview" | "security"
+) {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -221,7 +224,7 @@ function renderUserDetail(user: WorkspaceAdminUser = testUser) {
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <UserDetailView scope={scope} user={user} />
+      <UserDetailView scope={scope} section={section} user={user} />
     </QueryClientProvider>
   )
 }
@@ -229,20 +232,23 @@ function renderUserDetail(user: WorkspaceAdminUser = testUser) {
 describe("UserDetailView projects table sorting", () => {
   afterEach(cleanup)
 
-  it("renders identity card without redundant account type", () => {
+  it("renders the profile card with name and username, without account type", () => {
     renderUserDetail()
 
+    expect(screen.getByText("Profile")).toBeTruthy()
+    expect(screen.getByText("Name")).toBeTruthy()
+    expect(screen.getByText("testuser")).toBeTruthy()
     expect(screen.getByText("Crucible ID")).toBeTruthy()
-    expect(screen.queryByText("Username")).toBeNull()
     expect(screen.getByText("Platform role")).toBeTruthy()
     expect(screen.getByText("Email")).toBeTruthy()
     expect(screen.getByText("Last active")).toBeTruthy()
     expect(screen.queryByText("Account type")).toBeNull()
     expect(screen.queryByText("ORCID")).toBeNull()
+    expect(screen.queryByRole("tab", { name: /API keys/ })).toBeNull()
   })
 
   it("lists the person's sign-in methods and keeps their only one", async () => {
-    renderUserDetail()
+    renderUserDetail(testUser, "security")
 
     expect(
       await screen.findByRole("tab", { name: /Sign-in methods/ })
@@ -294,7 +300,7 @@ describe("UserDetailView projects table sorting", () => {
         },
       ],
     })
-    renderUserDetail()
+    renderUserDetail(testUser, "security")
 
     fireEvent.click(
       await screen.findByRole("button", {
@@ -340,7 +346,7 @@ describe("UserDetailView projects table sorting", () => {
         },
       ],
     })
-    renderUserDetail({ ...testUser, unique_id: "account" })
+    renderUserDetail({ ...testUser, unique_id: "account" }, "security")
 
     fireEvent.click(
       await screen.findByRole("button", {
@@ -453,7 +459,7 @@ describe("UserDetailView API keys", () => {
       status: "ok",
     })
     window.history.replaceState(null, "", "#api-keys")
-    renderUserDetail()
+    renderUserDetail(testUser, "security")
 
     const keysTab = await screen.findByRole("tab", { name: /API keys/ })
     await waitFor(() =>
@@ -493,7 +499,7 @@ describe("UserDetailView API keys", () => {
       },
       status: "error",
     })
-    renderUserDetail()
+    renderUserDetail(testUser, "security")
 
     fireEvent.click(await screen.findByRole("tab", { name: /API keys/ }))
     const table = await screen.findByRole("table", { name: "Active API keys" })

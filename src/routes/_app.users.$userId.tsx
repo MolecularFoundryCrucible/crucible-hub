@@ -1,28 +1,20 @@
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
-import { Link, createFileRoute } from "@tanstack/react-router"
+import { Link, Outlet, createFileRoute } from "@tanstack/react-router"
 
-import { ActivityTime } from "@/components/crucible/activity-time"
 import { PageHeader } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
-import { MfidValue } from "@/components/crucible/mfid-value"
-import { OrcidValue } from "@/components/crucible/orcid-value"
 import { AccountIcon } from "@/components/crucible/icons"
 import {
   PersonAvatar,
   personDisplayName,
 } from "@/components/crucible/person-identity"
-import type { PersonIdentityProfile } from "@/components/crucible/person-identity"
 import { PrincipalTypeIcon } from "@/components/crucible/resource-type-icon"
-import { ContentBoundary } from "@/components/crucible/content-layout"
+import { IdentityDetailPending } from "@/components/crucible/route-content-pending"
 import {
-  IdentityDetailContentPending,
-  IdentityDetailPending,
-} from "@/components/crucible/route-content-pending"
-import {
-  useAdministrationScope,
-  useWorkspacePrivilegeMode,
-  useWorkspaceScope,
-} from "@/components/crucible/workspace-provider"
+  ResourceSectionNavigation,
+  ResourceSectionPanel,
+  resourceSectionActiveProps,
+  resourceSectionLinkClassName,
+} from "@/components/crucible/resource-section-navigation"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -33,7 +25,6 @@ import {
 } from "@/components/ui/breadcrumb"
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -49,7 +40,7 @@ import { personQueryOptions } from "@/data/crucible/people.queries"
 import { serviceAccountAdminQueryOptions } from "@/data/crucible/service-accounts.queries"
 import { userDetailQueryOptions } from "@/data/crucible/users.queries"
 import type { WorkspaceAdminUser } from "@/data/crucible/workspace-source"
-import { UserDetailView } from "@/features/admin/user-detail"
+import { usePersonPage } from "@/features/people/person-page"
 import { hubPageTitle } from "@/lib/page-title"
 import { formatUsername } from "@/lib/username"
 
@@ -108,39 +99,17 @@ export const Route = createFileRoute("/_app/users/$userId")({
 
 function UserPage() {
   const { userId } = Route.useParams()
-  const scope = useWorkspaceScope()
-  const administrationScope = useAdministrationScope()
-  const privilegeMode = useWorkspacePrivilegeMode()
-  const { data: account } = useSuspenseQuery(accountQueryOptions(scope))
-  const { data: person } = useSuspenseQuery(personQueryOptions(scope, userId))
-
-  const canAdminUsers = canOpenUserAdministration(account, privilegeMode)
-  const canAdminServiceAccounts = canOpenServiceAccountAdministration(
-    account,
-    privilegeMode
-  )
-  const isServiceAccount = Boolean(person?.is_service_account)
-  const isSelf = account.unique_id === userId
-
-  const adminUserResult = useQuery({
-    ...userDetailQueryOptions(administrationScope, userId),
-    enabled: canAdminUsers && !isServiceAccount,
-  })
-  const serviceAccountAdminResult = useQuery({
-    ...serviceAccountAdminQueryOptions(administrationScope, userId),
-    enabled: canAdminServiceAccounts && isServiceAccount,
-  })
-
-  const activePerson =
-    adminUserResult.data ?? serviceAccountAdminResult.data ?? person
-  const lastActiveAt =
-    serviceAccountAdminResult.data !== undefined
-      ? serviceAccountAdminResult.data?.last_active_at
-      : adminUserResult.data !== undefined
-        ? adminUserResult.data?.last_active_at
-        : isSelf
-          ? account.last_active_at
-          : undefined
+  const page = usePersonPage(userId)
+  const {
+    activePerson,
+    administersPerson,
+    adminUserResult,
+    canAdminServiceAccounts,
+    canAdminUsers,
+    isSelf,
+    isServiceAccount,
+    person,
+  } = page
 
   if (!activePerson) {
     if (canAdminUsers && adminUserResult.isPending) {
@@ -230,76 +199,34 @@ function UserPage() {
         title={name}
       />
 
-      {canAdminUsers && !isServiceAccount ? (
-        adminUserResult.isPending ? (
-          <IdentityDetailContentPending kind="person" />
-        ) : adminUserResult.data ? (
-          <UserDetailView
-            key={adminUserResult.data.unique_id}
-            scope={administrationScope}
-            user={adminUserResult.data}
-          />
-        ) : (
-          <ReadOnlyPersonProfileCard
-            lastActiveAt={lastActiveAt}
-            person={activePerson}
-          />
-        )
-      ) : (
-        <ReadOnlyPersonProfileCard
-          lastActiveAt={lastActiveAt}
-          person={activePerson}
-        />
-      )}
-    </PageLayout>
-  )
-}
+      {administersPerson ? (
+        <ResourceSectionNavigation label="Person sections">
+          <Link
+            activeOptions={{ exact: true, includeSearch: false }}
+            activeProps={resourceSectionActiveProps}
+            className={resourceSectionLinkClassName}
+            params={{ userId }}
+            to="/users/$userId"
+            viewTransition
+          >
+            Overview
+          </Link>
+          <Link
+            activeOptions={{ includeSearch: false }}
+            activeProps={resourceSectionActiveProps}
+            className={resourceSectionLinkClassName}
+            params={{ userId }}
+            to="/users/$userId/security"
+            viewTransition
+          >
+            Security
+          </Link>
+        </ResourceSectionNavigation>
+      ) : null}
 
-function ReadOnlyPersonProfileCard({
-  lastActiveAt,
-  person,
-}: {
-  lastActiveAt?: string | null
-  person: PersonIdentityProfile
-}) {
-  return (
-    <ContentBoundary width="reading">
-      <Card>
-        <CardHeader>
-          <CardTitle>Profile</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <dl className="grid grid-cols-1 gap-4 @fields-wide:grid-cols-2">
-            {lastActiveAt !== undefined ? (
-              <div className="flex min-w-0 flex-col gap-1">
-                <dt className="text-label text-muted-foreground">
-                  Last active
-                </dt>
-                <dd className="text-body">
-                  <ActivityTime fallback="Never" value={lastActiveAt} />
-                </dd>
-              </div>
-            ) : null}
-            <div className="flex min-w-0 flex-col gap-1">
-              <dt className="text-label text-muted-foreground">Crucible ID</dt>
-              <dd>
-                <MfidValue value={person.unique_id} />
-              </dd>
-            </div>
-            {person.orcid ? (
-              <div className="flex min-w-0 flex-col gap-1">
-                <dt className="text-label text-muted-foreground">ORCID</dt>
-                <dd>
-                  <OrcidValue
-                    orcid={person.orcid}
-                    verified={person.orcid_verified}
-                  />
-                </dd>
-              </div>
-            ) : null}
-          </dl>
-        </CardContent>
-      </Card>
-    </ContentBoundary>
+      <ResourceSectionPanel>
+        <Outlet />
+      </ResourceSectionPanel>
+    </PageLayout>
   )
 }
