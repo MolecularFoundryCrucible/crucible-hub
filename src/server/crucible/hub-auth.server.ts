@@ -66,6 +66,47 @@ const tokenSchema = z.object({
 })
 
 type Tokens = z.infer<typeof tokenSchema>
+
+const oauthTokenSchema = z.object({
+  access_token: z.string().min(1),
+  refresh_token: z.string().min(1),
+  token_type: z.literal("Bearer"),
+  expires_in: z.number().int().nonnegative(),
+  refresh_expires_in: z.number().int().nonnegative(),
+  user_unique_id: z.string().min(1),
+  auth_time: z.number().int().nonnegative().optional(),
+})
+
+function storedTokens(
+  answer: z.infer<typeof oauthTokenSchema>,
+  receivedAt: number
+): Tokens {
+  return tokenSchema.parse({
+    access_token: answer.access_token,
+    refresh_token: answer.refresh_token,
+    access_expires_at: new Date(
+      receivedAt + answer.expires_in * 1000
+    ).toISOString(),
+    refresh_expires_at: new Date(
+      receivedAt + answer.refresh_expires_in * 1000
+    ).toISOString(),
+    token_type: answer.token_type,
+    user_unique_id: answer.user_unique_id,
+    auth_time:
+      answer.auth_time === undefined
+        ? null
+        : new Date(answer.auth_time * 1000).toISOString(),
+  })
+}
+
+type TokenGrant =
+  | {
+      grant_type: "authorization_code"
+      code: string
+      code_verifier: string
+      redirect_uri: string
+    }
+  | { grant_type: "refresh_token"; refresh_token: string }
 type Transaction = {
   state: string
   verifier: string
@@ -552,15 +593,16 @@ function basicAuthorization(secret: string) {
   return `Basic ${Buffer.from(`${clientId}:${secret}`).toString("base64")}`
 }
 
-async function tokenRequest(path: string, body: object): Promise<Tokens> {
+async function tokenRequest(grant: TokenGrant): Promise<Tokens> {
   const { baseUrl, secret } = config()
-  const response = await fetch(`${baseUrl}${path}`, {
+  const sentAt = Date.now()
+  const response = await fetch(`${baseUrl}/oauth/token`, {
     method: "POST",
     headers: {
       Authorization: basicAuthorization(secret),
-      "Content-Type": "application/json",
+      "Content-Type": "application/x-www-form-urlencoded",
     },
-    body: JSON.stringify(body),
+    body: new URLSearchParams(grant),
     cache: "no-store",
     signal: AbortSignal.timeout(15000),
   })
@@ -569,7 +611,7 @@ async function tokenRequest(path: string, body: object): Promise<Tokens> {
       response.status,
       readRetryAfterSeconds(response.headers)
     )
-  return tokenSchema.parse(await response.json())
+  return storedTokens(oauthTokenSchema.parse(await response.json()), sentAt)
 }
 
 async function currentAccount() {
@@ -637,7 +679,8 @@ export async function beginHubLogin(
     ...cookieOptions("/hub/auth"),
     maxAge: transactionLifetime / 1000,
   })
-  const url = new URL(`${publicBaseUrl}/auth/hub/login`)
+  const url = new URL(`${publicBaseUrl}/oauth/authorize`)
+  url.searchParams.set("response_type", "code")
   url.searchParams.set("client_id", clientId)
   url.searchParams.set("redirect_uri", callbackUri)
   url.searchParams.set("state", state)
@@ -689,7 +732,8 @@ export async function finishHubLogin(
     if (providerError !== null || code === null) {
       throw new HubSignInRefusedError(providerError ?? "")
     }
-    const tokens = await tokenRequest("/auth/hub/token", {
+    const tokens = await tokenRequest({
+      grant_type: "authorization_code",
       code,
       code_verifier: transaction.verifier,
       redirect_uri: callbackUri,
@@ -748,7 +792,8 @@ export async function finishHubLogin(
     if (providerError !== null || code === null) {
       throw new HubSignInRefusedError(providerError ?? "")
     }
-    const tokens = await tokenRequest("/auth/hub/token", {
+    const tokens = await tokenRequest({
+      grant_type: "authorization_code",
       code,
       code_verifier: transaction.verifier,
       redirect_uri: callbackUri,
@@ -830,7 +875,8 @@ async function refreshSharedSession(
       })
       if (!claimed) continue
       try {
-        const tokens = await tokenRequest("/auth/hub/refresh", {
+        const tokens = await tokenRequest({
+          grant_type: "refresh_token",
           refresh_token: current.session.tokens.refresh_token,
         })
         const claimedState = await readSession(sessionId)
@@ -951,7 +997,8 @@ async function refresh(sessionId: string): Promise<Tokens | null> {
   if (existing) return existing
   const current = localSession(sessionId)
   if (!current) return null
-  const operation = tokenRequest("/auth/hub/refresh", {
+  const operation = tokenRequest({
+    grant_type: "refresh_token",
     refresh_token: current.tokens.refresh_token,
   })
     .then(async (tokens) => {
@@ -1114,13 +1161,16 @@ export function hubApiAuthorizationUrl(value: string) {
 async function revokeRefreshToken(refreshToken: string) {
   try {
     const { baseUrl, secret } = config()
-    const response = await fetch(`${baseUrl}/auth/hub/revoke`, {
+    const response = await fetch(`${baseUrl}/oauth/revoke`, {
       method: "POST",
       headers: {
         Authorization: basicAuthorization(secret),
-        "Content-Type": "application/json",
+        "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: JSON.stringify({ token: refreshToken }),
+      body: new URLSearchParams({
+        token: refreshToken,
+        token_type_hint: "refresh_token",
+      }),
       cache: "no-store",
       signal: AbortSignal.timeout(15000),
     })

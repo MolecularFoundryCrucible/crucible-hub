@@ -15,6 +15,7 @@ import {
   hubSignInOrigin,
   sessionApiFetch,
 } from "./hub-auth.server"
+import { oauthForm, oauthRoute, oauthTokenAnswer } from "@/test/oauth"
 import { startRequestScope } from "@/test/start-request"
 import type { StartRequestScope } from "@/test/start-request"
 
@@ -83,7 +84,7 @@ describe("hub login exchange", () => {
     const providerUrl = new URL(location)
 
     expect(providerUrl.origin).toBe("https://api.example.test")
-    expect(providerUrl.pathname).toBe("/auth/hub/login")
+    expect(providerUrl.pathname).toBe("/oauth/authorize")
     expect(providerUrl.searchParams.get("client_id")).toBe("crucible-hub")
     expect(providerUrl.searchParams.get("redirect_uri")).toBe(
       "http://127.0.0.1:3000/hub/auth/callback"
@@ -109,21 +110,21 @@ describe("hub login exchange", () => {
               ? input.href
               : input.url
         )
-        expect(url.pathname).toBe("/auth/hub/token")
+        expect(url.pathname).toBe("/oauth/token")
         expect(init?.method).toBe("POST")
         const headers = init?.headers as Record<string, string>
         expect(headers.Authorization).toMatch(/^Basic /)
-        const body = JSON.parse(String(init?.body)) as {
-          code: string
-          code_verifier: string
-          redirect_uri: string
-        }
+        expect(headers["Content-Type"]).toBe(
+          "application/x-www-form-urlencoded"
+        )
+        const body = oauthForm(init)
+        expect(body.grant_type).toBe("authorization_code")
         expect(body.code).toBe("one-time-code")
         expect(body.code_verifier).toMatch(/^[A-Za-z0-9_-]{43}$/)
         expect(body.redirect_uri).toBe(
           "http://127.0.0.1:3000/hub/auth/callback"
         )
-        return Response.json(tokenResponse)
+        return Response.json(oauthTokenAnswer(tokenResponse))
       }
     )
     vi.stubGlobal("fetch", fetchMock)
@@ -159,7 +160,7 @@ describe("hub login exchange", () => {
     const transactionCookie = loginCookie(scope)
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () => Response.json(tokenResponse))
+      vi.fn(async () => Response.json(oauthTokenAnswer(tokenResponse)))
     )
     const state = new URL(location).searchParams.get("state")!
     const { destination } = await finishLogin(transactionCookie, "code", state)
@@ -172,7 +173,7 @@ describe("hub login exchange", () => {
     const transactionCookie = loginCookie(scope)
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () => Response.json(tokenResponse))
+      vi.fn(async () => Response.json(oauthTokenAnswer(tokenResponse)))
     )
     await expect(
       finishLogin(transactionCookie, "code", "wrong-state-wrong-state-wrong-1")
@@ -186,7 +187,9 @@ describe("hub login exchange", () => {
   ])("rejects a callback from %s", async (_case, issuer) => {
     stubHubAuthEnv()
     const { scope, location } = await beginLogin("/hub/data")
-    const fetch = vi.fn(async () => Response.json(tokenResponse))
+    const fetch = vi.fn(async () =>
+      Response.json(oauthTokenAnswer(tokenResponse))
+    )
     vi.stubGlobal("fetch", fetch)
     await expect(
       finishLogin(
@@ -205,7 +208,7 @@ describe("hub login exchange", () => {
     const { scope, location } = await beginLogin("/hub/data")
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () => Response.json(tokenResponse))
+      vi.fn(async () => Response.json(oauthTokenAnswer(tokenResponse)))
     )
     await expect(
       finishLogin(
@@ -220,7 +223,9 @@ describe("hub login exchange", () => {
     async function finishWithError(error: string, state?: string) {
       const { scope, location } = await beginLogin("/hub/data")
       const transactionCookie = loginCookie(scope)
-      const fetch = vi.fn(async () => Response.json(tokenResponse))
+      const fetch = vi.fn(async () =>
+        Response.json(oauthTokenAnswer(tokenResponse))
+      )
       vi.stubGlobal("fetch", fetch)
       const callback = startRequestScope(
         "http://127.0.0.1:3000/hub/auth/callback",
@@ -311,7 +316,7 @@ describe("hub login exchange", () => {
     const state = new URL(location).searchParams.get("state")!
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () => Response.json(tokenResponse))
+      vi.fn(async () => Response.json(oauthTokenAnswer(tokenResponse)))
     )
     await finishLogin(transactionCookie, "code", state)
     const failure: unknown = await finishLogin(
@@ -522,7 +527,9 @@ describe("hub login exchange", () => {
       vi.stubGlobal(
         "fetch",
         vi.fn(async () =>
-          Response.json({ ...tokenResponse, user_unique_id: account })
+          Response.json(
+            oauthTokenAnswer({ ...tokenResponse, user_unique_id: account })
+          )
         )
       )
       const { cookies } = await finishLogin(loginCookie(scope), "code", state)
@@ -549,18 +556,20 @@ describe("hub login exchange", () => {
       vi.stubGlobal(
         "fetch",
         vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
-          const path = new URL(String(input)).pathname
+          const path = oauthRoute(input, init)
           requests.push(path)
-          if (path === "/auth/hub/revoke") {
-            revoked.push(JSON.parse(String(init?.body)))
+          if (path === "/oauth/revoke") {
+            revoked.push(oauthForm(init))
           }
-          return path === "/auth/hub/token"
-            ? Response.json({
-                ...tokenResponse,
-                auth_time: authTime,
-                refresh_token: "refresh-2",
-                user_unique_id: returning,
-              })
+          return path === "/oauth/token:authorization_code"
+            ? Response.json(
+                oauthTokenAnswer({
+                  ...tokenResponse,
+                  auth_time: authTime,
+                  refresh_token: "refresh-2",
+                  user_unique_id: returning,
+                })
+              )
             : new Response(null)
         })
       )
@@ -620,7 +629,10 @@ describe("hub login exchange", () => {
         expect(hubSignInFailureDetails(error)).toEqual({
           reason: "stale-sign-in",
         })
-        expect(requests).toEqual(["/auth/hub/token", "/auth/hub/revoke"])
+        expect(requests).toEqual([
+          "/oauth/token:authorization_code",
+          "/oauth/revoke",
+        ])
         expect(
           callback
             .setCookies()
@@ -651,8 +663,13 @@ describe("hub login exchange", () => {
         "0000-0000-0000-000X"
       )
       await expect(finished).resolves.toBe("/hub/reauthenticated")
-      expect(requests).toEqual(["/auth/hub/token", "/auth/hub/revoke"])
-      expect(revoked).toEqual([{ token: "refresh-1" }])
+      expect(requests).toEqual([
+        "/oauth/token:authorization_code",
+        "/oauth/revoke",
+      ])
+      expect(revoked).toEqual([
+        { token: "refresh-1", token_type_hint: "refresh_token" },
+      ])
       expect(
         callback
           .setCookies()
@@ -671,7 +688,10 @@ describe("hub login exchange", () => {
       expect(hubSignInFailureDetails(error)).toEqual({
         reason: "account-mismatch",
       })
-      expect(requests).toEqual(["/auth/hub/token", "/auth/hub/revoke"])
+      expect(requests).toEqual([
+        "/oauth/token:authorization_code",
+        "/oauth/revoke",
+      ])
       expect(
         callback
           .setCookies()
@@ -695,7 +715,9 @@ describe("hub login exchange", () => {
       vi.stubGlobal(
         "fetch",
         vi.fn(async () =>
-          Response.json({ ...tokenResponse, user_unique_id: "mfid-any" })
+          Response.json(
+            oauthTokenAnswer({ ...tokenResponse, user_unique_id: "mfid-any" })
+          )
         )
       )
       await expect(
@@ -713,17 +735,11 @@ describe("hub login exchange", () => {
     const requests: string[] = []
     vi.stubGlobal(
       "fetch",
-      vi.fn(async (input: string | URL | Request) => {
-        const url = new URL(
-          typeof input === "string"
-            ? input
-            : input instanceof URL
-              ? input.href
-              : input.url
-        )
-        requests.push(url.pathname)
-        if (url.pathname === "/auth/hub/token") {
-          return Response.json(tokenResponse)
+      vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+        const route = oauthRoute(input, init)
+        requests.push(route)
+        if (route === "/oauth/token:authorization_code") {
+          return Response.json(oauthTokenAnswer(tokenResponse))
         }
         return new Response(null, {
           headers: {
@@ -750,7 +766,10 @@ describe("hub login exchange", () => {
       expect(response.status).toBe(401)
       expect(hasHubSession()).toBe(true)
     })
-    expect(requests).toEqual(["/auth/hub/token", "/service_accounts"])
+    expect(requests).toEqual([
+      "/oauth/token:authorization_code",
+      "/service_accounts",
+    ])
   })
 
   async function signedInSession(
@@ -761,19 +780,13 @@ describe("hub login exchange", () => {
     const requests: string[] = []
     vi.stubGlobal(
       "fetch",
-      vi.fn(async (input: string | URL | Request) => {
-        const url = new URL(
-          typeof input === "string"
-            ? input
-            : input instanceof URL
-              ? input.href
-              : input.url
-        )
-        requests.push(url.pathname)
-        if (url.pathname === "/auth/hub/token") {
-          return Response.json(tokenResponse)
+      vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+        const route = oauthRoute(input, init)
+        requests.push(route)
+        if (route === "/oauth/token:authorization_code") {
+          return Response.json(oauthTokenAnswer(tokenResponse))
         }
-        return respond(url.pathname)
+        return respond(route)
       })
     )
     const { cookies } = await finishLogin(loginCookie(scope), "code", state)
@@ -803,7 +816,7 @@ describe("hub login exchange", () => {
     vi.setSystemTime(new Date("2026-10-06T22:59:45.000Z"))
     stubHubAuthEnv()
     const { call, requests } = await signedInSession((path) =>
-      path === "/auth/hub/refresh"
+      path === "/oauth/token:refresh_token"
         ? new Response(null, { headers: { "Retry-After": "20" }, status: 429 })
         : Response.json([])
     )
@@ -814,8 +827,8 @@ describe("hub login exchange", () => {
     const second = await call()
     expect(second.response?.status).toBe(200)
     expect(requests).toEqual([
-      "/auth/hub/token",
-      "/auth/hub/refresh",
+      "/oauth/token:authorization_code",
+      "/oauth/token:refresh_token",
       "/datasets",
       "/datasets",
     ])
@@ -826,7 +839,7 @@ describe("hub login exchange", () => {
     vi.setSystemTime(new Date("2026-10-06T22:59:45.000Z"))
     stubHubAuthEnv()
     const { call, requests, sessionCookie } = await signedInSession((path) =>
-      path === "/auth/hub/refresh"
+      path === "/oauth/token:refresh_token"
         ? new Response(null, { headers: { "Retry-After": "20" }, status: 429 })
         : Response.json([])
     )
@@ -839,7 +852,7 @@ describe("hub login exchange", () => {
       tokenResponse.access_token
     )
     expect(
-      requests.filter((path) => path === "/auth/hub/refresh")
+      requests.filter((path) => path === "/oauth/token:refresh_token")
     ).toHaveLength(1)
   })
 
@@ -849,16 +862,18 @@ describe("hub login exchange", () => {
     stubHubAuthEnv()
     let refreshes = 0
     const { call } = await signedInSession((path) => {
-      if (path !== "/auth/hub/refresh") return Response.json([])
+      if (path !== "/oauth/token:refresh_token") return Response.json([])
       refreshes += 1
       return refreshes === 1
         ? new Response(null, { headers: { "Retry-After": "10" }, status: 429 })
-        : Response.json({
-            ...tokenResponse,
-            access_token: "access-2",
-            access_expires_at: "2026-10-06T23:15:30.000Z",
-            refresh_token: "refresh-2",
-          })
+        : Response.json(
+            oauthTokenAnswer({
+              ...tokenResponse,
+              access_token: "access-2",
+              access_expires_at: "2026-10-06T23:15:30.000Z",
+              refresh_token: "refresh-2",
+            })
+          )
     })
 
     const failed = await call()
@@ -880,7 +895,7 @@ describe("hub login exchange", () => {
     vi.setSystemTime(new Date("2026-10-06T23:00:30.000Z"))
     stubHubAuthEnv()
     const { call } = await signedInSession((path) =>
-      path === "/auth/hub/refresh"
+      path === "/oauth/token:refresh_token"
         ? new Response(null, { status: 504 })
         : Response.json([])
     )
@@ -895,7 +910,7 @@ describe("hub login exchange", () => {
     vi.setSystemTime(new Date("2026-10-06T23:00:30.000Z"))
     stubHubAuthEnv()
     const { call } = await signedInSession((path) =>
-      path === "/auth/hub/refresh"
+      path === "/oauth/token:refresh_token"
         ? Response.json({ detail: "invalid_grant" }, { status: 400 })
         : Response.json([])
     )

@@ -9,6 +9,7 @@ import {
   previewHubLink,
 } from "./hub-link.server"
 import { CrucibleResponseError } from "./request-error.server"
+import { oauthTokenAnswer } from "@/test/oauth"
 import { startRequestScope } from "@/test/start-request"
 
 const tokenResponse = {
@@ -37,7 +38,9 @@ async function signIn(accessToken = "access-1") {
   vi.stubGlobal(
     "fetch",
     vi.fn(async () =>
-      Response.json({ ...tokenResponse, access_token: accessToken })
+      Response.json(
+        oauthTokenAnswer({ ...tokenResponse, access_token: accessToken })
+      )
     )
   )
   const callback = startRequestScope(
