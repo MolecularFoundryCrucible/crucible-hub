@@ -14,6 +14,7 @@ import {
   writeWorkspaceResourceMetadata,
   patchWorkspaceSampleDescription,
   readWorkspaceDatasetFiles,
+  readWorkspaceDatasetIngestionRequests,
   readWorkspaceIngestionClasses,
   readWorkspaceResource,
   readWorkspaceResourceGraph,
@@ -25,6 +26,28 @@ describe("workspace resource sources", () => {
   afterEach(() => {
     vi.unstubAllEnvs()
     vi.unstubAllGlobals()
+  })
+
+  it("asks for a dataset's ingestion requests by its MFID", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "api")
+    vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
+    vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
+    const requests: Request[] = []
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (request: Request) => {
+        requests.push(request)
+        return crucibleApiResponse({ items: [], total: 0 })
+      })
+    )
+
+    await expect(
+      readWorkspaceDatasetIngestionRequests("dataset-1")
+    ).resolves.toEqual({ items: [], total: 0 })
+    const query = new URL(requests[0].url).searchParams
+    expect(query.get("dataset_mfid")).toBe("dataset-1")
+    expect(query.has("dataset_id")).toBe(false)
   })
 
   it("builds a bounded fixture graph from immediate resource links", async () => {
