@@ -5,17 +5,22 @@ import { cn } from "@/lib/utils"
 export function PageHeader({
   actionLayout = "inline",
   actions,
+  avatar,
   description,
   divider = true,
+  eyebrow,
   icon,
   identifier,
   title,
 }: {
   actionLayout?: "inline" | "stacked"
   actions?: React.ReactNode
+  /** Shown in place of the icon well, for a person. */
+  avatar?: React.ReactNode
   description?: string
   /** Rule under the header; directories leave it off so the toolbar leads. */
   divider?: boolean
+  eyebrow?: string
   icon?: React.ReactNode
   identifier?: string
   title: string
@@ -31,11 +36,22 @@ export function PageHeader({
       )}
     >
       <div className="min-w-0 flex-1 basis-56">
-        <div className="flex min-w-0 items-start gap-2.5">
-          {icon ? (
-            <span className="entity-icon-well entity-icon-well-lg">{icon}</span>
-          ) : null}
+        <div
+          className={cn(
+            "flex min-w-0 gap-2.5",
+            avatar ? "items-center gap-3" : "items-start"
+          )}
+        >
+          {avatar ??
+            (icon ? (
+              <span className="entity-icon-well entity-icon-well-lg">
+                {icon}
+              </span>
+            ) : null)}
           <div className="min-w-0">
+            {eyebrow ? (
+              <p className="mb-1 text-label text-muted-foreground">{eyebrow}</p>
+            ) : null}
             <h1
               className="min-w-0 scroll-mt-20 text-title-page break-words"
               data-page-top

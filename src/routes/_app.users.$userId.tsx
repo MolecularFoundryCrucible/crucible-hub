@@ -8,7 +8,7 @@ import { MfidValue } from "@/components/crucible/mfid-value"
 import { OrcidValue } from "@/components/crucible/orcid-value"
 import { AccountIcon } from "@/components/crucible/icons"
 import {
-  PersonIdentity,
+  PersonAvatar,
   personDisplayName,
 } from "@/components/crucible/person-identity"
 import type { PersonIdentityProfile } from "@/components/crucible/person-identity"
@@ -221,11 +221,11 @@ function UserPage() {
             </Link>
           ) : null
         }
-        icon={
-          <PrincipalTypeIcon
-            className="size-5"
-            type={isServiceAccount ? "service_account" : "user"}
-          />
+        avatar={<PersonAvatar person={activePerson} size="lg" />}
+        identifier={
+          activePerson.username
+            ? formatUsername(activePerson.username, "handle")
+            : undefined
         }
         title={name}
       />
@@ -266,22 +266,10 @@ function ReadOnlyPersonProfileCard({
     <ContentBoundary width="reading">
       <Card>
         <CardHeader>
-          <PersonIdentity person={person} presentation="avatar" size="lg" />
+          <CardTitle>Profile</CardTitle>
         </CardHeader>
         <CardContent>
-          <dl className="grid grid-cols-2 gap-4">
-            <div className="flex min-w-0 flex-col gap-1">
-              <dt className="text-label text-muted-foreground">Username</dt>
-              <dd className="text-body break-words">
-                {person.username ? (
-                  <span className="font-mono">
-                    {formatUsername(person.username, "raw")}
-                  </span>
-                ) : (
-                  "Not provided"
-                )}
-              </dd>
-            </div>
+          <dl className="grid grid-cols-1 gap-4 @fields-wide:grid-cols-2">
             {lastActiveAt !== undefined ? (
               <div className="flex min-w-0 flex-col gap-1">
                 <dt className="text-label text-muted-foreground">
@@ -292,14 +280,14 @@ function ReadOnlyPersonProfileCard({
                 </dd>
               </div>
             ) : null}
-            <div className="col-span-2 flex min-w-0 flex-col gap-1 @fields:col-span-1">
+            <div className="flex min-w-0 flex-col gap-1">
               <dt className="text-label text-muted-foreground">Crucible ID</dt>
               <dd>
                 <MfidValue value={person.unique_id} />
               </dd>
             </div>
             {person.orcid ? (
-              <div className="col-span-2 flex min-w-0 flex-col gap-1 @fields:col-span-1">
+              <div className="flex min-w-0 flex-col gap-1">
                 <dt className="text-label text-muted-foreground">ORCID</dt>
                 <dd>
                   <OrcidValue

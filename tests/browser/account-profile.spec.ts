@@ -30,8 +30,9 @@ test("opens profile management from the account avatar and saves changes", async
 
   await expect(page).toHaveURL(/\/hub\/account\?scenario=populated/)
   await expect(
-    page.getByRole("heading", { level: 1, name: "My profile" })
+    page.getByRole("heading", { level: 1, name: "Avery Chen" })
   ).toBeVisible()
+  await expect(page.getByText("My profile", { exact: true })).toBeVisible()
   await expect(page.getByLabel("First name")).toHaveCount(0)
   await expect(page.getByText("avery.chen@example.invalid")).toBeVisible()
   await page.getByRole("button", { name: "Edit profile" }).click()
