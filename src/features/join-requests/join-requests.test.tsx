@@ -10,7 +10,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { isProjectMember } from "./join-request-messages"
-import { JoinRequestReviewTable } from "./join-request-review"
+import { JoinRequestQueue } from "./join-request-review"
 import { RequestToJoinProject } from "./request-to-join"
 import {
   createJoinRequestFn,
@@ -187,9 +187,13 @@ describe("RequestToJoinProject", () => {
   })
 })
 
-describe("JoinRequestReviewTable", () => {
+describe("JoinRequestQueue", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.mocked(getJoinRequests).mockResolvedValue({
+      data: { items: [pendingRequest], nextCursor: null, total: 1 },
+      status: "ok",
+    })
     vi.mocked(reviewJoinRequestFn).mockResolvedValue({
       data: { ...pendingRequest, status: "approved" },
       status: "ok",
@@ -197,16 +201,37 @@ describe("JoinRequestReviewTable", () => {
   })
   afterEach(cleanup)
 
-  it("approves with the chosen role", async () => {
+  function renderQueue() {
     render(
-      wrap(<JoinRequestReviewTable requests={[pendingRequest]} showProject />)
+      wrap(
+        <JoinRequestQueue
+          emptyTitle="No requests need review"
+          filters={{ scope: "reviewable", status: "pending" }}
+        />
+      )
     )
+  }
 
-    fireEvent.click(screen.getByRole("button", { name: "Approve" }))
-    const dialog = await screen.findByRole("dialog", {
-      name: "Approve request",
+  it("lists requests in the shared table with a count", async () => {
+    renderQueue()
+
+    const table = await screen.findByRole("table", {
+      name: "Requests to join",
     })
-    fireEvent.change(within(dialog).getByLabelText("Role"), {
+    expect(within(table).getByText("R. Park")).toBeTruthy()
+    expect(within(table).getByText("Operando Catalyst Mapping")).toBeTruthy()
+    expect(screen.getByText("All 1 join requests shown")).toBeTruthy()
+  })
+
+  it("approves with the chosen role", async () => {
+    renderQueue()
+
+    fireEvent.click(await screen.findByRole("button", { name: "Review" }))
+    const dialog = await screen.findByRole("dialog", {
+      name: "Review request",
+    })
+    expect(within(dialog).getByText("I run the in-situ cell.")).toBeTruthy()
+    fireEvent.change(within(dialog).getByLabelText("Role if approved"), {
       target: { value: "editor" },
     })
     fireEvent.click(within(dialog).getByRole("button", { name: "Approve" }))
@@ -223,18 +248,12 @@ describe("JoinRequestReviewTable", () => {
   })
 
   it("rejects without a role", async () => {
-    render(
-      wrap(
-        <JoinRequestReviewTable
-          requests={[pendingRequest]}
-          showProject={false}
-        />
-      )
-    )
+    renderQueue()
 
-    fireEvent.click(screen.getByRole("button", { name: "Reject" }))
-    const dialog = await screen.findByRole("dialog", { name: "Reject request" })
-    expect(within(dialog).queryByLabelText("Role")).toBeNull()
+    fireEvent.click(await screen.findByRole("button", { name: "Review" }))
+    const dialog = await screen.findByRole("dialog", {
+      name: "Review request",
+    })
     fireEvent.click(within(dialog).getByRole("button", { name: "Reject" }))
 
     await waitFor(() =>
@@ -244,21 +263,13 @@ describe("JoinRequestReviewTable", () => {
     )
   })
 
-  it("offers no review to someone who cannot review", () => {
-    render(
-      wrap(
-        <JoinRequestReviewTable
-          requests={[
-            {
-              ...pendingRequest,
-              capabilities: { can_review: false, can_withdraw: false },
-            },
-          ]}
-          showProject
-        />
-      )
-    )
+  it("shows the empty state", async () => {
+    vi.mocked(getJoinRequests).mockResolvedValue({
+      data: { items: [], nextCursor: null, total: 0 },
+      status: "ok",
+    })
+    renderQueue()
 
-    expect(screen.queryByRole("button", { name: "Approve" })).toBeNull()
+    expect(await screen.findByText("No requests need review")).toBeTruthy()
   })
 })

@@ -1,7 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 
-import { ContentBoundary } from "@/components/crucible/content-layout"
 import {
   useAdministrationScope,
   useWorkspaceMode,
@@ -28,14 +27,12 @@ function ServiceAccountOverviewPage() {
   )
   if (!serviceAccount) return null
   return (
-    <ContentBoundary width="reading">
-      <ServiceAccountProfileCard
-        key={serviceAccount.unique_id}
-        account={serviceAccount}
-        canChangePlatformRole={!account.is_service_account}
-        mode={mode}
-        scope={administrationScope}
-      />
-    </ContentBoundary>
+    <ServiceAccountProfileCard
+      key={serviceAccount.unique_id}
+      account={serviceAccount}
+      canChangePlatformRole={!account.is_service_account}
+      mode={mode}
+      scope={administrationScope}
+    />
   )
 }

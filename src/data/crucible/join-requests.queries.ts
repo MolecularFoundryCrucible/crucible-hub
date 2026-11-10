@@ -1,4 +1,4 @@
-import { queryOptions } from "@tanstack/react-query"
+import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query"
 
 import { fixtureScenarioFromScope } from "./fixture-scenarios"
 import { getJoinRequests } from "./join-requests.functions"
@@ -36,6 +36,38 @@ export function joinRequestsQueryOptions(
           signal,
         })
       ),
+    ...(scenario ? { retry: false } : {}),
+  })
+}
+
+export function joinRequestsInfiniteQueryOptions(
+  scope: IdentityScope,
+  filters: Omit<JoinRequestFilters, "limit">
+) {
+  const scenario = fixtureScenarioFromScope(scope)
+  const limit = 25
+  return infiniteQueryOptions({
+    initialPageParam: null as string | null,
+    queryKey: [
+      ...crucibleKeys.joinRequests(scope, { ...filters, limit }),
+      "pages",
+    ] as const,
+    queryFn: async ({ pageParam, signal }) =>
+      unwrapHubResult(
+        await getJoinRequests({
+          data: {
+            cursor: pageParam ?? undefined,
+            limit,
+            privilegeMode: privilegeModeFromScope(scope),
+            projectMfid: filters.projectMfid,
+            scenario,
+            scope: filters.scope,
+            status: filters.status,
+          },
+          signal,
+        })
+      ),
+    getNextPageParam: (page) => page.nextCursor ?? undefined,
     ...(scenario ? { retry: false } : {}),
   })
 }

@@ -468,6 +468,12 @@ export function AppShell({
                               aria-current={
                                 joinRequestsActive ? "page" : undefined
                               }
+                              search={{
+                                view:
+                                  pendingJoinCount > 0
+                                    ? "reviewable"
+                                    : "submitted",
+                              }}
                               to="/join-requests"
                             />
                           }
