@@ -140,6 +140,12 @@ type ResourceFlowNodePresentation = {
 }
 
 const GRAPH_VIEWPORT_CULLING_NODE_THRESHOLD = 100
+const graphAriaLabels = {
+  "node.a11yDescription.default":
+    "Press Enter or Space to inspect this resource, or F to center it.",
+  "node.a11yDescription.keyboardDisabled":
+    "Press Enter or Space to inspect this resource, or F to center it.",
+}
 const ELK_LAYOUT_TIMEOUT_MS = 6000
 const reactFlowProOptions = { hideAttribution: true }
 let elk: ELKInstance | undefined
@@ -161,15 +167,15 @@ export function resolveGraphNodeClickAction({
     : "select"
 }
 
-export function resetResourceGraphLayoutEngine() {
-  if (elk) {
-    try {
-      elk.terminateWorker()
-    } catch {
-      // Worker could already be terminated.
-    }
-    elk = undefined
+/** Drops the engine, or only `failed` when given, so a newer engine survives. */
+export function resetResourceGraphLayoutEngine(failed?: ELKInstance) {
+  if (!elk || (failed && failed !== elk)) return
+  try {
+    elk.terminateWorker()
+  } catch {
+    // Worker could already be terminated.
   }
+  elk = undefined
 }
 
 function resourceGraphLayoutEngine() {
@@ -204,6 +210,7 @@ export const ResourceGraphCanvas = memo(function ResourceGraphCanvasComponent({
   onExpand,
   onDisplayChange,
   onInspect,
+  onReset,
   rootContext,
   thumbnails,
 }: {
@@ -219,6 +226,7 @@ export const ResourceGraphCanvas = memo(function ResourceGraphCanvasComponent({
   onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
   onDisplayChange: (changes: Partial<ResourceGraphDisplay>) => void
   onInspect: (mfid: string, trigger: HTMLElement) => void
+  onReset?: () => void
   rootContext: string | null
   thumbnails: Readonly<Partial<Record<string, WorkspaceDatasetThumbnail>>>
 }) {
@@ -237,6 +245,7 @@ export const ResourceGraphCanvas = memo(function ResourceGraphCanvasComponent({
         onExpand={onExpand}
         onDisplayChange={onDisplayChange}
         onInspect={onInspect}
+        onReset={onReset}
         rootContext={rootContext}
         thumbnails={thumbnails}
       />
@@ -257,6 +266,7 @@ function ResourceGraphFlow({
   onExpand,
   onDisplayChange,
   onInspect,
+  onReset,
   rootContext,
   thumbnails,
 }: {
@@ -272,6 +282,7 @@ function ResourceGraphFlow({
   onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
   onDisplayChange: (changes: Partial<ResourceGraphDisplay>) => void
   onInspect: (mfid: string, trigger: HTMLElement) => void
+  onReset?: () => void
   rootContext: string | null
   thumbnails: Readonly<Partial<Record<string, WorkspaceDatasetThumbnail>>>
 }) {
@@ -287,10 +298,12 @@ function ResourceGraphFlow({
     () => resourceGraphLayoutSignature(graph),
     [graph]
   )
-  const layoutGraph = useRef({ graph, signature: layoutSignature })
-  if (layoutGraph.current.signature !== layoutSignature) {
-    layoutGraph.current = { graph, signature: layoutSignature }
-  }
+  const latestGraph = useRef(graph)
+  useLayoutEffect(() => {
+    latestGraph.current = graph
+  }, [graph])
+  const layoutUnfinished = useRef(false)
+  const layoutDroppedByDrag = useRef(false)
   const layoutGeneration = useRef(0)
   const resetLayoutRequested = useRef(false)
   const previousLayoutDirection = useRef<LayoutDirection | null>(null)
@@ -401,11 +414,18 @@ function ResourceGraphFlow({
   }, [display.orientation])
 
   useEffect(() => {
+    let wasFullscreen = false
+    let frame: number | null = null
     const updateFullscreen = () => {
-      setFullscreen(document.fullscreenElement === surface.current)
+      const isFullscreen = document.fullscreenElement === surface.current
+      if (isFullscreen === wasFullscreen) return
+      wasFullscreen = isFullscreen
+      setFullscreen(isFullscreen)
       setFullscreenError(false)
       setTouchHintVisible(false)
-      requestAnimationFrame(() => {
+      if (frame !== null) cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(() => {
+        frame = null
         void flow.fitView({
           ...graphViewportOptions(surface.current),
           maxZoom: 1,
@@ -414,8 +434,10 @@ function ResourceGraphFlow({
       })
     }
     document.addEventListener("fullscreenchange", updateFullscreen)
-    return () =>
+    return () => {
       document.removeEventListener("fullscreenchange", updateFullscreen)
+      if (frame !== null) cancelAnimationFrame(frame)
+    }
   }, [flow])
 
   useEffect(() => {
@@ -666,7 +688,7 @@ function ResourceGraphFlow({
   useEffect(() => {
     const element = surface.current
     if (!element || !flowReady || !layoutDirection) return
-    const currentGraph = layoutGraph.current.graph
+    const currentGraph = latestGraph.current
     const requestedAnchor = pendingExpansionAnchor.current
     const resetLayout = resetLayoutRequested.current
     resetLayoutRequested.current = false
@@ -682,6 +704,7 @@ function ResourceGraphFlow({
     setFlowNodes((current) => clearEnteringFlowNodes(current))
     setEnteringEdgeIds(new Set())
     setLayoutPending(true)
+    layoutUnfinished.current = true
     const previousPositions = displayedPositions.current
     const initialPositions =
       previousPositions.size > 0 && !resetLayout && !directionChanged
@@ -735,6 +758,7 @@ function ResourceGraphFlow({
             !firstLayout
           )
         }
+        layoutUnfinished.current = false
         setLayoutPending(false)
         return
       }
@@ -785,6 +809,7 @@ function ResourceGraphFlow({
         }
         layoutAnimationFrame.current = null
         displayedPositions.current = nextPositions
+        layoutUnfinished.current = false
         setLayoutPending(false)
       }
       layoutAnimationFrame.current = requestAnimationFrame(animate)
@@ -839,11 +864,13 @@ function ResourceGraphFlow({
   )
 
   const resetLayout = useCallback(() => {
-    resetResourceGraphLayoutEngine()
+    pendingExpansionAnchor.current = null
     resetLayoutRequested.current = true
     setHoveredNode(null)
+    setSelectedNode(null)
+    onReset?.()
     setLayoutRevision((current) => current + 1)
-  }, [])
+  }, [onReset])
 
   const portalContainer = fullscreen ? surface : undefined
   const zoomIn = useCallback(
@@ -938,7 +965,20 @@ function ResourceGraphFlow({
     setLayoutPositions(next)
   }, [])
 
+  const inspect = useCallback(
+    (nodeMfid: string, trigger: HTMLElement) => {
+      // The inspector renders outside the fullscreen element, so leave it first.
+      if (document.fullscreenElement === surface.current) {
+        void document.exitFullscreen().catch(() => undefined)
+      }
+      onInspect(nodeMfid, trigger)
+    },
+    [onInspect]
+  )
+
   const cancelLayoutForDrag = useCallback(() => {
+    if (layoutUnfinished.current) layoutDroppedByDrag.current = true
+    layoutUnfinished.current = false
     layoutGeneration.current += 1
     cancelAnimationFrameRef(layoutAnimationFrame)
     cancelAnimationFrameRef(entryRevealFrame)
@@ -993,10 +1033,10 @@ function ResourceGraphFlow({
         return
       }
       if (event.currentTarget instanceof HTMLElement) {
-        onInspect(node.id, event.currentTarget)
+        inspect(node.id, event.currentTarget)
       }
     },
-    [inspectedMfid, isMobile, onInspect, validSelectedNode]
+    [inspect, inspectedMfid, isMobile, validSelectedNode]
   )
   const handleNodeDoubleClick = useCallback<NodeMouseHandler<ResourceFlowNode>>(
     (event, node) => {
@@ -1032,12 +1072,23 @@ function ResourceGraphFlow({
         centerGraphNode(nodeMfid)
         return
       }
-      onInspect(nodeMfid, node)
+      inspect(nodeMfid, node)
     },
-    [centerGraphNode, onInspect]
+    [centerGraphNode, inspect]
   )
   const handleNodeDragStop = useCallback<OnNodeDrag<ResourceFlowNode>>(
-    (_event, node) => persistNodePosition(node),
+    (_event, node) => {
+      persistNodePosition(node)
+      if (!layoutDroppedByDrag.current) return
+      layoutDroppedByDrag.current = false
+      if (
+        latestGraph.current.nodes.some(
+          (graphNode) => !displayedPositions.current.has(graphNode.unique_id)
+        )
+      ) {
+        setLayoutRevision((current) => current + 1)
+      }
+    },
     [persistNodePosition]
   )
   const handleNodeDragStart = useCallback<OnNodeDrag<ResourceFlowNode>>(
@@ -1167,6 +1218,7 @@ function ResourceGraphFlow({
       <ReactFlow<ResourceFlowNode, ResourceFlowEdge>
         aria-describedby="resource-graph-instructions"
         aria-label={`Graph of ${graph.nodes.length} resources and ${graph.edges.length} relationships`}
+        ariaLabelConfig={graphAriaLabels}
         colorMode={theme}
         className="resource-graph-canvas"
         edges={flowEdges}
@@ -1214,7 +1266,7 @@ function ResourceGraphFlow({
         use two fingers to pan or pinch to zoom, or double-tap and hold then
         drag vertically to zoom. Double-click a node, or focus it and press F,
         to center it. Press Enter or Space on a focused node to inspect it.
-        Reset layout restores the ELK arrangement.
+        Reset graph removes expanded resources and arranges the graph again.
       </span>
       {touchHintVisible && !fullscreen ? (
         <div
@@ -1333,17 +1385,19 @@ const ResourceGraphNode = memo(function ResourceGraphNodeComponent({
       <div className="resource-graph-flow-node-content">
         <Tooltip>
           <TooltipTrigger
-            aria-label={
-              data.isRoot ? `Current ${data.node.kind}` : data.node.kind
+            render={
+              <div
+                aria-hidden="true"
+                className="resource-graph-flow-node-icon-badge"
+              />
             }
-            render={<div className="resource-graph-flow-node-icon-badge" />}
           >
             <ResourceTypeIcon
               className="resource-graph-flow-node-icon"
               type={data.node.kind}
             />
           </TooltipTrigger>
-          <TooltipContent>
+          <TooltipContent portalContainer={data.portalContainer}>
             {data.isRoot ? `Current ${data.node.kind}` : data.node.kind}
           </TooltipContent>
         </Tooltip>
@@ -1632,7 +1686,7 @@ export async function layoutResourceGraph(
       ])
     )
   } catch (error) {
-    resetResourceGraphLayoutEngine()
+    resetResourceGraphLayoutEngine(engine)
     throw error
   } finally {
     if (timer) {

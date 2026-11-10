@@ -14,10 +14,7 @@ import {
   resolveAssociationHandleIds,
   resolveGraphNodeClickAction,
 } from "./resource-graph-canvas"
-import {
-  graphRelationshipOrder,
-  graphRelationshipPresentations,
-} from "./resource-graph-page"
+import {} from "./resource-graph-page"
 
 vi.mock("@/lib/motion", async (importOriginal) => ({
   ...(await importOriginal<object>()),
@@ -198,87 +195,6 @@ describe("resource graph association handle routing", () => {
       sourceHandle: "association-source-top",
       targetHandle: "association-target-bottom",
     })
-  })
-})
-
-describe("resource graph relationship classification", () => {
-  it("classifies direct, multi-hop lineage, and multi-hop associated nodes in order", () => {
-    const nodes = [
-      createMockNode("grandparent-sample"),
-      createMockNode("parent-sample"),
-      createMockNode("root-sample"),
-      createMockNode("child-sample"),
-      createMockNode("grandchild-sample"),
-      createMockNode("direct-dataset", "dataset"),
-      createMockNode("indirect-dataset", "dataset"),
-    ]
-    const edges = [
-      createMockEdge("e1", "grandparent-sample", "parent-sample", "parent"),
-      createMockEdge("e2", "parent-sample", "root-sample", "parent"),
-      createMockEdge("e3", "root-sample", "child-sample", "parent"),
-      createMockEdge("e4", "child-sample", "grandchild-sample", "parent"),
-      createMockEdge("e5", "root-sample", "direct-dataset", "associated"),
-      createMockEdge("e6", "child-sample", "indirect-dataset", "associated"),
-    ]
-    const graph = createMockGraph("root-sample", nodes, edges)
-
-    const presentations = graphRelationshipPresentations(graph)
-
-    expect(presentations.get("root-sample")).toBeUndefined()
-    expect(presentations.get("parent-sample")).toEqual({
-      distance: 1,
-      label: "Parent",
-      relationship: "parent",
-      typeLabel: null,
-    })
-    expect(presentations.get("grandparent-sample")).toEqual({
-      distance: 2,
-      label: "Ancestor",
-      relationship: "ancestor",
-      typeLabel: "2 hops upstream",
-    })
-    expect(presentations.get("child-sample")).toEqual({
-      distance: 1,
-      label: "Child",
-      relationship: "child",
-      typeLabel: null,
-    })
-    expect(presentations.get("grandchild-sample")).toEqual({
-      distance: 2,
-      label: "Descendant",
-      relationship: "descendant",
-      typeLabel: "2 hops downstream",
-    })
-    expect(presentations.get("direct-dataset")).toEqual({
-      distance: 1,
-      label: "Associated",
-      relationship: "associated",
-      typeLabel: null,
-    })
-    expect(presentations.get("indirect-dataset")).toEqual({
-      distance: 2,
-      label: "Associated",
-      relationship: "associated",
-      typeLabel: "2 hops away",
-    })
-
-    const orderedIds = nodes
-      .filter((node) => node.unique_id !== "root-sample")
-      .map((node) => node.unique_id)
-      .sort(
-        (left, right) =>
-          graphRelationshipOrder(presentations.get(left)) -
-          graphRelationshipOrder(presentations.get(right))
-      )
-
-    expect(orderedIds).toEqual([
-      "parent-sample",
-      "grandparent-sample",
-      "child-sample",
-      "grandchild-sample",
-      "direct-dataset",
-      "indirect-dataset",
-    ])
   })
 })
 

@@ -711,7 +711,6 @@
   --graph-layout-layer-gap: 96;
   --graph-layout-node-gap: 40;
   --graph-fit-padding: 52;
-  --graph-center-offset-y: 0;
   --graph-min-zoom: 0.35;
   --graph-max-zoom: 2.5;
   --graph-readable-zoom: 0.62;
@@ -1581,8 +1580,7 @@ body {
 }
 
 @media (width < --theme(--breakpoint-md)) {
-  .resource-graph-canvas {
-    --graph-center-offset-y: -48;
+  .resource-graph-surface {
     --graph-layout-layer-gap: 72;
     --graph-layout-node-gap: 32;
     --graph-fit-padding: 32;

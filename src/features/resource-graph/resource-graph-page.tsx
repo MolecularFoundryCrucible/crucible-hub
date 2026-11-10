@@ -26,7 +26,6 @@ import {
   resourceGraphQueryOptions,
 } from "@/data/crucible/resources.queries"
 import { HubApiClientError } from "@/data/crucible/result"
-import { workspaceRelationshipTypeLabel } from "@/data/crucible/resource-relationships"
 import type {
   WorkspaceDatasetThumbnail,
   WorkspaceResourceGraph,
@@ -57,14 +56,6 @@ type GraphExpansionQueryResult = {
 
 type GraphThumbnailQueryResult = {
   data?: Readonly<Partial<Record<string, WorkspaceDatasetThumbnail>>>
-}
-
-export type GraphRelationshipPresentation = {
-  distance: number
-  label: string
-  relationship:
-    "ancestor" | "associated" | "child" | "descendant" | "indirect" | "parent"
-  typeLabel: string | null
 }
 
 const initialLineageDepth = 3
@@ -292,6 +283,10 @@ export function ResourceGraphPage({
     },
     [display.associations, expansionStates, onDisplayChange, resourceMfid]
   )
+  const resetExpansions = useCallback(
+    () => setExpansion({ resourceMfid, requests: [] }),
+    [resourceMfid]
+  )
   const inspectNode = useCallback(
     (mfid: string, trigger: HTMLElement) => {
       const node = nodesByMfid.get(mfid)
@@ -420,6 +415,7 @@ export function ResourceGraphPage({
       ) : (
         <Suspense fallback={<ResourceGraphCanvasSkeleton />}>
           <ResourceGraphCanvas
+            onReset={resetExpansions}
             display={display}
             hiddenCount={filtered.hiddenCount}
             expansionStates={expansionStates}
@@ -458,246 +454,6 @@ function ResourceGraphCanvasSkeleton() {
       className="min-h-graph-canvas w-full"
     />
   )
-}
-
-export function graphRelationshipPresentations(
-  graph: WorkspaceResourceGraph
-): Map<string, GraphRelationshipPresentation> {
-  const relationships = new Map<string, GraphRelationshipPresentation>()
-  const upstreamEdgesByTarget = new Map<
-    string,
-    Array<{ relationshipType: string | null; source: string }>
-  >()
-  const downstreamEdgesBySource = new Map<
-    string,
-    Array<{ relationshipType: string | null; target: string }>
-  >()
-  const neighborsByNode = new Map<
-    string,
-    Array<{ neighbor: string; relationship: "associated" | "parent" }>
-  >()
-  const allNodeIds = new Set<string>(graph.nodes.map((node) => node.unique_id))
-
-  const addNeighbor = (
-    from: string,
-    neighbor: string,
-    relationship: "associated" | "parent"
-  ) => {
-    const list = neighborsByNode.get(from)
-    if (list) {
-      list.push({ neighbor, relationship })
-    } else {
-      neighborsByNode.set(from, [{ neighbor, relationship }])
-    }
-  }
-
-  for (const edge of graph.edges) {
-    allNodeIds.add(edge.source)
-    allNodeIds.add(edge.target)
-    addNeighbor(edge.source, edge.target, edge.relationship)
-    addNeighbor(edge.target, edge.source, edge.relationship)
-    if (edge.relationship === "parent") {
-      const upstream = upstreamEdgesByTarget.get(edge.target)
-      if (upstream) {
-        upstream.push({
-          relationshipType: edge.relationshipType,
-          source: edge.source,
-        })
-      } else {
-        upstreamEdgesByTarget.set(edge.target, [
-          { relationshipType: edge.relationshipType, source: edge.source },
-        ])
-      }
-      const downstream = downstreamEdgesBySource.get(edge.source)
-      if (downstream) {
-        downstream.push({
-          relationshipType: edge.relationshipType,
-          target: edge.target,
-        })
-      } else {
-        downstreamEdgesBySource.set(edge.source, [
-          { relationshipType: edge.relationshipType, target: edge.target },
-        ])
-      }
-    }
-  }
-
-  const upstreamDistances = new Map<
-    string,
-    { distance: number; relationshipType: string | null }
-  >()
-  const upstreamQueue: string[] = [graph.rootMfid]
-  upstreamDistances.set(graph.rootMfid, {
-    distance: 0,
-    relationshipType: null,
-  })
-  while (upstreamQueue.length > 0) {
-    const current = upstreamQueue.shift()!
-    const currentEntry = upstreamDistances.get(current)!
-    for (const edge of upstreamEdgesByTarget.get(current) ?? []) {
-      if (upstreamDistances.has(edge.source)) continue
-      upstreamDistances.set(edge.source, {
-        distance: currentEntry.distance + 1,
-        relationshipType:
-          currentEntry.distance === 0 ? edge.relationshipType : null,
-      })
-      upstreamQueue.push(edge.source)
-    }
-  }
-
-  const downstreamDistances = new Map<
-    string,
-    { distance: number; relationshipType: string | null }
-  >()
-  const downstreamQueue: string[] = [graph.rootMfid]
-  downstreamDistances.set(graph.rootMfid, {
-    distance: 0,
-    relationshipType: null,
-  })
-  while (downstreamQueue.length > 0) {
-    const current = downstreamQueue.shift()!
-    const currentEntry = downstreamDistances.get(current)!
-    for (const edge of downstreamEdgesBySource.get(current) ?? []) {
-      if (downstreamDistances.has(edge.target)) continue
-      downstreamDistances.set(edge.target, {
-        distance: currentEntry.distance + 1,
-        relationshipType:
-          currentEntry.distance === 0 ? edge.relationshipType : null,
-      })
-      downstreamQueue.push(edge.target)
-    }
-  }
-
-  const directAssociatedMfids = new Set<string>()
-  for (const edge of graph.edges) {
-    if (edge.relationship !== "associated") continue
-    if (edge.source === graph.rootMfid) {
-      directAssociatedMfids.add(edge.target)
-    } else if (edge.target === graph.rootMfid) {
-      directAssociatedMfids.add(edge.source)
-    }
-  }
-
-  const generalDistances = new Map<
-    string,
-    { distance: number; hasAssociation: boolean }
-  >()
-  const generalQueue: string[] = [graph.rootMfid]
-  generalDistances.set(graph.rootMfid, {
-    distance: 0,
-    hasAssociation: false,
-  })
-  while (generalQueue.length > 0) {
-    const current = generalQueue.shift()!
-    const currentEntry = generalDistances.get(current)!
-    for (const edge of neighborsByNode.get(current) ?? []) {
-      if (generalDistances.has(edge.neighbor)) continue
-      generalDistances.set(edge.neighbor, {
-        distance: currentEntry.distance + 1,
-        hasAssociation:
-          currentEntry.hasAssociation || edge.relationship === "associated",
-      })
-      generalQueue.push(edge.neighbor)
-    }
-  }
-
-  for (const nodeMfid of allNodeIds) {
-    if (nodeMfid === graph.rootMfid) continue
-    const upstream = upstreamDistances.get(nodeMfid)
-    const downstream = downstreamDistances.get(nodeMfid)
-
-    if (upstream && upstream.distance === 1) {
-      relationships.set(nodeMfid, {
-        distance: 1,
-        label: "Parent",
-        relationship: "parent",
-        typeLabel: upstream.relationshipType
-          ? workspaceRelationshipTypeLabel({
-              relationship: "parent",
-              relationship_type: upstream.relationshipType,
-            })
-          : null,
-      })
-      continue
-    }
-    if (downstream && downstream.distance === 1) {
-      relationships.set(nodeMfid, {
-        distance: 1,
-        label: "Child",
-        relationship: "child",
-        typeLabel: downstream.relationshipType
-          ? workspaceRelationshipTypeLabel({
-              relationship: "child",
-              relationship_type: downstream.relationshipType,
-            })
-          : null,
-      })
-      continue
-    }
-    if (directAssociatedMfids.has(nodeMfid)) {
-      relationships.set(nodeMfid, {
-        distance: 1,
-        label: "Associated",
-        relationship: "associated",
-        typeLabel: null,
-      })
-      continue
-    }
-    if (upstream && (!downstream || upstream.distance <= downstream.distance)) {
-      relationships.set(nodeMfid, {
-        distance: upstream.distance,
-        label: "Ancestor",
-        relationship: "ancestor",
-        typeLabel: `${upstream.distance} hops upstream`,
-      })
-      continue
-    }
-    if (downstream) {
-      relationships.set(nodeMfid, {
-        distance: downstream.distance,
-        label: "Descendant",
-        relationship: "descendant",
-        typeLabel: `${downstream.distance} hops downstream`,
-      })
-      continue
-    }
-    const general = generalDistances.get(nodeMfid)
-    if (general && general.hasAssociation) {
-      relationships.set(nodeMfid, {
-        distance: general.distance,
-        label: "Associated",
-        relationship: "associated",
-        typeLabel:
-          general.distance > 1 ? `${general.distance} hops away` : null,
-      })
-      continue
-    }
-    relationships.set(nodeMfid, {
-      distance: general?.distance ?? 2,
-      label: "Indirect",
-      relationship: "indirect",
-      typeLabel:
-        general && general.distance > 1
-          ? `${general.distance} hops away`
-          : null,
-    })
-  }
-
-  return relationships
-}
-
-export function graphRelationshipOrder(
-  presentation:
-    Pick<GraphRelationshipPresentation, "distance" | "relationship"> | undefined
-) {
-  if (!presentation) return 6
-  const hopOffset = Math.max(presentation.distance - 1, 0) * 0.01
-  if (presentation.relationship === "parent") return 0
-  if (presentation.relationship === "ancestor") return 1 + hopOffset
-  if (presentation.relationship === "child") return 2
-  if (presentation.relationship === "descendant") return 3 + hopOffset
-  if (presentation.relationship === "associated") return 4 + hopOffset
-  return 5 + hopOffset
 }
 
 function graphErrorMessage(error: Error | null) {

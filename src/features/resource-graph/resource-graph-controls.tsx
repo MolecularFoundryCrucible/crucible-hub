@@ -7,6 +7,7 @@ import {
   FilterIcon,
   FitGraphIcon,
   GraphDisplayOptionsIcon,
+  RemoveFilterIcon,
   ResetGraphLayoutIcon,
   ZoomInGraphIcon,
   ZoomOutGraphIcon,
@@ -179,7 +180,7 @@ export function GraphFilterMenu({
                     onDisplayChange({ associations: true, hidden: [] })
                   }
                 >
-                  <ResetGraphLayoutIcon aria-hidden="true" />
+                  <RemoveFilterIcon aria-hidden="true" />
                   Show everything
                 </DropdownMenuItem>
               </DropdownMenuGroup>
@@ -306,7 +307,7 @@ export function GraphViewToolbar({
             <DropdownMenuGroup>
               <DropdownMenuItem onClick={onResetLayout}>
                 <ResetGraphLayoutIcon aria-hidden="true" />
-                Reset layout
+                Reset graph
               </DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>
