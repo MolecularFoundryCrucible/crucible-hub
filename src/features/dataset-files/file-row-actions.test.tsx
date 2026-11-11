@@ -122,15 +122,11 @@ describe("FileRowActions", () => {
     fireEvent.click(
       screen.getByRole("button", { name: "Actions for scan-01.h5" })
     )
-    fireEvent.click(
-      await screen.findByRole("menuitem", { name: /Remove from dataset/ })
-    )
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Remove" }))
     const dialog = await screen.findByRole("alertdialog", {
       name: "Remove scan-01.h5?",
     })
-    fireEvent.click(
-      within(dialog).getByRole("button", { name: "Remove from dataset" })
-    )
+    fireEvent.click(within(dialog).getByRole("button", { name: "Remove" }))
 
     await waitFor(() =>
       expect(vi.mocked(removeDatasetFileFn)).toHaveBeenCalledWith({

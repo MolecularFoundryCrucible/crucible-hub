@@ -149,7 +149,7 @@ describe("DatasetFiles", () => {
     ).toBe(false)
   })
 
-  it("offers Remove from dataset only with the delete capability", async () => {
+  it("offers Remove only with the delete capability", async () => {
     vi.mocked(getWorkspaceDatasetFiles).mockResolvedValue({
       status: "ok",
       data: [demoWorkspace.files[0]],
@@ -160,9 +160,7 @@ describe("DatasetFiles", () => {
     fireEvent.click(
       await screen.findByRole("button", { name: `Actions for ${name}` })
     )
-    expect(
-      await screen.findByRole("menuitem", { name: /Remove from dataset/ })
-    ).toBeTruthy()
+    expect(await screen.findByRole("menuitem", { name: "Remove" })).toBeTruthy()
     expect(screen.queryByRole("menuitem", { name: /Rename/ })).toBeNull()
     cleanup()
 

@@ -152,7 +152,7 @@ export function FileRowActions({
                 variant="destructive"
               >
                 <RemoveFileIcon aria-hidden="true" />
-                Remove from dataset
+                Remove
               </DropdownMenuItem>
             ) : null}
           </DropdownMenuGroup>
@@ -189,7 +189,7 @@ export function FileRowActions({
         </Field>
       </ConfirmationDialog>
       <ConfirmationDialog
-        confirmLabel="Remove from dataset"
+        confirmLabel="Remove"
         description="The file and its ingestion history leave this dataset. Its stored copy is cleaned up later."
         error={error}
         kind="alert"
