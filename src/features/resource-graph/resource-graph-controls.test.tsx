@@ -53,6 +53,7 @@ describe("graph filters", () => {
     render(
       <ResourceGraphLegend
         display={resolveResourceGraphDisplay({ hide: ["dataset"] })}
+        expandable
         hiddenCount={3}
       />
     )
@@ -60,5 +61,6 @@ describe("graph filters", () => {
     expect(screen.getByText("Sample")).toBeTruthy()
     expect(screen.queryByText("Dataset")).toBeNull()
     expect(screen.getByText("3 hidden by filters")).toBeTruthy()
+    expect(screen.getByText("Load more")).toBeTruthy()
   })
 })

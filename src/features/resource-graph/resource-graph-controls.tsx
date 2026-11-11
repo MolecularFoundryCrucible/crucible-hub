@@ -6,6 +6,11 @@ import {
   ExploreGraphFocusIcon,
   FilterIcon,
   FitGraphIcon,
+  GraphAncestorsIcon,
+  GraphAncestorsVerticalIcon,
+  GraphAssociationsIcon,
+  GraphDescendantsIcon,
+  GraphDescendantsVerticalIcon,
   GraphDisplayOptionsIcon,
   RemoveFilterIcon,
   ResetGraphLayoutIcon,
@@ -331,11 +336,20 @@ export function GraphViewToolbar({
 
 export function ResourceGraphLegend({
   display,
+  expandable,
   hiddenCount,
 }: {
   display: ResourceGraphDisplay
+  expandable: boolean
   hiddenCount: number
 }) {
+  const vertical = display.orientation === "vertical"
+  const AncestorsIcon = vertical
+    ? GraphAncestorsVerticalIcon
+    : GraphAncestorsIcon
+  const DescendantsIcon = vertical
+    ? GraphDescendantsVerticalIcon
+    : GraphDescendantsIcon
   const lineageShown = !graphLineageTypes.every((value) =>
     display.hidden.includes(value)
   )
@@ -372,6 +386,16 @@ export function ResourceGraphLegend({
             className="resource-graph-legend-edge resource-graph-legend-edge-associated"
           />
           Associated
+        </span>
+      ) : null}
+      {expandable ? (
+        <span className="flex items-center gap-1.5">
+          <span aria-hidden="true" className="flex items-center">
+            <AncestorsIcon className="size-3.5" />
+            <DescendantsIcon className="size-3.5" />
+            <GraphAssociationsIcon className="size-3.5" />
+          </span>
+          Load more
         </span>
       ) : null}
       {hiddenCount > 0 ? (

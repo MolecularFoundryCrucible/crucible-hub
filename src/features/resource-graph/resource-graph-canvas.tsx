@@ -82,6 +82,7 @@ type ExpansionAnchor = {
   mode: GraphExpansionMode
   nodeMfid: string
   requestStarted: boolean
+  restoreFocus: boolean
   retry: boolean
 }
 
@@ -246,6 +247,7 @@ function ResourceGraphFlow({
   const [fullscreen, setFullscreen] = useState(false)
   const [fullscreenError, setFullscreenError] = useState(false)
   const [touchHintVisible, setTouchHintVisible] = useState(false)
+  const [keyboardNavigation, setKeyboardNavigation] = useState(false)
   const [flowNodes, setFlowNodes, handleNodesChange] =
     useNodesState<ResourceFlowNode>([])
 
@@ -277,6 +279,9 @@ function ResourceGraphFlow({
         mode,
         nodeMfid,
         requestStarted: graphExpansionPending(state),
+        restoreFocus: Boolean(
+          surface.current?.contains(document.activeElement)
+        ),
         retry: Boolean(state?.isError),
       }
       onExpand(nodeMfid, mode)
@@ -778,6 +783,18 @@ function ResourceGraphFlow({
       (state?.isError && (!anchor.retry || anchor.requestStarted))
     ) {
       pendingExpansionAnchor.current = null
+      if (!state.isSuccess || !anchor.restoreFocus) return
+      // The finished expansion button is removed, so focus its node instead.
+      const frame = requestAnimationFrame(() => {
+        const active = document.activeElement
+        if (active && active !== document.body) return
+        surface.current
+          ?.querySelector<HTMLElement>(
+            `.react-flow__node[data-id="${CSS.escape(anchor.nodeMfid)}"]`
+          )
+          ?.focus()
+      })
+      return () => cancelAnimationFrame(frame)
     }
   }, [expansionStates])
 
@@ -1109,6 +1126,10 @@ function ResourceGraphFlow({
       className="resource-graph-surface relative overflow-hidden rounded-xl border"
       data-density={graphDensity(graph.nodes.length)}
       data-resource-preview-trigger=""
+      onKeyDownCapture={(event) => {
+        if (event.key === "Tab") setKeyboardNavigation(true)
+      }}
+      onPointerDownCapture={() => setKeyboardNavigation(false)}
       ref={surface}
     >
       <GraphFilterMenu
@@ -1154,6 +1175,7 @@ function ResourceGraphFlow({
         onNodeMouseLeave={handleNodeMouseLeave}
         onPaneClick={handlePaneClick}
         onlyRenderVisibleElements={
+          !keyboardNavigation &&
           graph.nodes.length >= GRAPH_VIEWPORT_CULLING_NODE_THRESHOLD
         }
         preventScrolling={false}
@@ -1206,7 +1228,13 @@ function ResourceGraphFlow({
           {loading ? "Loading" : "Arranging"}
         </div>
       ) : null}
-      <ResourceGraphLegend display={display} hiddenCount={hiddenCount} />
+      <ResourceGraphLegend
+        display={display}
+        expandable={[...expansionModesByNode.values()].some(
+          (modes) => modes.length > 0
+        )}
+        hiddenCount={hiddenCount}
+      />
     </div>
   )
 }
