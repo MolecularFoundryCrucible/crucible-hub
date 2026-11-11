@@ -210,6 +210,11 @@ export async function layoutResourceGraph(
   }
 }
 
+/**
+ * Layers by lineage distance from the current resource (ancestors before,
+ * descendants after, associated resources level with their neighbour), used
+ * when ELK fails or times out.
+ */
 export function fallbackResourceGraphLayout(
   graph: WorkspaceResourceGraph,
   element: HTMLElement,
@@ -219,22 +224,68 @@ export function fallbackResourceGraphLayout(
   const nodeHeight = graphNumberToken(element, "--graph-node-height")
   const rootWidth = graphNumberToken(element, "--graph-root-node-width")
   const rootHeight = graphNumberToken(element, "--graph-root-node-height")
-  const gap = graphNumberToken(element, "--graph-layout-layer-gap")
-  const rootIndex = graph.nodes.findIndex(
-    (node) => node.unique_id === graph.rootMfid
-  )
+  const layerGap = graphNumberToken(element, "--graph-layout-layer-gap")
+  const nodeGap = graphNumberToken(element, "--graph-layout-node-gap")
+  const horizontal = direction === "RIGHT"
+  const layerStep = (horizontal ? nodeWidth : nodeHeight) + layerGap
+  const crossStep = (horizontal ? nodeHeight : nodeWidth) + nodeGap
+
+  const neighbours = new Map<string, { id: string; offset: number }[]>()
+  const link = (from: string, id: string, offset: number) => {
+    const list = neighbours.get(from)
+    if (list) list.push({ id, offset })
+    else neighbours.set(from, [{ id, offset }])
+  }
+  for (const edge of graph.edges) {
+    const offset = edge.relationship === "parent" ? 1 : 0
+    link(edge.source, edge.target, offset)
+    link(edge.target, edge.source, -offset)
+  }
+
+  const layers = new Map([[graph.rootMfid, 0]])
+  const queue = [graph.rootMfid]
+  for (const from of queue) {
+    const layer = layers.get(from) ?? 0
+    for (const next of neighbours.get(from) ?? []) {
+      if (layers.has(next.id)) continue
+      layers.set(next.id, layer + next.offset)
+      queue.push(next.id)
+    }
+  }
+
+  const members = new Map<number, string[]>()
+  for (const node of graph.nodes) {
+    if (node.unique_id === graph.rootMfid) continue
+    const layer = layers.get(node.unique_id) ?? 0
+    const list = members.get(layer)
+    if (list) list.push(node.unique_id)
+    else members.set(layer, [node.unique_id])
+  }
+
+  const cross = new Map<string, number>([[graph.rootMfid, 0]])
+  for (const [layer, ids] of members) {
+    ids.forEach((id, index) => {
+      cross.set(
+        id,
+        layer === 0
+          ? (index % 2 === 0 ? 1 : -1) * Math.ceil((index + 1) / 2) * crossStep
+          : (index - (ids.length - 1) / 2) * crossStep
+      )
+    })
+  }
+
   return new Map(
-    graph.nodes.map((node, index) => {
-      const offset = index - Math.max(rootIndex, 0)
-      const width = node.unique_id === graph.rootMfid ? rootWidth : nodeWidth
-      const height = node.unique_id === graph.rootMfid ? rootHeight : nodeHeight
+    graph.nodes.map((node) => {
+      const isRoot = node.unique_id === graph.rootMfid
+      const main = (layers.get(node.unique_id) ?? 0) * layerStep
+      const offset = cross.get(node.unique_id) ?? 0
       return [
         node.unique_id,
         {
-          height,
-          width,
-          x: direction === "RIGHT" ? offset * (nodeWidth + gap) : 0,
-          y: direction === "DOWN" ? offset * (nodeHeight + gap) : 0,
+          height: isRoot ? rootHeight : nodeHeight,
+          width: isRoot ? rootWidth : nodeWidth,
+          x: horizontal ? main : offset,
+          y: horizontal ? offset : main,
         },
       ]
     })

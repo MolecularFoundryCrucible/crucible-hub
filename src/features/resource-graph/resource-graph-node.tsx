@@ -23,27 +23,18 @@ import { TruncatedText } from "@/components/ui/truncation-tooltip"
 import type { WorkspaceResourceGraphNode } from "@/data/crucible/workspace-source"
 import { cn } from "@/lib/utils"
 
-import {
-  graphExpansionModeLabel,
-  graphExpansionModesForNode,
-  graphExpansionPending,
-  graphExpansionState,
-} from "./resource-graph-expansion"
+import { graphExpansionModeLabel } from "./resource-graph-expansion"
+import type { GraphExpansionMode } from "./resource-graph-expansion"
 import type {
-  GraphExpansionMode,
-  GraphExpansionState,
-} from "./resource-graph-expansion"
-import type { ResourceFlowNode } from "./resource-graph-flow-model"
+  GraphNodeExpansion,
+  ResourceFlowNode,
+} from "./resource-graph-flow-model"
 import type { LayoutDirection } from "./resource-graph-layout"
 
+// React Flow positions the node's wrapper, so the node only needs its data.
 const ResourceGraphNode = memo(function ResourceGraphNodeComponent({
   data,
 }: NodeProps<ResourceFlowNode>) {
-  const expansionModes = graphExpansionModesForNode(
-    data.node,
-    data.expansionStates,
-    data.expansionModes
-  )
   return (
     <div
       className="resource-graph-flow-node"
@@ -56,70 +47,7 @@ const ResourceGraphNode = memo(function ResourceGraphNodeComponent({
       data-root={data.isRoot ? "" : undefined}
       data-thumbnail={data.thumbnail ? "" : undefined}
     >
-      <Handle
-        className="resource-graph-handle"
-        id="lineage-target"
-        position={
-          data.layoutDirection === "DOWN" ? Position.Top : Position.Left
-        }
-        type="target"
-      />
-      <Handle
-        className="resource-graph-handle"
-        id="lineage-source"
-        position={
-          data.layoutDirection === "DOWN" ? Position.Bottom : Position.Right
-        }
-        type="source"
-      />
-      <Handle
-        className="resource-graph-handle resource-graph-handle-association-source"
-        id="association-source-top"
-        position={Position.Top}
-        type="source"
-      />
-      <Handle
-        className="resource-graph-handle resource-graph-handle-association-source"
-        id="association-source-right"
-        position={Position.Right}
-        type="source"
-      />
-      <Handle
-        className="resource-graph-handle resource-graph-handle-association-source"
-        id="association-source-bottom"
-        position={Position.Bottom}
-        type="source"
-      />
-      <Handle
-        className="resource-graph-handle resource-graph-handle-association-source"
-        id="association-source-left"
-        position={Position.Left}
-        type="source"
-      />
-      <Handle
-        className="resource-graph-handle resource-graph-handle-association-target"
-        id="association-target-top"
-        position={Position.Top}
-        type="target"
-      />
-      <Handle
-        className="resource-graph-handle resource-graph-handle-association-target"
-        id="association-target-right"
-        position={Position.Right}
-        type="target"
-      />
-      <Handle
-        className="resource-graph-handle resource-graph-handle-association-target"
-        id="association-target-bottom"
-        position={Position.Bottom}
-        type="target"
-      />
-      <Handle
-        className="resource-graph-handle resource-graph-handle-association-target"
-        id="association-target-left"
-        position={Position.Left}
-        type="target"
-      />
+      <ResourceGraphNodeHandles layoutDirection={data.layoutDirection} />
       <div className="resource-graph-flow-node-content">
         <Tooltip>
           <TooltipTrigger
@@ -165,95 +93,146 @@ const ResourceGraphNode = memo(function ResourceGraphNodeComponent({
           />
         ) : null}
       </div>
-      {expansionModes.length > 0 ? (
-        <GraphNodeExpansionControls
-          modes={expansionModes}
-          expansionStates={data.expansionStates}
+      {data.expansions.map((expansion) => (
+        <GraphNodeExpansionAction
+          expansion={expansion}
+          key={expansion.mode}
           layoutDirection={data.layoutDirection}
           node={data.node}
           onExpand={data.onExpand}
           portalContainer={data.portalContainer}
         />
-      ) : null}
+      ))}
     </div>
   )
-})
+}, sameNodeProps)
+
+function sameNodeProps(
+  previous: NodeProps<ResourceFlowNode>,
+  next: NodeProps<ResourceFlowNode>
+) {
+  return previous.data === next.data
+}
+
+const ResourceGraphNodeHandles = memo(
+  function ResourceGraphNodeHandlesComponent({
+    layoutDirection,
+  }: {
+    layoutDirection: LayoutDirection
+  }) {
+    return (
+      <>
+        <Handle
+          className="resource-graph-handle"
+          id="lineage-target"
+          position={layoutDirection === "DOWN" ? Position.Top : Position.Left}
+          type="target"
+        />
+        <Handle
+          className="resource-graph-handle"
+          id="lineage-source"
+          position={
+            layoutDirection === "DOWN" ? Position.Bottom : Position.Right
+          }
+          type="source"
+        />
+        <Handle
+          className="resource-graph-handle resource-graph-handle-association-source"
+          id="association-source-top"
+          position={Position.Top}
+          type="source"
+        />
+        <Handle
+          className="resource-graph-handle resource-graph-handle-association-source"
+          id="association-source-right"
+          position={Position.Right}
+          type="source"
+        />
+        <Handle
+          className="resource-graph-handle resource-graph-handle-association-source"
+          id="association-source-bottom"
+          position={Position.Bottom}
+          type="source"
+        />
+        <Handle
+          className="resource-graph-handle resource-graph-handle-association-source"
+          id="association-source-left"
+          position={Position.Left}
+          type="source"
+        />
+        <Handle
+          className="resource-graph-handle resource-graph-handle-association-target"
+          id="association-target-top"
+          position={Position.Top}
+          type="target"
+        />
+        <Handle
+          className="resource-graph-handle resource-graph-handle-association-target"
+          id="association-target-right"
+          position={Position.Right}
+          type="target"
+        />
+        <Handle
+          className="resource-graph-handle resource-graph-handle-association-target"
+          id="association-target-bottom"
+          position={Position.Bottom}
+          type="target"
+        />
+        <Handle
+          className="resource-graph-handle resource-graph-handle-association-target"
+          id="association-target-left"
+          position={Position.Left}
+          type="target"
+        />
+      </>
+    )
+  }
+)
 
 export const nodeTypes = { resource: ResourceGraphNode }
 
-function GraphNodeExpansionControls({
-  modes,
-  expansionStates,
-  layoutDirection,
-  node,
-  onExpand,
-  portalContainer,
-}: {
-  modes: readonly GraphExpansionMode[]
-  expansionStates: ReadonlyMap<string, GraphExpansionState>
-  layoutDirection: LayoutDirection
-  node: WorkspaceResourceGraphNode
-  onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
-  portalContainer?: React.RefObject<HTMLDivElement | null>
-}) {
-  return (
-    <>
-      {modes.map((mode) => (
-        <GraphNodeExpansionAction
-          key={mode}
-          layoutDirection={layoutDirection}
-          mode={mode}
-          node={node}
-          onExpand={onExpand}
-          portalContainer={portalContainer}
-          state={graphExpansionState(expansionStates, node.unique_id, mode)}
-        />
-      ))}
-    </>
-  )
-}
-
 function GraphNodeExpansionAction({
-  mode,
+  expansion,
   layoutDirection,
   node,
   onExpand,
   portalContainer,
-  state,
 }: {
-  mode: GraphExpansionMode
+  expansion: GraphNodeExpansion
   layoutDirection: LayoutDirection
   node: WorkspaceResourceGraphNode
   onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
   portalContainer?: React.RefObject<HTMLDivElement | null>
-  state?: GraphExpansionState
 }) {
-  const pending = graphExpansionPending(state)
+  const { mode, status } = expansion
+  const pending = status === "pending"
   const Icon = graphExpansionIcon(mode, layoutDirection)
-  const modeLabel = graphExpansionModeLabel(mode)
-  const label = state?.isError
-    ? `Retry loading ${modeLabel.toLowerCase()} from ${node.name}`
-    : `Load ${modeLabel.toLowerCase()} from ${node.name}`
+  const modeLabel = graphExpansionModeLabel(mode).toLowerCase()
+  const label =
+    status === "error"
+      ? `Retry loading ${modeLabel} from ${node.name}`
+      : `Load ${modeLabel} from ${node.name}`
   return (
     <Tooltip>
       <TooltipTrigger
         render={
           <Button
+            aria-busy={pending || undefined}
+            aria-disabled={pending || undefined}
             aria-label={label}
             className={cn(
               "nodrag nopan resource-graph-expansion-action",
               `resource-graph-expansion-${mode}`
             )}
-            data-error={state?.isError ? "" : undefined}
+            data-error={status === "error" ? "" : undefined}
             data-pending={pending ? "" : undefined}
-            disabled={pending}
             onClick={(event) => {
               event.stopPropagation()
-              onExpand(node.unique_id, mode)
+              if (!pending) onExpand(node.unique_id, mode)
             }}
             size="icon-circle"
             type="button"
-            variant={state?.isError ? "destructive" : "outline"}
+            variant={status === "error" ? "destructive" : "outline"}
           />
         }
       >

@@ -46,7 +46,7 @@ import {
   clearEnteringFlowNodes,
   reconcileResourceFlowNodes,
   updateResourceFlowNodePositions,
-  updateResourceFlowNodePresentation,
+  presentResourceFlowNodes,
 } from "./resource-graph-flow-model"
 import type {
   ResourceFlowEdge,
@@ -283,6 +283,15 @@ function ResourceGraphFlow({
     },
     [expansionStates, layoutSignature, onExpand]
   )
+  const latestRequestExpansion = useRef(requestExpansion)
+  useLayoutEffect(() => {
+    latestRequestExpansion.current = requestExpansion
+  }, [requestExpansion])
+  const stableRequestExpansion = useCallback(
+    (nodeMfid: string, mode: GraphExpansionMode) =>
+      latestRequestExpansion.current(nodeMfid, mode),
+    []
+  )
   const nodePresentation = useRef<ResourceFlowNodePresentation | null>(null)
   nodePresentation.current = layoutDirection
     ? {
@@ -293,7 +302,7 @@ function ResourceGraphFlow({
         expansionStates,
         inspectedMfid,
         layoutDirection,
-        onExpand: requestExpansion,
+        onExpand: stableRequestExpansion,
         portalContainer: fullscreen ? surface : undefined,
         rootContext,
         thumbnails,
@@ -838,20 +847,8 @@ function ResourceGraphFlow({
     if (!layoutDirection) return
     const presentation = nodePresentation.current
     if (!presentation) return
-    const graphNodes = new Map(
-      graph.nodes.map((node) => [node.unique_id, node] as const)
-    )
     setFlowNodes((current) =>
-      current.map((flowNode) => {
-        const node = graphNodes.get(flowNode.id)
-        if (!node) return flowNode
-        return updateResourceFlowNodePresentation(
-          flowNode,
-          graph.rootMfid,
-          node,
-          presentation
-        )
-      })
+      presentResourceFlowNodes(current, graph, presentation)
     )
   }, [
     activeHighlightMfid,
@@ -860,11 +857,9 @@ function ResourceGraphFlow({
     expansionModesByNode,
     expansionStates,
     fullscreen,
-    graph.nodes,
-    graph.rootMfid,
+    graph,
     inspectedMfid,
     layoutDirection,
-    requestExpansion,
     rootContext,
     setFlowNodes,
     thumbnails,

@@ -7,18 +7,27 @@ import type {
   WorkspaceResourceGraphNode,
 } from "@/data/crucible/workspace-source"
 
+import {
+  graphExpansionModesForNode,
+  graphExpansionPending,
+  graphExpansionState,
+} from "./resource-graph-expansion"
 import type {
   GraphExpansionMode,
   GraphExpansionState,
 } from "./resource-graph-expansion"
 import type { LayoutDirection, LayoutPosition } from "./resource-graph-layout"
 
+export type GraphNodeExpansion = {
+  mode: GraphExpansionMode
+  status: "error" | "idle" | "pending"
+}
+
 export type ResourceFlowNodeData = {
   context: string | null
   dimmed: boolean
   entering: boolean
-  expansionStates: ReadonlyMap<string, GraphExpansionState>
-  expansionModes: readonly GraphExpansionMode[]
+  expansions: readonly GraphNodeExpansion[]
   highlighted: boolean
   inspected: boolean
   isRoot: boolean
@@ -114,29 +123,119 @@ export function reconcileResourceFlowNodes(
   })
 }
 
-export function updateResourceFlowNodePresentation(
+function updateResourceFlowNodePresentation(
   flowNode: ResourceFlowNode,
   rootMfid: string,
   node: WorkspaceResourceGraphNode,
   presentation: ResourceFlowNodePresentation
 ): ResourceFlowNode {
+  const data = resourceFlowNodeData(
+    rootMfid,
+    node,
+    presentation,
+    flowNode.data.entering
+  )
+  const ariaLabel = resourceFlowNodeAriaLabel(node)
+  const sourcePosition =
+    presentation.layoutDirection === "DOWN" ? Position.Bottom : Position.Right
+  const targetPosition =
+    presentation.layoutDirection === "DOWN" ? Position.Top : Position.Left
+  if (
+    sameNodeData(flowNode.data, data) &&
+    flowNode.ariaLabel === ariaLabel &&
+    flowNode.sourcePosition === sourcePosition &&
+    flowNode.targetPosition === targetPosition
+  ) {
+    return flowNode
+  }
   return {
     ...flowNode,
-    ariaLabel: resourceFlowNodeAriaLabel(node),
-    data: resourceFlowNodeData(
-      rootMfid,
-      node,
-      presentation,
-      flowNode.data.entering
-    ),
+    ariaLabel,
+    data: sameNodeData(flowNode.data, data) ? flowNode.data : data,
     focusable: true,
-    sourcePosition:
-      presentation.layoutDirection === "DOWN"
-        ? Position.Bottom
-        : Position.Right,
-    targetPosition:
-      presentation.layoutDirection === "DOWN" ? Position.Top : Position.Left,
+    sourcePosition,
+    targetPosition,
   }
+}
+
+/** Updates presentation, keeping the array and each unchanged node as they were. */
+export function presentResourceFlowNodes(
+  current: ResourceFlowNode[],
+  graph: WorkspaceResourceGraph,
+  presentation: ResourceFlowNodePresentation
+) {
+  const graphNodes = new Map(
+    graph.nodes.map((node) => [node.unique_id, node] as const)
+  )
+  const next = current.map((flowNode) => {
+    const node = graphNodes.get(flowNode.id)
+    return node
+      ? updateResourceFlowNodePresentation(
+          flowNode,
+          graph.rootMfid,
+          node,
+          presentation
+        )
+      : flowNode
+  })
+  return next.some((flowNode, index) => flowNode !== current[index])
+    ? next
+    : current
+}
+
+function nodeExpansions(
+  node: WorkspaceResourceGraphNode,
+  presentation: ResourceFlowNodePresentation
+): GraphNodeExpansion[] {
+  return graphExpansionModesForNode(
+    node,
+    presentation.expansionStates,
+    presentation.expansionModesByNode.get(node.unique_id)
+  ).map((mode) => {
+    const state = graphExpansionState(
+      presentation.expansionStates,
+      node.unique_id,
+      mode
+    )
+    return {
+      mode,
+      status: graphExpansionPending(state)
+        ? "pending"
+        : state?.isError
+          ? "error"
+          : "idle",
+    }
+  })
+}
+
+function sameExpansions(
+  left: readonly GraphNodeExpansion[],
+  right: readonly GraphNodeExpansion[]
+) {
+  return (
+    left.length === right.length &&
+    left.every(
+      (item, index) =>
+        item.mode === right[index].mode && item.status === right[index].status
+    )
+  )
+}
+
+function sameNodeData(left: ResourceFlowNodeData, right: ResourceFlowNodeData) {
+  return (
+    left.context === right.context &&
+    left.dimmed === right.dimmed &&
+    left.entering === right.entering &&
+    left.highlighted === right.highlighted &&
+    left.inspected === right.inspected &&
+    left.isRoot === right.isRoot &&
+    left.layoutDirection === right.layoutDirection &&
+    left.node === right.node &&
+    left.onExpand === right.onExpand &&
+    left.portalContainer === right.portalContainer &&
+    left.thumbnail === right.thumbnail &&
+    sameExpansions(left.expansions, right.expansions)
+  )
 }
 
 function resourceFlowNodeData(
@@ -153,8 +252,7 @@ function resourceFlowNodeData(
       !presentation.activeNeighbours.has(node.unique_id)
     ),
     entering,
-    expansionStates: presentation.expansionStates,
-    expansionModes: presentation.expansionModesByNode.get(node.unique_id) ?? [],
+    expansions: nodeExpansions(node, presentation),
     highlighted: presentation.activeHighlightMfid === node.unique_id,
     inspected: presentation.inspectedMfid === node.unique_id,
     isRoot: node.unique_id === rootMfid,
