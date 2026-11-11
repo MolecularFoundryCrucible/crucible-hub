@@ -382,7 +382,7 @@ export async function patchWorkspaceProject(
     ) {
       throw new CrucibleResponseError(409)
     }
-    return toWorkspaceProject({ ...project, ...changes })
+    return toWorkspaceProject({ proposal_sync: false, ...project, ...changes })
   }
 
   const client = createCrucibleClient(configuration)

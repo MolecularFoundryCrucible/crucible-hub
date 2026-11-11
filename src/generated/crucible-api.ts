@@ -828,7 +828,7 @@ export interface paths {
         put?: never;
         /**
          * Get First Thumbnails
-         * @description Given a list of dataset unique_ids, returns a dict mapping each unique_id
+         * @description Given a list of at most 1000 dataset unique_ids, returns a dict mapping each unique_id
          *     to its first (lowest-id) thumbnail. Datasets with no thumbnail or that the
          *     caller cannot access are omitted from the response.
          *
@@ -1248,15 +1248,11 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Complete Resumable Upload
+         * Removed Legacy Upload
          * @deprecated
-         * @description Finalise a GCS resumable upload.
-         *     Requires contributor access to the dataset and ownership of the upload session.
-         *     Verifies the blob landed in GCS, registers it as an AssociatedFile on the dataset,
-         *     and deletes the upload session record.
-         *     Deprecated: use POST /datasets/{dataset_mfid}/upload/multipart/initiate.
+         * @description Removed: the resumable and token uploads. Use the signed multipart routes under /datasets/{dataset_mfid}/upload/multipart.
          */
-        post: operations["complete_resumable_upload_datasets__dataset_mfid__upload_complete_post"];
+        post: operations["removed_legacy_upload_datasets__dataset_mfid__upload_complete_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1273,16 +1269,11 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Initiate Resumable Upload
+         * Removed Legacy Upload
          * @deprecated
-         * @description Initiate a GCS resumable upload session for a large file.
-         *     Requires contributor access to the dataset.
-         *     Returns an upload_id and a resumable_uri the client uses to PUT chunks directly to GCS
-         *     (no API credentials needed for the chunk transfers).
-         *     Call POST /datasets/{dataset_mfid}/upload/complete when all chunks are uploaded.
-         *     Deprecated: use POST /datasets/{dataset_mfid}/upload/multipart/initiate.
+         * @description Removed: the resumable and token uploads. Use the signed multipart routes under /datasets/{dataset_mfid}/upload/multipart.
          */
-        post: operations["initiate_resumable_upload_datasets__dataset_mfid__upload_initiate_post"];
+        post: operations["removed_legacy_upload_datasets__dataset_mfid__upload_initiate_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1299,16 +1290,11 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Initiate Multipart Upload
+         * Removed Legacy Upload
          * @deprecated
-         * @description Vend a short-lived GCS OAuth2 access token for parallel client-side uploads.
-         *     Requires contributor access to the dataset.
-         *     The client uses this token with google-cloud-storage transfer_manager.upload_chunks_concurrently().
-         *     Returns upload_id — pass it to POST /datasets/{dataset_mfid}/upload/complete after the transfer.
-         *     If existing_file is set, the file already exists; skip the upload entirely.
-         *     Deprecated: use POST /datasets/{dataset_mfid}/upload/multipart/initiate.
+         * @description Removed: the resumable and token uploads. Use the signed multipart routes under /datasets/{dataset_mfid}/upload/multipart.
          */
-        post: operations["initiate_multipart_upload_datasets__dataset_mfid__upload_initiate_multipart_post"];
+        post: operations["removed_legacy_upload_datasets__dataset_mfid__upload_initiate_multipart_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1579,6 +1565,27 @@ export interface paths {
          *     Use /project_graph/{project_ref} to get all entities in a project.
          */
         get: operations["entity_graph_cte_entity_graph_cte__entity_mfid__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/features": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Features
+         * @description The optional features of this deployment and whether each is enabled, so a client can hide
+         *     what is unavailable instead of meeting a 501 `feature_disabled` response.
+         */
+        get: operations["list_features_features_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1977,8 +1984,8 @@ export interface paths {
          * @description Change an instrument's lifecycle status.
          *
          *     Its own route rather than a field on PATCH: decommissioning is a lifecycle
-         *     transition, not a metadata edit, and carries a higher bar. Instruments are
-         *     never deleted, so this is how one is retired.
+         *     transition, not a metadata edit, and carries a higher bar. An instrument with
+         *     datasets cannot be deleted, so this is how one is retired.
          */
         post: operations["set_instrument_status_instruments__instrument_ref__status_post"];
         delete?: never;
@@ -2621,7 +2628,9 @@ export interface paths {
          * Create Project
          * @description Create a new project. One of project_lead (ORCID, username, or email) or
          *     project_lead_orcid/_email/_username must be provided and must correspond
-         *     to an existing user. The resolved canonical user identifier is stored on the project.
+         *     to an existing person, never a service account. Only an administrator may name
+         *     someone else as the lead (403 otherwise), and only a project an administrator
+         *     creates has `proposal_sync` on.
          *     Returns 409 if a project with the given project_id already exists.
          */
         post: operations["create_project_projects_post"];
@@ -2642,7 +2651,7 @@ export interface paths {
          * Search Projects
          * @description Search projects by title or project_id across all projects, not just ones the
          *     caller is a member of. This is how a user discovers a project to request to
-         *     join via POST /access_groups/{group_name}/join. Returns results ordered by
+         *     join via POST /projects/{project_ref}/join_requests. Returns results ordered by
          *     match quality. Maximum 50 results.
          *
          *     Note: ProjectRead has no lead/scientific_metadata fields, so this is safe to
@@ -2691,6 +2700,8 @@ export interface paths {
          *
          *     project_id may be changed (renamed) here. Datasets, samples, and memberships
          *     link to the project by MFID, so a rename changes only the project row.
+         *     Only an administrator may set `proposal_sync` (403 otherwise); a rename by
+         *     anyone else turns it off.
          */
         patch: operations["update_project_projects__project_ref__patch"];
         trace?: never;
@@ -3312,7 +3323,8 @@ export interface paths {
         head?: never;
         /**
          * Update Service Account Platform Role
-         * @description Update a service account's platform role.
+         * @description Update a service account's platform role. Making one an administrator needs a browser
+         *     session with a recent sign-in, not an API key. The change is recorded as `role_changed`.
          */
         patch: operations["update_service_account_platform_role_service_accounts__service_account_ref__patch"];
         trace?: never;
@@ -5153,6 +5165,38 @@ export interface components {
          */
         FacetSort: "value" | "label" | "count";
         /**
+         * FeaturesRead
+         * @description Whether each optional feature is enabled on this deployment. Each field name is the `feature`
+         *     in the 501 `feature_disabled` response that the feature's routes return while it is disabled.
+         */
+        FeaturesRead: {
+            /**
+             * Ingestion
+             * @description Ingestion requests and postprocessing pipelines (`INGESTION_ENABLED`)
+             */
+            ingestion: boolean;
+            /**
+             * Passwords
+             * @description Password sign-in (`CRUCIBLE_AUTH_PASSWORD_ENABLED`)
+             */
+            passwords: boolean;
+            /**
+             * Printing
+             * @description Label printing (`PRINTING_ENABLED`)
+             */
+            printing: boolean;
+            /**
+             * Proposal Sync
+             * @description Project membership from the proposal database (`PROPOSAL_SYNC_ENABLED`)
+             */
+            proposal_sync: boolean;
+            /**
+             * Uploads
+             * @description Files can be uploaded (`MULTIPART_UPLOAD_ENABLED`)
+             */
+            uploads: boolean;
+        };
+        /**
          * GraphDirection
          * @enum {string}
          */
@@ -6217,6 +6261,11 @@ export interface components {
             project_id: string;
             /** Project Lead Orcid */
             project_lead_orcid?: string | null;
+            /**
+             * Proposal Sync
+             * @default false
+             */
+            proposal_sync: boolean;
             /** Status */
             status?: string | null;
             /** Title */
@@ -6274,6 +6323,11 @@ export interface components {
             organization?: string;
             /** Project Id */
             project_id?: string;
+            /**
+             * Proposal Sync
+             * @description Administrators only. Whether people named on a proposal with this project's `project_id` are added to it.
+             */
+            proposal_sync?: boolean;
             /** Status */
             status?: string | null;
             /** Title */
@@ -6305,6 +6359,11 @@ export interface components {
             project_id: string;
             /** Project Lead Orcid */
             project_lead_orcid?: string | null;
+            /**
+             * Proposal Sync
+             * @default false
+             */
+            proposal_sync: boolean;
             /**
              * Role
              * @description Project membership role. On GET /projects and project singletons it is the caller's role; on GET /users/{user_id}/projects it is that user's role. Null when not a member.
@@ -6431,6 +6490,12 @@ export interface components {
              * @default false
              */
             can_delete: boolean;
+            /**
+             * Can Delete Files
+             * @description Datasets only. `DELETE /files/{file_id}` would be accepted for a file of this dataset: the caller may delete on the dataset and it is not pending deletion.
+             * @default false
+             */
+            can_delete_files: boolean;
             /** Can Edit */
             can_edit: boolean;
             /** Can Manage Access */
@@ -6946,64 +7011,6 @@ export interface components {
             /** New Owner */
             new_owner: string;
         };
-        /**
-         * UploadComplete
-         * @description Body for POST /datasets/{dataset_mfid}/upload/complete.
-         */
-        UploadComplete: {
-            /** Sha256 Hash */
-            sha256_hash: string;
-            /** Upload Id */
-            upload_id: string;
-        };
-        /**
-         * UploadInitiate
-         * @description Body for POST /datasets/{dataset_mfid}/upload/initiate.
-         */
-        UploadInitiate: {
-            /** Filename */
-            filename: string;
-            /** Sha256 Hash */
-            sha256_hash?: string | null;
-            /** Size */
-            size: number;
-        };
-        /**
-         * UploadInitiateRead
-         * @description Response from upload initiate — pass upload_id and resumable_uri to the client.
-         *     If existing_file is set, a file with the same sha256_hash already exists for this
-         *     dataset; skip the upload and /complete call and use existing_file directly.
-         */
-        UploadInitiateRead: {
-            /** Chunk Size Hint */
-            chunk_size_hint?: number | null;
-            existing_file?: components["schemas"]["AssociatedFileRead"] | null;
-            /** Resumable Uri */
-            resumable_uri?: string | null;
-            /** Upload Id */
-            upload_id?: string | null;
-        };
-        /**
-         * UploadMultipartInitiateRead
-         * @description Response from POST /datasets/{dataset_mfid}/upload/initiate/multipart.
-         *     Either existing_file is set (dedup hit — no upload needed), or all other fields are set.
-         *     Pass upload_id to POST /datasets/{dataset_mfid}/upload/complete after the transfer finishes.
-         */
-        UploadMultipartInitiateRead: {
-            /** Access Token */
-            access_token?: string | null;
-            /** Bucket */
-            bucket?: string | null;
-            existing_file?: components["schemas"]["AssociatedFileRead"] | null;
-            /** Object Prefix */
-            object_prefix?: string | null;
-            /** Project */
-            project?: string | null;
-            /** Token Expiry */
-            token_expiry?: string | null;
-            /** Upload Id */
-            upload_id?: string | null;
-        };
         /** UploadedPart */
         UploadedPart: {
             /** Etag */
@@ -7225,7 +7232,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -7265,7 +7272,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -7303,7 +7310,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -7345,7 +7352,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -7383,7 +7390,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -7465,7 +7472,7 @@ export interface operations {
                 cursor?: string | null;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -7499,7 +7506,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -7558,7 +7565,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -7601,7 +7608,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -7654,7 +7661,7 @@ export interface operations {
                 cursor?: string | null;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -7688,7 +7695,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -7724,7 +7731,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -7788,7 +7795,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -7876,7 +7883,7 @@ export interface operations {
                 offset?: number;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -7912,7 +7919,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -7983,7 +7990,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -8022,7 +8029,7 @@ export interface operations {
             query?: never;
             header?: {
                 "if-match"?: string | null;
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -8069,7 +8076,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -8105,7 +8112,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -8154,7 +8161,7 @@ export interface operations {
                 limit?: number;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -8190,7 +8197,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -8235,7 +8242,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -8269,7 +8276,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -8309,7 +8316,7 @@ export interface operations {
                 cursor?: string | null;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -8343,7 +8350,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -8391,7 +8398,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -8448,7 +8455,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -8498,7 +8505,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -9124,7 +9131,7 @@ export interface operations {
                 owner_orcid?: string | null;
                 /**
                  * @deprecated
-                 * @description Deprecated display-name filter. Matches the registered instrument's current name, or the stored label for datasets without a registered instrument. Use instrument_mfid.
+                 * @description Deprecated display-name filter. Matches the registered instrument's current name. Use instrument_mfid.
                  */
                 instrument_name?: string | null;
                 timestamp?: string | null;
@@ -9147,7 +9154,7 @@ export interface operations {
                 project_mfid_is_null?: boolean | null;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -9183,7 +9190,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -9278,7 +9285,7 @@ export interface operations {
                 project_mfid_is_null?: boolean | null;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -9314,7 +9321,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -9370,7 +9377,7 @@ export interface operations {
                 project_scope?: ("assigned" | "shared" | "all") | null;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -9410,7 +9417,7 @@ export interface operations {
                 relationship_type?: ("is_derived_from" | "is_part_of") | null;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -9453,7 +9460,7 @@ export interface operations {
                 include_owner?: boolean;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -9491,7 +9498,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -9534,7 +9541,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -9583,7 +9590,7 @@ export interface operations {
                 disposition?: "attachment" | "inline";
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -9631,7 +9638,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -9670,7 +9677,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -9752,7 +9759,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -9798,7 +9805,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -9841,7 +9848,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -9882,7 +9889,7 @@ export interface operations {
                 keyword: string;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -9921,7 +9928,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -9969,7 +9976,7 @@ export interface operations {
             header?: {
                 /** @description Retries with the same key return the original run instead of starting another. */
                 "idempotency-key"?: string | null;
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -10045,7 +10052,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -10122,7 +10129,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -10163,7 +10170,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -10204,7 +10211,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -10243,7 +10250,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -10286,7 +10293,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -10328,7 +10335,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -10368,36 +10375,24 @@ export interface operations {
             };
         };
     };
-    complete_resumable_upload_datasets__dataset_mfid__upload_complete_post: {
+    removed_legacy_upload_datasets__dataset_mfid__upload_complete_post: {
         parameters: {
             query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
+            header?: never;
             path: {
-                /** @description Dataset MFID. */
                 dataset_mfid: string;
             };
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UploadComplete"];
-            };
-        };
+        requestBody?: never;
         responses: {
-            /** @description Successful Response */
-            200: {
+            /** @description This route was removed: `{"detail": {"code": "route_removed", "message": ...}}` names the replacement */
+            410: {
                 headers: {
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["AssociatedFileRead"];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -10408,46 +10403,27 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
-            };
-            /** @description File storage is not configured on this server (`storage_not_configured`), or it is not Google Cloud Storage, which these routes need (`legacy_upload_unavailable`; upload through `/upload/multipart` instead): `{"detail": {"code": ..., "message": ...}}` */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
         };
     };
-    initiate_resumable_upload_datasets__dataset_mfid__upload_initiate_post: {
+    removed_legacy_upload_datasets__dataset_mfid__upload_initiate_post: {
         parameters: {
             query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
+            header?: never;
             path: {
-                /** @description Dataset MFID. */
                 dataset_mfid: string;
             };
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UploadInitiate"];
-            };
-        };
+        requestBody?: never;
         responses: {
-            /** @description Successful Response */
-            200: {
+            /** @description This route was removed: `{"detail": {"code": "route_removed", "message": ...}}` names the replacement */
+            410: {
                 headers: {
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["UploadInitiateRead"];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -10458,46 +10434,27 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
-            };
-            /** @description File storage is not configured on this server (`storage_not_configured`), or it is not Google Cloud Storage, which these routes need (`legacy_upload_unavailable`; upload through `/upload/multipart` instead): `{"detail": {"code": ..., "message": ...}}` */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
         };
     };
-    initiate_multipart_upload_datasets__dataset_mfid__upload_initiate_multipart_post: {
+    removed_legacy_upload_datasets__dataset_mfid__upload_initiate_multipart_post: {
         parameters: {
             query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
+            header?: never;
             path: {
-                /** @description Dataset MFID. */
                 dataset_mfid: string;
             };
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UploadInitiate"];
-            };
-        };
+        requestBody?: never;
         responses: {
-            /** @description Successful Response */
-            200: {
+            /** @description This route was removed: `{"detail": {"code": "route_removed", "message": ...}}` names the replacement */
+            410: {
                 headers: {
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["UploadMultipartInitiateRead"];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -10508,13 +10465,6 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
-            };
-            /** @description File storage is not configured on this server (`storage_not_configured`), or it is not Google Cloud Storage, which these routes need (`legacy_upload_unavailable`; upload through `/upload/multipart` instead): `{"detail": {"code": ..., "message": ...}}` */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
         };
     };
@@ -10522,7 +10472,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -10566,7 +10516,7 @@ export interface operations {
             query?: never;
             header?: {
                 "idempotency-key"?: string | null;
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -10610,6 +10560,13 @@ export interface operations {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
+            /** @description Uploads is not enabled on this server: `{"detail": {"code": "feature_disabled", "feature": "uploads", "message": ...}}` */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     get_status_datasets__dataset_mfid__upload_multipart__upload_id__get: {
@@ -10619,7 +10576,7 @@ export interface operations {
                 limit?: number;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -10659,7 +10616,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -10697,7 +10654,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -10745,7 +10702,7 @@ export interface operations {
                 relationship_type?: ("is_derived_from" | "is_part_of") | null;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -10786,7 +10743,7 @@ export interface operations {
                 relationship_type?: ("is_derived_from" | "is_part_of") | null;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -10827,7 +10784,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -10890,7 +10847,7 @@ export interface operations {
                 offset?: number;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -10926,7 +10883,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -10979,7 +10936,7 @@ export interface operations {
                 offset?: number;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -11015,7 +10972,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -11056,7 +11013,7 @@ export interface operations {
                 reviewer_notes?: string | null;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -11110,7 +11067,7 @@ export interface operations {
                 offset?: number;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -11146,7 +11103,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -11188,7 +11145,7 @@ export interface operations {
                 recursive?: boolean;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -11223,6 +11180,42 @@ export interface operations {
             };
         };
     };
+    list_features_features_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FeaturesRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_files_files_get: {
         parameters: {
             query?: {
@@ -11231,7 +11224,7 @@ export interface operations {
                 sha256_hash?: string | null;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -11267,7 +11260,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -11307,7 +11300,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -11345,7 +11338,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -11390,7 +11383,7 @@ export interface operations {
                 disposition?: "attachment" | "inline";
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -11446,7 +11439,7 @@ export interface operations {
                 status?: "requested" | "not_requested";
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -11507,7 +11500,7 @@ export interface operations {
             header?: {
                 "idempotency-key"?: string | null;
                 "if-match"?: string | null;
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -11563,6 +11556,13 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+            /** @description Uploads is not enabled on this server: `{"detail": {"code": "feature_disabled", "feature": "uploads", "message": ...}}` */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -11666,7 +11666,7 @@ export interface operations {
                 offset?: number;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -11702,7 +11702,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -11740,7 +11740,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -11843,7 +11843,7 @@ export interface operations {
                 active_since?: string | null;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -11879,7 +11879,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -11930,7 +11930,7 @@ export interface operations {
                 include_owner?: boolean;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -11971,7 +11971,7 @@ export interface operations {
                 include_members?: boolean;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -12010,7 +12010,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -12053,7 +12053,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -12092,7 +12092,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -12133,7 +12133,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -12176,7 +12176,7 @@ export interface operations {
                 status: string;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -12244,7 +12244,7 @@ export interface operations {
                 q?: string | null;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -12303,7 +12303,7 @@ export interface operations {
                 q?: string | null;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -12339,7 +12339,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -12377,7 +12377,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -12404,7 +12404,7 @@ export interface operations {
                     "application/json": components["schemas"]["JoinRequestRead"];
                 };
             };
-            /** @description Not allowed to review, or the role is not below yours */
+            /** @description Not allowed to review, or the role is above yours */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -12433,7 +12433,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -12484,7 +12484,10 @@ export interface operations {
     list_all_keywords_keywords_get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -12493,11 +12496,23 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
                     "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["KeywordRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -12507,7 +12522,10 @@ export interface operations {
             query?: {
                 permissive?: boolean;
             };
-            header?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
             path: {
                 keyword: string;
             };
@@ -12518,6 +12536,9 @@ export interface operations {
             /** @description Successful Response */
             200: {
                 headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
                     "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
@@ -13495,7 +13516,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -13537,7 +13558,7 @@ export interface operations {
                 offset?: number;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -13573,7 +13594,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -13611,7 +13632,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -13660,7 +13681,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -13707,7 +13728,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -13750,7 +13771,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -13819,7 +13840,7 @@ export interface operations {
                 offset?: number;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -13855,7 +13876,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -13901,7 +13922,7 @@ export interface operations {
                 limit?: number;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -13940,7 +13961,7 @@ export interface operations {
                 include_members?: boolean;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -13979,7 +14000,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -14022,7 +14043,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -14082,7 +14103,7 @@ export interface operations {
                 offset?: number;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -14133,7 +14154,7 @@ export interface operations {
                 role?: components["schemas"]["ProjectMembershipRole"];
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -14185,7 +14206,7 @@ export interface operations {
                 username?: string | null;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -14228,7 +14249,7 @@ export interface operations {
                 role: components["schemas"]["ProjectMembershipRole"];
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -14275,7 +14296,7 @@ export interface operations {
                 affiliation?: components["schemas"]["ResourceAffiliation"][] | null;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -14317,7 +14338,7 @@ export interface operations {
                 include_datasets?: boolean;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -14361,7 +14382,7 @@ export interface operations {
                 confirm?: boolean;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -14400,7 +14421,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -14438,7 +14459,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -14476,7 +14497,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -14514,7 +14535,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -14558,7 +14579,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -14598,7 +14619,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -14640,7 +14661,7 @@ export interface operations {
                 write: boolean;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -14680,7 +14701,7 @@ export interface operations {
                 reason?: string | null;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -14719,7 +14740,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -14758,7 +14779,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -14799,7 +14820,7 @@ export interface operations {
                 overwrite?: boolean;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -14844,7 +14865,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -14891,7 +14912,7 @@ export interface operations {
                 confirm?: boolean;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -14935,7 +14956,7 @@ export interface operations {
                 confirm?: boolean;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -14986,7 +15007,7 @@ export interface operations {
                 relationship_type?: components["schemas"]["GraphRelationshipTypeFilter"][] | null;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -15102,7 +15123,7 @@ export interface operations {
                 project_mfid_is_null?: boolean | null;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -15138,7 +15159,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -15221,7 +15242,7 @@ export interface operations {
                 project_mfid_is_null?: boolean | null;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -15271,7 +15292,7 @@ export interface operations {
                 project_scope?: ("assigned" | "shared" | "all") | null;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -15311,7 +15332,7 @@ export interface operations {
                 relationship_type?: ("is_derived_from" | "is_part_of") | null;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -15354,7 +15375,7 @@ export interface operations {
                 relationship_type?: ("is_derived_from" | "is_part_of") | null;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -15395,7 +15416,7 @@ export interface operations {
                 relationship_type?: ("is_derived_from" | "is_part_of") | null;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -15436,7 +15457,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -15483,7 +15504,7 @@ export interface operations {
                 include_datasets?: boolean;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -15521,7 +15542,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -15568,7 +15589,7 @@ export interface operations {
                 offset?: number;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -15604,7 +15625,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -15651,7 +15672,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -15690,7 +15711,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -15718,6 +15739,20 @@ export interface operations {
                     "application/json": components["schemas"]["ServiceAccountAdminDetail"];
                 };
             };
+            /** @description Making a service account an administrator needs a recent sign-in (`insufficient_user_authentication`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not an administrator, or making a service account an administrator with an API key (`hub_session_required`) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             /** @description Validation Error */
             422: {
                 headers: {
@@ -15733,7 +15768,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -15837,7 +15872,7 @@ export interface operations {
                 direction?: components["schemas"]["SortDirection"];
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -15873,7 +15908,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -15951,7 +15986,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -15999,7 +16034,7 @@ export interface operations {
                 limit?: number;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path?: never;
@@ -16035,7 +16070,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -16074,7 +16109,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -16124,7 +16159,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -16163,7 +16198,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -16203,7 +16238,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -16274,7 +16309,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -16342,7 +16377,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -16387,7 +16422,7 @@ export interface operations {
                 cursor?: string | null;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -16424,7 +16459,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -16469,7 +16504,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -16540,7 +16575,7 @@ export interface operations {
                 cursor?: string | null;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -16615,7 +16650,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -16656,7 +16691,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -16709,7 +16744,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -16755,7 +16790,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -16794,7 +16829,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -16860,7 +16895,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -16925,7 +16960,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -17006,7 +17041,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -17063,7 +17098,7 @@ export interface operations {
                 offset?: number;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -17102,7 +17137,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -17202,7 +17237,7 @@ export interface operations {
                 cursor?: string | null;
             };
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -17246,7 +17281,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {
@@ -17290,7 +17325,7 @@ export interface operations {
         parameters: {
             query?: never;
             header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. Omission preserves legacy behavior. */
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
             };
             path: {

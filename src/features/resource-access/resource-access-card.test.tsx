@@ -45,6 +45,7 @@ const sample: Extract<WorkspaceResourceDetail, { kind: "sample" }> = {
     can_view_access: true,
     can_request_deletion: true,
     can_transfer: false,
+    can_delete_files: false,
     max_grant_role: null,
   },
   creation_time: "2026-09-01T12:00:00Z",
@@ -91,6 +92,7 @@ function renderCard(canManageAccess: boolean) {
       can_view_access: true,
       can_request_deletion: true,
       can_transfer: false,
+      can_delete_files: false,
       max_grant_role: canManageAccess ? ("admin" as const) : null,
     },
   }
@@ -130,6 +132,7 @@ describe("ResourceManagePage", () => {
         can_manage_access: false,
         can_request_deletion: false,
         can_transfer: false,
+        can_delete_files: false,
         can_view_access: canViewAccess,
         max_grant_role: null,
       },

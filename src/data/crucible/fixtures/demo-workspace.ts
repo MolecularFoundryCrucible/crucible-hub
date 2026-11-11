@@ -66,6 +66,7 @@ const publicOnlyCapabilities = {
   can_manage_access: false,
   can_view_access: false,
   can_transfer: false,
+  can_delete_files: false,
   max_grant_role: null,
 } satisfies Schema<"ResourceCapabilities">
 
@@ -105,6 +106,7 @@ const capabilities = {
   can_manage_access: true,
   can_view_access: true,
   can_transfer: true,
+  can_delete_files: true,
   max_grant_role: "admin",
 } satisfies Schema<"ResourceCapabilities">
 
@@ -210,6 +212,7 @@ export const demoWorkspace = {
   projects: [
     {
       ...projectReference,
+      proposal_sync: false,
       organization: "Example National Laboratory",
       project_lead_orcid: account.unique_id,
       status: "active",
@@ -244,6 +247,7 @@ export const demoWorkspace = {
       unique_id: "01J6Y8N4Q2R7M9K3T5V0W1X2ZB",
       project_id: "porous-framework-screening",
       title: "Porous Framework Screening",
+      proposal_sync: false,
       organization: "Example National Laboratory",
       project_lead_orcid: collaborator.unique_id,
       status: "active",
@@ -337,6 +341,7 @@ export const demoWorkspace = {
         can_manage_access: false,
         can_view_access: true,
         can_transfer: false,
+        can_delete_files: false,
         max_grant_role: null,
       },
     },
