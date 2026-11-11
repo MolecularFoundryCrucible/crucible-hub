@@ -69,6 +69,7 @@ import {
   resourceGraphLayoutSignature,
 } from "./resource-graph-layout"
 import type { LayoutDirection, LayoutPosition } from "./resource-graph-layout"
+import { LayoutSupersededError } from "./resource-graph-layout-queue"
 import { nodeTypes } from "./resource-graph-node"
 import { useGraphTouchGestures } from "./use-graph-touch-gestures"
 
@@ -468,11 +469,12 @@ function ResourceGraphFlow({
       element,
       layoutDirection,
       initialPositions
-    ).then(applyLayout, () =>
+    ).then(applyLayout, (error: unknown) => {
+      if (error instanceof LayoutSupersededError) return
       applyLayout(
         fallbackResourceGraphLayout(currentGraph, element, layoutDirection)
       )
-    )
+    })
   }, [
     flow,
     flowReady,

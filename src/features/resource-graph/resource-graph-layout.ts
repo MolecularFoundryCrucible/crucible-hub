@@ -1,6 +1,6 @@
 import ELK from "elkjs/lib/elk-api.js"
 import ELKWorker from "elkjs/lib/elk-worker.min.js?worker"
-import type { ELK as ELKInstance } from "elkjs/lib/elk-api.js"
+import type { ELK as ELKInstance, ElkNode } from "elkjs/lib/elk-api.js"
 import type { ReactFlowInstance } from "@xyflow/react"
 
 import type { WorkspaceResourceGraph } from "@/data/crucible/workspace-source"
@@ -11,6 +11,7 @@ import type {
   ResourceFlowNode,
 } from "./resource-graph-flow-model"
 import type { GraphOrientation } from "./resource-graph-display"
+import { createLayoutQueue } from "./resource-graph-layout-queue"
 
 export type LayoutDirection = "DOWN" | "RIGHT"
 
@@ -41,9 +42,18 @@ function resourceGraphLayoutEngine() {
   return elk
 }
 
+const layoutQueue = createLayoutQueue({
+  engine: resourceGraphLayoutEngine,
+  layout: (engine: ELKInstance, graph: ElkNode) => engine.layout(graph),
+  onFailure: (engine: ELKInstance) => resetResourceGraphLayoutEngine(engine),
+  timeoutMs: ELK_LAYOUT_TIMEOUT_MS,
+})
+
 export function warmResourceGraphLayoutEngine() {
-  void resourceGraphLayoutEngine()
-    .layout({
+  // Only when idle, so the warm-up never replaces a real layout.
+  if (!layoutQueue.idle()) return
+  layoutQueue
+    .run({
       id: "warmup",
       layoutOptions: { "elk.algorithm": "layered" },
       children: [
@@ -124,91 +134,71 @@ export async function layoutResourceGraph(
     (edge) => nodeIds.has(edge.source) && nodeIds.has(edge.target)
   )
 
-  const engine = resourceGraphLayoutEngine()
-  let timer: ReturnType<typeof setTimeout> | undefined
-
-  try {
-    const layoutPromise = engine.layout({
-      children: graph.nodes.map((node) => {
-        const isRoot = node.unique_id === graph.rootMfid
-        const width = isRoot ? rootWidth : nodeWidth
-        const height = isRoot ? rootHeight : nodeHeight
-        const prev = previousPositions?.get(node.unique_id)
-        return {
-          height,
-          id: node.unique_id,
-          width,
-          ...(prev
-            ? {
-                layoutOptions: {
-                  "elk.position": `(${prev.x}, ${prev.y})`,
-                },
-                x: prev.x,
-                y: prev.y,
-              }
-            : {}),
-        }
-      }),
-      edges: validEdges.map((edge) => {
-        const isAssociated = edge.relationship === "associated"
-        return {
-          id: edge.id,
-          sources: [edge.source],
-          targets: [edge.target],
-          layoutOptions: {
-            "org.eclipse.elk.edge.type": isAssociated
-              ? "ASSOCIATION"
-              : "DIRECTED",
-            "org.eclipse.elk.layered.priority.direction": isAssociated
-              ? "0"
-              : "10",
-          },
-        }
-      }),
-      id: "resource-graph",
-      layoutOptions: {
-        "elk.algorithm": "layered",
-        "elk.direction": direction,
-        "elk.edgeRouting": "ORTHOGONAL",
-        "elk.layered.cycleBreaking.strategy": "GREEDY",
-        "elk.layered.crossingMinimization.strategy": "LAYER_SWEEP",
-        "elk.layered.crossingMinimization.semiInteractive":
-          previousPositions && previousPositions.size > 0 ? "true" : "false",
-        "elk.layered.nodePlacement.bk.fixedAlignment": "BALANCED",
-        "elk.layered.nodePlacement.favorStraightEdges": "true",
-        "elk.layered.nodePlacement.strategy": "BRANDES_KOEPF",
-        "elk.layered.spacing.nodeNodeBetweenLayers": String(layerGap),
-        "elk.spacing.nodeNode": String(nodeGap),
-      },
-    })
-
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      timer = setTimeout(() => {
-        reject(new Error("Resource graph layout calculation timed out"))
-      }, ELK_LAYOUT_TIMEOUT_MS)
-    })
-
-    const layout = await Promise.race([layoutPromise, timeoutPromise])
-
-    return new Map(
-      (layout.children ?? []).map((node) => [
-        node.id,
-        {
-          height: node.height,
-          width: node.width,
-          x: node.x ?? 0,
-          y: node.y ?? 0,
+  const layout = await layoutQueue.run({
+    children: graph.nodes.map((node) => {
+      const isRoot = node.unique_id === graph.rootMfid
+      const width = isRoot ? rootWidth : nodeWidth
+      const height = isRoot ? rootHeight : nodeHeight
+      const prev = previousPositions?.get(node.unique_id)
+      return {
+        height,
+        id: node.unique_id,
+        width,
+        ...(prev
+          ? {
+              layoutOptions: {
+                "elk.position": `(${prev.x}, ${prev.y})`,
+              },
+              x: prev.x,
+              y: prev.y,
+            }
+          : {}),
+      }
+    }),
+    edges: validEdges.map((edge) => {
+      const isAssociated = edge.relationship === "associated"
+      return {
+        id: edge.id,
+        sources: [edge.source],
+        targets: [edge.target],
+        layoutOptions: {
+          "org.eclipse.elk.edge.type": isAssociated
+            ? "ASSOCIATION"
+            : "DIRECTED",
+          "org.eclipse.elk.layered.priority.direction": isAssociated
+            ? "0"
+            : "10",
         },
-      ])
-    )
-  } catch (error) {
-    resetResourceGraphLayoutEngine(engine)
-    throw error
-  } finally {
-    if (timer) {
-      clearTimeout(timer)
-    }
-  }
+      }
+    }),
+    id: "resource-graph",
+    layoutOptions: {
+      "elk.algorithm": "layered",
+      "elk.direction": direction,
+      "elk.edgeRouting": "ORTHOGONAL",
+      "elk.layered.cycleBreaking.strategy": "GREEDY",
+      "elk.layered.crossingMinimization.strategy": "LAYER_SWEEP",
+      "elk.layered.crossingMinimization.semiInteractive":
+        previousPositions && previousPositions.size > 0 ? "true" : "false",
+      "elk.layered.nodePlacement.bk.fixedAlignment": "BALANCED",
+      "elk.layered.nodePlacement.favorStraightEdges": "true",
+      "elk.layered.nodePlacement.strategy": "BRANDES_KOEPF",
+      "elk.layered.spacing.nodeNodeBetweenLayers": String(layerGap),
+      "elk.spacing.nodeNode": String(nodeGap),
+    },
+  })
+
+  return new Map(
+    (layout.children ?? []).map((node) => [
+      node.id,
+      {
+        height: node.height ?? 0,
+        width: node.width ?? 0,
+        x: node.x ?? 0,
+        y: node.y ?? 0,
+      },
+    ])
+  )
 }
 
 /**
