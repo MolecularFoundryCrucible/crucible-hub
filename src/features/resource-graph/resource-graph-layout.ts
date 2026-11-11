@@ -25,6 +25,7 @@ const ELK_LAYOUT_TIMEOUT_MS = 6000
 
 let elk: ELKInstance | undefined
 
+/** Drops the engine, or only `failed` when given, so a newer engine survives. */
 export function resetResourceGraphLayoutEngine(failed?: ELKInstance) {
   if (!elk || (failed && failed !== elk)) return
   try {
@@ -413,6 +414,10 @@ export function interpolateLayoutPositions(
       ]
     })
   )
+}
+
+export function fitAllViewportOptions(element: HTMLElement | null) {
+  return { ...graphViewportOptions(element), maxZoom: 1, padding: 0.16 }
 }
 
 export function graphViewportOptions(element: HTMLElement | null) {
