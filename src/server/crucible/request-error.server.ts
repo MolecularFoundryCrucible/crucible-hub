@@ -109,6 +109,7 @@ export class CrucibleResponseError extends Error {
   readonly reauthenticationRequired: boolean = false
   readonly routeMissing: boolean = false
   readonly valueIssues?: { field: string; kind: ValueIssueKind }[]
+  readonly invalidParameters?: string[]
 
   constructor(source: number | Response, body?: unknown) {
     super("The Crucible API rejected the request.")
@@ -130,6 +131,8 @@ export class CrucibleResponseError extends Error {
     if (source.status === 422) {
       const issues = readValueIssues(body)
       if (issues.length > 0) this.valueIssues = issues
+      const parameters = readInvalidParameters(body)
+      if (parameters.length > 0) this.invalidParameters = parameters
     }
   }
 }
@@ -169,6 +172,16 @@ function valueIssueKind(issue: {
     default:
       return undefined
   }
+}
+
+/** Where FastAPI says a request was invalid, such as "query.affiliation.0". */
+function readInvalidParameters(body: unknown): string[] {
+  const detail = (body as { detail?: unknown } | null)?.detail
+  if (!Array.isArray(detail)) return []
+  return detail.flatMap((entry: unknown) => {
+    const loc = (entry as { loc?: unknown } | null)?.loc
+    return Array.isArray(loc) ? [loc.map(String).join(".")] : []
+  })
 }
 
 function readValueIssues(

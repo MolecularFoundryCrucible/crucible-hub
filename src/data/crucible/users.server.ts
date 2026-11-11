@@ -181,7 +181,8 @@ export async function readWorkspaceUsers(
     },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (!result.data) throw new CrucibleResponseError(result.response)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
   return {
     items: result.data.items.map(toWorkspaceAdminUser),
     limit: result.data.limit,
@@ -240,7 +241,8 @@ export async function readWorkspaceUserDetail(
     signal: crucibleRequestSignal(requestSignal),
   })
   if (result.response.status === 404) return null
-  if (!result.data) throw new CrucibleResponseError(result.response)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
   return toWorkspaceAdminUser(result.data)
 }
 
@@ -316,7 +318,8 @@ export async function updateWorkspaceUserPlatformRole(
     params: { path: { user_ref: userId } },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (!result.data) throw new CrucibleResponseError(result.response)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
   return toWorkspaceAdminUser(result.data)
 }
 
@@ -421,6 +424,7 @@ export async function checkWorkspaceEmailExactMatch(
     params: { query: { email, limit: 1 } },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (!result.data) throw new CrucibleResponseError(result.response)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
   return result.data.items.length > 0
 }

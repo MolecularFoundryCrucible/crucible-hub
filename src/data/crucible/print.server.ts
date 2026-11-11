@@ -34,7 +34,8 @@ export async function readWorkspacePrinters(
     "/print/printers",
     { signal: crucibleRequestSignal(requestSignal) }
   )
-  if (!result.data) throw new CrucibleResponseError(result.response)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
   return result.data.printers
 }
 
@@ -75,6 +76,7 @@ export async function printWorkspaceLabel(
       signal: crucibleRequestSignal(requestSignal),
     }
   )
-  if (!result.data) throw new CrucibleResponseError(result.response)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
   return result.data
 }

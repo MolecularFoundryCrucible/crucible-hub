@@ -135,7 +135,7 @@ export async function createWorkspaceSampleResource(
     signal: crucibleRequestSignal(requestSignal),
   })
   if (result.data) return toWorkspaceResourceDetail(result.data)
-  throw new CrucibleResponseError(result.response)
+  throw new CrucibleResponseError(result.response, result.error)
 }
 
 export async function createWorkspaceDatasetResource(
@@ -202,5 +202,5 @@ export async function createWorkspaceDatasetResource(
     signal: crucibleRequestSignal(requestSignal),
   })
   if (result.data) return toWorkspaceResourceDetail(result.data)
-  throw new CrucibleResponseError(result.response)
+  throw new CrucibleResponseError(result.response, result.error)
 }

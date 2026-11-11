@@ -52,7 +52,7 @@ export async function readWorkspacePerson(
   })
   if (result.response.status === 404) return null
   if (!result.data) {
-    throw new CrucibleResponseError(result.response)
+    throw new CrucibleResponseError(result.response, result.error)
   }
   return toWorkspacePerson(result.data)
 }

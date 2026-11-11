@@ -108,7 +108,8 @@ export async function readAccountPreferences(
     "/account/preferences",
     { signal: crucibleRequestSignal(requestSignal) }
   )
-  if (!result.data) throw new CrucibleResponseError(result.response)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
   return apiDocument(result.data, result.response)
 }
 

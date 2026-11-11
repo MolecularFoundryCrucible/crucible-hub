@@ -40,6 +40,10 @@ export async function safeCrucibleCall<T>(
           error instanceof CrucibleContractError ? error.contract : undefined,
         correlationId,
         errorName: error instanceof Error ? error.name : "UnknownError",
+        invalidParameters:
+          error instanceof CrucibleResponseError
+            ? error.invalidParameters
+            : undefined,
         issues:
           error instanceof CrucibleContractError ? error.issues : undefined,
         operation: options.operation ?? "crucible-api",

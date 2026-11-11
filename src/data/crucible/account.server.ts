@@ -43,7 +43,7 @@ export async function readWorkspaceAccount(
     signal: crucibleRequestSignal(requestSignal),
   })
   if (!result.data) {
-    throw new CrucibleResponseError(result.response)
+    throw new CrucibleResponseError(result.response, result.error)
   }
 
   return toWorkspaceAccount(result.data)
@@ -146,7 +146,8 @@ export async function checkWorkspaceUsernameExactMatch(
     params: { query: { username: [username], limit: 1 } },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (!result.data) throw new CrucibleResponseError(result.response)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
   return result.data.items.length > 0
 }
 
