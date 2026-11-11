@@ -9,7 +9,7 @@ The API bundle's front door (Caddy) serves both at one address: `/api/v3/` goes 
 - Docker with Compose v2.20 or later.
 - The API bundle running with its Hub sign-in settings (`compose.hub.yaml` in its `COMPOSE_FILE`): the Hub callbacks `<your address>/hub/auth/callback` and `<your address>/hub/auth/link/callback` among its allowed redirects, and the same client secret as `secrets/hub_auth_client_secret` here.
 - HTTPS at the front door, unless everything runs on one machine at `http://localhost`. The Hub accepts an HTTP callback and public API address only on `localhost`, `127.0.0.1` or `[::1]`, and drops `Secure` from its cookies only then. Open the Hub at exactly the address in `HUB_PUBLIC_ORIGIN`: the Hub refuses changes sent from another origin, so `127.0.0.1` and `localhost` are not interchangeable.
-- A way to sign in through the API. Passwords are on by default in the API bundle. ORCID needs the bundle's `compose.orcid.yaml`, HTTPS, and an ORCID application whose redirect is the API's own callback (`<public API address>/auth/hub/callback`), not the Hub's.
+- A way to sign in through the API. Passwords are on by default in the API bundle. ORCID needs the bundle's `compose.orcid.yaml`, HTTPS, and an ORCID application whose redirect is the API's own callback (`<public API address>/oauth/callback/orcid`), not the Hub's. An ORCID application registered before API 4.0.0 with `<public API address>/auth/hub/callback` works only with the bundle's `ORCID_LEGACY_CALLBACK=true`.
 
 ## Secrets
 
@@ -77,7 +77,7 @@ docker compose pull hub hub-setup
 docker compose up -d
 ```
 
-The image's `gov.lbl.crucible.api.min-version` label names the oldest Crucible API release it works with, and `gov.lbl.crucible.api.revision` the exact API revision it was built against (`docker inspect --format '{{ index .Config.Labels "gov.lbl.crucible.api.min-version" }}' <image>`). Hub 1.7.2 and later need Crucible API 3.3.0 or later (1.7.0 and 1.7.1 need 3.2.0).
+The image's `gov.lbl.crucible.api.min-version` label names the oldest Crucible API release it works with, and `gov.lbl.crucible.api.revision` the exact API revision it was built against (`docker inspect --format '{{ index .Config.Labels "gov.lbl.crucible.api.min-version" }}' <image>`). Hub 1.8.0 and later need Crucible API 4.0.0 or later (1.7.2 and 1.7.3 need 3.3.0, and 1.7.0 and 1.7.1 need 3.2.0). Pre-release images such as 1.8.0-alpha.1 are built against an unreleased API revision and carry no `min-version` label.
 
 ## Checking and upgrading
 
