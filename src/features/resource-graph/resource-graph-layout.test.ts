@@ -6,15 +6,14 @@ import type {
   WorkspaceResourceGraphNode,
 } from "@/data/crucible/workspace-source"
 
+import { resolveGraphNodeClickAction } from "./resource-graph-canvas"
 import {
   fallbackResourceGraphLayout,
   graphViewportOptions,
   layoutResourceGraph,
   resetResourceGraphLayoutEngine,
   resolveAssociationHandleIds,
-  resolveGraphNodeClickAction,
-} from "./resource-graph-canvas"
-import {} from "./resource-graph-page"
+} from "./resource-graph-layout"
 
 vi.mock("@/lib/motion", async (importOriginal) => ({
   ...(await importOriginal<object>()),

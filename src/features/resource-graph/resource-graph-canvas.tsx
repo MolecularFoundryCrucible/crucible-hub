@@ -7,110 +7,70 @@ import {
   useRef,
   useState,
 } from "react"
-import ELK from "elkjs/lib/elk-api.js"
-import ELKWorker from "elkjs/lib/elk-worker.min.js?worker"
-import type { ELK as ELKInstance } from "elkjs/lib/elk-api.js"
 import {
   Background,
   BackgroundVariant,
-  Handle,
   MarkerType,
-  Position,
   ReactFlow,
   ReactFlowProvider,
   useNodesState,
   useReactFlow,
 } from "@xyflow/react"
-import type {
-  Edge,
-  Node,
-  NodeMouseHandler,
-  NodeProps,
-  OnNodeDrag,
-  ReactFlowInstance,
-} from "@xyflow/react"
+import type { NodeMouseHandler, OnNodeDrag } from "@xyflow/react"
 import "@xyflow/react/dist/style.css"
 
-import {
-  GraphAncestorsIcon,
-  GraphAncestorsVerticalIcon,
-  GraphAssociationsIcon,
-  GraphDescendantsIcon,
-  GraphDescendantsVerticalIcon,
-} from "@/components/crucible/icons"
-import { BreakableText } from "@/components/crucible/breakable-text"
-import { DatasetThumbnailImage } from "@/components/crucible/dataset-thumbnail"
-import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
+import { PendingIcon } from "@/components/crucible/pending-icon"
 import { useTheme } from "@/components/theme-provider"
-import { Button } from "@/components/ui/button"
-import { TruncatedText } from "@/components/ui/truncation-tooltip"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 import type {
   WorkspaceDatasetThumbnail,
   WorkspaceResourceGraph,
-  WorkspaceResourceGraphNode,
 } from "@/data/crucible/workspace-source"
 import { useIsMobile } from "@/hooks/use-mobile"
-import { motionDuration, motionEasing } from "@/lib/motion"
-import { cn } from "@/lib/utils"
-import {
-  graphExpansionModeLabel,
-  graphExpansionModesForNode,
-  graphExpansionPending,
-  graphExpansionState,
-} from "./resource-graph-expansion"
-import type {
-  GraphOrientation,
-  ResourceGraphDisplay,
-} from "./resource-graph-display"
-import type {
-  GraphExpansionMode,
-  GraphExpansionState,
-} from "./resource-graph-expansion"
-import { PendingIcon } from "@/components/crucible/pending-icon"
+import { motionEasing } from "@/lib/motion"
+
 import {
   GraphFilterMenu,
   GraphViewToolbar,
   ResourceGraphLegend,
 } from "./resource-graph-controls"
+import type { ResourceGraphDisplay } from "./resource-graph-display"
+import {
+  graphExpansionPending,
+  graphExpansionState,
+} from "./resource-graph-expansion"
+import type {
+  GraphExpansionMode,
+  GraphExpansionState,
+} from "./resource-graph-expansion"
+import {
+  clearEnteringFlowNodes,
+  reconcileResourceFlowNodes,
+  updateResourceFlowNodePositions,
+  updateResourceFlowNodePresentation,
+} from "./resource-graph-flow-model"
+import type {
+  ResourceFlowEdge,
+  ResourceFlowNode,
+  ResourceFlowNodePresentation,
+} from "./resource-graph-flow-model"
+import {
+  alignLayoutToAnchor,
+  centerResourceGraph,
+  fallbackResourceGraphLayout,
+  graphDensity,
+  graphNumberToken,
+  graphViewportOptions,
+  interpolateLayoutPositions,
+  layoutAnimationStartPositions,
+  layoutResourceGraph,
+  resolveAssociationHandleIds,
+  resolveLayoutDirection,
+  resourceGraphLayoutSignature,
+} from "./resource-graph-layout"
+import type { LayoutDirection, LayoutPosition } from "./resource-graph-layout"
+import { nodeTypes } from "./resource-graph-node"
 
-type ResourceFlowNodeData = {
-  context: string | null
-  dimmed: boolean
-  entering: boolean
-  expansionStates: ReadonlyMap<string, GraphExpansionState>
-  expansionModes: readonly GraphExpansionMode[]
-  highlighted: boolean
-  inspected: boolean
-  isRoot: boolean
-  layoutDirection: LayoutDirection
-  node: WorkspaceResourceGraphNode
-  onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
-  portalContainer?: React.RefObject<HTMLDivElement | null>
-  thumbnail?: WorkspaceDatasetThumbnail
-}
-
-type ResourceFlowNode = Node<ResourceFlowNodeData, "resource">
-
-type ResourceFlowEdgeData = {
-  highlighted: boolean
-  relationship: "associated" | "parent"
-}
-
-type ResourceFlowEdge = Edge<ResourceFlowEdgeData>
-
-export type LayoutDirection = "DOWN" | "RIGHT"
-
-export type LayoutPosition = {
-  height: number
-  width: number
-  x: number
-  y: number
-}
+export { warmResourceGraphLayoutEngine } from "./resource-graph-layout"
 
 type EdgeMetrics = {
   cornerRadius: number
@@ -125,30 +85,16 @@ type ExpansionAnchor = {
   retry: boolean
 }
 
-type ResourceFlowNodePresentation = {
-  activeHighlightMfid: string | null
-  activeNeighbours: ReadonlySet<string> | undefined
-  displayThumbnails: boolean
-  expansionStates: ReadonlyMap<string, GraphExpansionState>
-  expansionModesByNode: ReadonlyMap<string, readonly GraphExpansionMode[]>
-  inspectedMfid: string | null
-  layoutDirection: LayoutDirection
-  onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
-  portalContainer?: React.RefObject<HTMLDivElement | null>
-  rootContext: string | null
-  thumbnails: Readonly<Partial<Record<string, WorkspaceDatasetThumbnail>>>
-}
-
 const GRAPH_VIEWPORT_CULLING_NODE_THRESHOLD = 100
+
 const graphAriaLabels = {
   "node.a11yDescription.default":
     "Press Enter or Space to inspect this resource, or F to center it.",
   "node.a11yDescription.keyboardDisabled":
     "Press Enter or Space to inspect this resource, or F to center it.",
 }
-const ELK_LAYOUT_TIMEOUT_MS = 6000
+
 const reactFlowProOptions = { hideAttribution: true }
-let elk: ELKInstance | undefined
 
 export function resolveGraphNodeClickAction({
   inspectedMfid,
@@ -168,34 +114,6 @@ export function resolveGraphNodeClickAction({
 }
 
 /** Drops the engine, or only `failed` when given, so a newer engine survives. */
-export function resetResourceGraphLayoutEngine(failed?: ELKInstance) {
-  if (!elk || (failed && failed !== elk)) return
-  try {
-    elk.terminateWorker()
-  } catch {
-    // Worker could already be terminated.
-  }
-  elk = undefined
-}
-
-function resourceGraphLayoutEngine() {
-  elk ??= new ELK({ workerFactory: () => new ELKWorker() })
-  return elk
-}
-
-export function warmResourceGraphLayoutEngine() {
-  void resourceGraphLayoutEngine()
-    .layout({
-      id: "warmup",
-      layoutOptions: { "elk.algorithm": "layered" },
-      children: [
-        { id: "a", width: 1, height: 1 },
-        { id: "b", width: 1, height: 1 },
-      ],
-      edges: [{ id: "e", sources: ["a"], targets: ["b"] }],
-    })
-    .catch(() => undefined)
-}
 
 export const ResourceGraphCanvas = memo(function ResourceGraphCanvasComponent({
   display,
@@ -1298,717 +1216,6 @@ function ResourceGraphFlow({
   )
 }
 
-const ResourceGraphNode = memo(function ResourceGraphNodeComponent({
-  data,
-}: NodeProps<ResourceFlowNode>) {
-  const expansionModes = graphExpansionModesForNode(
-    data.node,
-    data.expansionStates,
-    data.expansionModes
-  )
-  return (
-    <div
-      className="resource-graph-flow-node"
-      data-dimmed={data.dimmed ? "" : undefined}
-      data-entering={data.entering ? "" : undefined}
-      data-highlighted={data.highlighted ? "" : undefined}
-      data-inspected={data.inspected ? "" : undefined}
-      data-kind={data.node.kind}
-      data-layout-direction={data.layoutDirection}
-      data-root={data.isRoot ? "" : undefined}
-      data-thumbnail={data.thumbnail ? "" : undefined}
-    >
-      <Handle
-        className="resource-graph-handle"
-        id="lineage-target"
-        position={
-          data.layoutDirection === "DOWN" ? Position.Top : Position.Left
-        }
-        type="target"
-      />
-      <Handle
-        className="resource-graph-handle"
-        id="lineage-source"
-        position={
-          data.layoutDirection === "DOWN" ? Position.Bottom : Position.Right
-        }
-        type="source"
-      />
-      <Handle
-        className="resource-graph-handle resource-graph-handle-association-source"
-        id="association-source-top"
-        position={Position.Top}
-        type="source"
-      />
-      <Handle
-        className="resource-graph-handle resource-graph-handle-association-source"
-        id="association-source-right"
-        position={Position.Right}
-        type="source"
-      />
-      <Handle
-        className="resource-graph-handle resource-graph-handle-association-source"
-        id="association-source-bottom"
-        position={Position.Bottom}
-        type="source"
-      />
-      <Handle
-        className="resource-graph-handle resource-graph-handle-association-source"
-        id="association-source-left"
-        position={Position.Left}
-        type="source"
-      />
-      <Handle
-        className="resource-graph-handle resource-graph-handle-association-target"
-        id="association-target-top"
-        position={Position.Top}
-        type="target"
-      />
-      <Handle
-        className="resource-graph-handle resource-graph-handle-association-target"
-        id="association-target-right"
-        position={Position.Right}
-        type="target"
-      />
-      <Handle
-        className="resource-graph-handle resource-graph-handle-association-target"
-        id="association-target-bottom"
-        position={Position.Bottom}
-        type="target"
-      />
-      <Handle
-        className="resource-graph-handle resource-graph-handle-association-target"
-        id="association-target-left"
-        position={Position.Left}
-        type="target"
-      />
-      <div className="resource-graph-flow-node-content">
-        <Tooltip>
-          <TooltipTrigger
-            render={
-              <div
-                aria-hidden="true"
-                className="resource-graph-flow-node-icon-badge"
-              />
-            }
-          >
-            <ResourceTypeIcon
-              className="resource-graph-flow-node-icon"
-              type={data.node.kind}
-            />
-          </TooltipTrigger>
-          <TooltipContent portalContainer={data.portalContainer}>
-            {data.isRoot ? `Current ${data.node.kind}` : data.node.kind}
-          </TooltipContent>
-        </Tooltip>
-        <div className="resource-graph-flow-node-body">
-          {data.isRoot ? (
-            <span className="resource-graph-flow-node-eyebrow">Current</span>
-          ) : null}
-          <TruncatedText
-            className="resource-graph-flow-node-name"
-            label={data.node.name}
-          >
-            <BreakableText value={data.node.name} />
-          </TruncatedText>
-          {data.context ? (
-            <TruncatedText className="resource-graph-flow-node-context">
-              {data.context}
-            </TruncatedText>
-          ) : null}
-        </div>
-        {data.thumbnail ? (
-          <DatasetThumbnailImage
-            alt=""
-            className="resource-graph-flow-node-thumbnail"
-            decoding="async"
-            loading="lazy"
-            thumbnail={data.thumbnail}
-          />
-        ) : null}
-      </div>
-      {expansionModes.length > 0 ? (
-        <GraphNodeExpansionControls
-          modes={expansionModes}
-          expansionStates={data.expansionStates}
-          layoutDirection={data.layoutDirection}
-          node={data.node}
-          onExpand={data.onExpand}
-          portalContainer={data.portalContainer}
-        />
-      ) : null}
-    </div>
-  )
-})
-
-const nodeTypes = { resource: ResourceGraphNode }
-
-function GraphNodeExpansionControls({
-  modes,
-  expansionStates,
-  layoutDirection,
-  node,
-  onExpand,
-  portalContainer,
-}: {
-  modes: readonly GraphExpansionMode[]
-  expansionStates: ReadonlyMap<string, GraphExpansionState>
-  layoutDirection: LayoutDirection
-  node: WorkspaceResourceGraphNode
-  onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
-  portalContainer?: React.RefObject<HTMLDivElement | null>
-}) {
-  return (
-    <>
-      {modes.map((mode) => (
-        <GraphNodeExpansionAction
-          key={mode}
-          layoutDirection={layoutDirection}
-          mode={mode}
-          node={node}
-          onExpand={onExpand}
-          portalContainer={portalContainer}
-          state={graphExpansionState(expansionStates, node.unique_id, mode)}
-        />
-      ))}
-    </>
-  )
-}
-
-function GraphNodeExpansionAction({
-  mode,
-  layoutDirection,
-  node,
-  onExpand,
-  portalContainer,
-  state,
-}: {
-  mode: GraphExpansionMode
-  layoutDirection: LayoutDirection
-  node: WorkspaceResourceGraphNode
-  onExpand: (nodeMfid: string, mode: GraphExpansionMode) => void
-  portalContainer?: React.RefObject<HTMLDivElement | null>
-  state?: GraphExpansionState
-}) {
-  const pending = graphExpansionPending(state)
-  const Icon = graphExpansionIcon(mode, layoutDirection)
-  const modeLabel = graphExpansionModeLabel(mode)
-  const label = state?.isError
-    ? `Retry loading ${modeLabel.toLowerCase()} from ${node.name}`
-    : `Load ${modeLabel.toLowerCase()} from ${node.name}`
-  return (
-    <Tooltip>
-      <TooltipTrigger
-        render={
-          <Button
-            aria-label={label}
-            className={cn(
-              "nodrag nopan resource-graph-expansion-action",
-              `resource-graph-expansion-${mode}`
-            )}
-            data-error={state?.isError ? "" : undefined}
-            data-pending={pending ? "" : undefined}
-            disabled={pending}
-            onClick={(event) => {
-              event.stopPropagation()
-              onExpand(node.unique_id, mode)
-            }}
-            size="icon-circle"
-            type="button"
-            variant={state?.isError ? "destructive" : "outline"}
-          />
-        }
-      >
-        {pending ? <PendingIcon /> : <Icon aria-hidden="true" />}
-      </TooltipTrigger>
-      <TooltipContent portalContainer={portalContainer}>{label}</TooltipContent>
-    </Tooltip>
-  )
-}
-
-function graphExpansionIcon(
-  mode: GraphExpansionMode,
-  layoutDirection: LayoutDirection
-) {
-  if (layoutDirection === "DOWN") {
-    if (mode === "ancestors") return GraphAncestorsVerticalIcon
-    if (mode === "descendants") return GraphDescendantsVerticalIcon
-  }
-  if (mode === "ancestors") return GraphAncestorsIcon
-  if (mode === "descendants") return GraphDescendantsIcon
-  return GraphAssociationsIcon
-}
-
-export function resolveAssociationHandleIds(
-  sourcePosition: LayoutPosition,
-  targetPosition: LayoutPosition
-): {
-  sourceHandle:
-    | "association-source-bottom"
-    | "association-source-left"
-    | "association-source-right"
-    | "association-source-top"
-  targetHandle:
-    | "association-target-bottom"
-    | "association-target-left"
-    | "association-target-right"
-    | "association-target-top"
-} {
-  const sourceCenterX = sourcePosition.x + sourcePosition.width / 2
-  const sourceCenterY = sourcePosition.y + sourcePosition.height / 2
-  const targetCenterX = targetPosition.x + targetPosition.width / 2
-  const targetCenterY = targetPosition.y + targetPosition.height / 2
-  const dx = targetCenterX - sourceCenterX
-  const dy = targetCenterY - sourceCenterY
-  const avgWidth = Math.max(
-    (sourcePosition.width + targetPosition.width) / 2,
-    1
-  )
-  const avgHeight = Math.max(
-    (sourcePosition.height + targetPosition.height) / 2,
-    1
-  )
-  if (Math.abs(dx) / avgWidth >= Math.abs(dy) / avgHeight) {
-    return dx >= 0
-      ? {
-          sourceHandle: "association-source-right",
-          targetHandle: "association-target-left",
-        }
-      : {
-          sourceHandle: "association-source-left",
-          targetHandle: "association-target-right",
-        }
-  }
-  return dy >= 0
-    ? {
-        sourceHandle: "association-source-bottom",
-        targetHandle: "association-target-top",
-      }
-    : {
-        sourceHandle: "association-source-top",
-        targetHandle: "association-target-bottom",
-      }
-}
-
-export async function layoutResourceGraph(
-  graph: WorkspaceResourceGraph,
-  element: HTMLElement,
-  direction: LayoutDirection,
-  previousPositions?: ReadonlyMap<string, LayoutPosition> | null
-): Promise<Map<string, LayoutPosition>> {
-  const nodeWidth = graphNumberToken(element, "--graph-node-width")
-  const nodeHeight = graphNumberToken(element, "--graph-node-height")
-  const rootWidth = graphNumberToken(element, "--graph-root-node-width")
-  const rootHeight = graphNumberToken(element, "--graph-root-node-height")
-  const layerGap = graphNumberToken(element, "--graph-layout-layer-gap")
-  const nodeGap = graphNumberToken(element, "--graph-layout-node-gap")
-
-  const nodeIds = new Set(graph.nodes.map((node) => node.unique_id))
-  const validEdges = graph.edges.filter(
-    (edge) => nodeIds.has(edge.source) && nodeIds.has(edge.target)
-  )
-
-  const engine = resourceGraphLayoutEngine()
-  let timer: ReturnType<typeof setTimeout> | undefined
-
-  try {
-    const layoutPromise = engine.layout({
-      children: graph.nodes.map((node) => {
-        const isRoot = node.unique_id === graph.rootMfid
-        const width = isRoot ? rootWidth : nodeWidth
-        const height = isRoot ? rootHeight : nodeHeight
-        const prev = previousPositions?.get(node.unique_id)
-        return {
-          height,
-          id: node.unique_id,
-          width,
-          ...(prev
-            ? {
-                layoutOptions: {
-                  "elk.position": `(${prev.x}, ${prev.y})`,
-                },
-                x: prev.x,
-                y: prev.y,
-              }
-            : {}),
-        }
-      }),
-      edges: validEdges.map((edge) => {
-        const isAssociated = edge.relationship === "associated"
-        return {
-          id: edge.id,
-          sources: [edge.source],
-          targets: [edge.target],
-          layoutOptions: {
-            "org.eclipse.elk.edge.type": isAssociated
-              ? "ASSOCIATION"
-              : "DIRECTED",
-            "org.eclipse.elk.layered.priority.direction": isAssociated
-              ? "0"
-              : "10",
-          },
-        }
-      }),
-      id: "resource-graph",
-      layoutOptions: {
-        "elk.algorithm": "layered",
-        "elk.direction": direction,
-        "elk.edgeRouting": "ORTHOGONAL",
-        "elk.layered.cycleBreaking.strategy": "GREEDY",
-        "elk.layered.crossingMinimization.strategy": "LAYER_SWEEP",
-        "elk.layered.crossingMinimization.semiInteractive":
-          previousPositions && previousPositions.size > 0 ? "true" : "false",
-        "elk.layered.nodePlacement.bk.fixedAlignment": "BALANCED",
-        "elk.layered.nodePlacement.favorStraightEdges": "true",
-        "elk.layered.nodePlacement.strategy": "BRANDES_KOEPF",
-        "elk.layered.spacing.nodeNodeBetweenLayers": String(layerGap),
-        "elk.spacing.nodeNode": String(nodeGap),
-      },
-    })
-
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      timer = setTimeout(() => {
-        reject(new Error("Resource graph layout calculation timed out"))
-      }, ELK_LAYOUT_TIMEOUT_MS)
-    })
-
-    const layout = await Promise.race([layoutPromise, timeoutPromise])
-
-    return new Map(
-      (layout.children ?? []).map((node) => [
-        node.id,
-        {
-          height: node.height,
-          width: node.width,
-          x: node.x ?? 0,
-          y: node.y ?? 0,
-        },
-      ])
-    )
-  } catch (error) {
-    resetResourceGraphLayoutEngine(engine)
-    throw error
-  } finally {
-    if (timer) {
-      clearTimeout(timer)
-    }
-  }
-}
-
-function reconcileResourceFlowNodes(
-  currentNodes: ResourceFlowNode[],
-  graph: WorkspaceResourceGraph,
-  positions: ReadonlyMap<string, LayoutPosition>,
-  presentation: ResourceFlowNodePresentation,
-  enteringNodeIds: ReadonlySet<string>
-) {
-  const currentNodesByMfid = new Map(
-    currentNodes.map((node) => [node.id, node] as const)
-  )
-  return graph.nodes.flatMap<ResourceFlowNode>((node) => {
-    const position = positions.get(node.unique_id)
-    if (!position) return []
-    const currentNode = currentNodesByMfid.get(node.unique_id)
-    if (currentNode) {
-      const presentedNode = updateResourceFlowNodePresentation(
-        currentNode,
-        graph.rootMfid,
-        node,
-        presentation
-      )
-      return [
-        {
-          ...presentedNode,
-          data: {
-            ...presentedNode.data,
-            entering: enteringNodeIds.has(node.unique_id),
-          },
-          position: { x: position.x, y: position.y },
-        },
-      ]
-    }
-    return [
-      {
-        ariaLabel: resourceFlowNodeAriaLabel(node),
-        connectable: false,
-        data: resourceFlowNodeData(
-          graph.rootMfid,
-          node,
-          presentation,
-          enteringNodeIds.has(node.unique_id)
-        ),
-        deletable: false,
-        draggable: true,
-        focusable: true,
-        id: node.unique_id,
-        position: { x: position.x, y: position.y },
-        selectable: false,
-        sourcePosition:
-          presentation.layoutDirection === "DOWN"
-            ? Position.Bottom
-            : Position.Right,
-        targetPosition:
-          presentation.layoutDirection === "DOWN"
-            ? Position.Top
-            : Position.Left,
-        type: "resource",
-      },
-    ]
-  })
-}
-
-function updateResourceFlowNodePresentation(
-  flowNode: ResourceFlowNode,
-  rootMfid: string,
-  node: WorkspaceResourceGraphNode,
-  presentation: ResourceFlowNodePresentation
-): ResourceFlowNode {
-  return {
-    ...flowNode,
-    ariaLabel: resourceFlowNodeAriaLabel(node),
-    data: resourceFlowNodeData(
-      rootMfid,
-      node,
-      presentation,
-      flowNode.data.entering
-    ),
-    focusable: true,
-    sourcePosition:
-      presentation.layoutDirection === "DOWN"
-        ? Position.Bottom
-        : Position.Right,
-    targetPosition:
-      presentation.layoutDirection === "DOWN" ? Position.Top : Position.Left,
-  }
-}
-
-function resourceFlowNodeData(
-  rootMfid: string,
-  node: WorkspaceResourceGraphNode,
-  presentation: ResourceFlowNodePresentation,
-  entering: boolean
-): ResourceFlowNodeData {
-  return {
-    context:
-      node.unique_id === rootMfid ? presentation.rootContext : node.context,
-    dimmed: Boolean(
-      presentation.activeNeighbours &&
-      !presentation.activeNeighbours.has(node.unique_id)
-    ),
-    entering,
-    expansionStates: presentation.expansionStates,
-    expansionModes: presentation.expansionModesByNode.get(node.unique_id) ?? [],
-    highlighted: presentation.activeHighlightMfid === node.unique_id,
-    inspected: presentation.inspectedMfid === node.unique_id,
-    isRoot: node.unique_id === rootMfid,
-    layoutDirection: presentation.layoutDirection,
-    node,
-    onExpand: presentation.onExpand,
-    portalContainer: presentation.portalContainer,
-    thumbnail:
-      presentation.displayThumbnails && node.kind === "dataset"
-        ? presentation.thumbnails[node.unique_id]
-        : undefined,
-  }
-}
-
-function resourceFlowNodeAriaLabel(node: WorkspaceResourceGraphNode) {
-  return `${node.kind === "sample" ? "Sample" : "Dataset"}: ${node.name}`
-}
-
-function updateResourceFlowNodePositions(
-  nodes: ResourceFlowNode[],
-  positions: ReadonlyMap<string, LayoutPosition>
-) {
-  let changed = false
-  const nextNodes: ResourceFlowNode[] = []
-  for (const node of nodes) {
-    const position = positions.get(node.id)
-    if (!position) {
-      changed = true
-      continue
-    }
-    if (node.position.x === position.x && node.position.y === position.y) {
-      nextNodes.push(node)
-      continue
-    }
-    changed = true
-    nextNodes.push({
-      ...node,
-      position: { x: position.x, y: position.y },
-    })
-  }
-  return changed ? nextNodes : nodes
-}
-
-function clearEnteringFlowNodes(nodes: ResourceFlowNode[]) {
-  let changed = false
-  const nextNodes: ResourceFlowNode[] = []
-  for (const node of nodes) {
-    if (!node.data.entering) {
-      nextNodes.push(node)
-      continue
-    }
-    changed = true
-    nextNodes.push({ ...node, data: { ...node.data, entering: false } })
-  }
-  return changed ? nextNodes : nodes
-}
-
-export function fallbackResourceGraphLayout(
-  graph: WorkspaceResourceGraph,
-  element: HTMLElement,
-  direction: LayoutDirection
-) {
-  const nodeWidth = graphNumberToken(element, "--graph-node-width")
-  const nodeHeight = graphNumberToken(element, "--graph-node-height")
-  const rootWidth = graphNumberToken(element, "--graph-root-node-width")
-  const rootHeight = graphNumberToken(element, "--graph-root-node-height")
-  const gap = graphNumberToken(element, "--graph-layout-layer-gap")
-  const rootIndex = graph.nodes.findIndex(
-    (node) => node.unique_id === graph.rootMfid
-  )
-  return new Map(
-    graph.nodes.map((node, index) => {
-      const offset = index - Math.max(rootIndex, 0)
-      const width = node.unique_id === graph.rootMfid ? rootWidth : nodeWidth
-      const height = node.unique_id === graph.rootMfid ? rootHeight : nodeHeight
-      return [
-        node.unique_id,
-        {
-          height,
-          width,
-          x: direction === "RIGHT" ? offset * (nodeWidth + gap) : 0,
-          y: direction === "DOWN" ? offset * (nodeHeight + gap) : 0,
-        },
-      ]
-    })
-  )
-}
-
-function centerResourceGraph(
-  flow: ReactFlowInstance<ResourceFlowNode, ResourceFlowEdge>,
-  element: HTMLElement,
-  rootMfid: string,
-  positions: ReadonlyMap<string, LayoutPosition>,
-  animate: boolean
-) {
-  const root = positions.get(rootMfid)
-  if (!root) return
-  const rootCenter = {
-    x: root.x + root.width / 2,
-    y: root.y + root.height / 2,
-  }
-  const allPositions = [...positions.values()]
-  const minX = Math.min(...allPositions.map((position) => position.x))
-  const maxX = Math.max(
-    ...allPositions.map((position) => position.x + position.width)
-  )
-  const minY = Math.min(...allPositions.map((position) => position.y))
-  const maxY = Math.max(
-    ...allPositions.map((position) => position.y + position.height)
-  )
-  const boundsWidth = Math.max(maxX - minX, 1)
-  const boundsHeight = Math.max(maxY - minY, 1)
-  const padding = graphNumberToken(element, "--graph-fit-padding")
-  const availableWidth = Math.max(element.clientWidth - padding * 2, 1)
-  const availableHeight = Math.max(element.clientHeight - padding * 2, 1)
-  const finalZoom = Math.max(
-    Math.min(
-      availableWidth / boundsWidth,
-      availableHeight / boundsHeight,
-      1,
-      graphNumberToken(element, "--graph-max-zoom")
-    ),
-    graphNumberToken(element, "--graph-readable-zoom"),
-    graphNumberToken(element, "--graph-min-zoom")
-  )
-  const centerX =
-    boundsWidth * finalZoom <= availableWidth ? (minX + maxX) / 2 : rootCenter.x
-  const centerY =
-    boundsHeight * finalZoom <= availableHeight
-      ? (minY + maxY) / 2
-      : rootCenter.y
-  void flow.setCenter(centerX, centerY, {
-    ...(animate ? graphViewportOptions(element) : { duration: 0 }),
-    zoom: finalZoom,
-  })
-}
-
-function alignLayoutToAnchor(
-  positions: ReadonlyMap<string, LayoutPosition>,
-  previousPositions: ReadonlyMap<string, LayoutPosition>,
-  anchorMfid: string
-) {
-  const anchor = positions.get(anchorMfid)
-  const previousAnchor = previousPositions.get(anchorMfid)
-  if (!anchor || !previousAnchor) return new Map(positions)
-  const offsetX =
-    previousAnchor.x + previousAnchor.width / 2 - (anchor.x + anchor.width / 2)
-  const offsetY =
-    previousAnchor.y +
-    previousAnchor.height / 2 -
-    (anchor.y + anchor.height / 2)
-  return new Map(
-    [...positions].map(([nodeMfid, position]) => [
-      nodeMfid,
-      {
-        ...position,
-        x: position.x + offsetX,
-        y: position.y + offsetY,
-      },
-    ])
-  )
-}
-
-function layoutAnimationStartPositions(
-  previousPositions: ReadonlyMap<string, LayoutPosition>,
-  nextPositions: ReadonlyMap<string, LayoutPosition>,
-  anchorMfid: string
-) {
-  const anchor =
-    previousPositions.get(anchorMfid) ?? previousPositions.values().next().value
-  const origin = anchor
-    ? {
-        x: anchor.x + anchor.width / 2,
-        y: anchor.y + anchor.height / 2,
-      }
-    : null
-  return new Map(
-    [...nextPositions].map(([nodeMfid, next]) => {
-      const previous = previousPositions.get(nodeMfid)
-      return [
-        nodeMfid,
-        {
-          ...next,
-          x: previous?.x ?? (origin ? origin.x - next.width / 2 : next.x),
-          y: previous?.y ?? (origin ? origin.y - next.height / 2 : next.y),
-        },
-      ]
-    })
-  )
-}
-
-function interpolateLayoutPositions(
-  startPositions: ReadonlyMap<string, LayoutPosition>,
-  nextPositions: ReadonlyMap<string, LayoutPosition>,
-  progress: number
-) {
-  return new Map(
-    [...nextPositions].map(([nodeMfid, next]) => {
-      const start = startPositions.get(nodeMfid) ?? next
-      return [
-        nodeMfid,
-        {
-          ...next,
-          x: start.x + (next.x - start.x) * progress,
-          y: start.y + (next.y - start.y) * progress,
-        },
-      ]
-    })
-  )
-}
-
 function cancelAnimationFrameRef(frame: { current: number | null }) {
   if (frame.current === null) return
   cancelAnimationFrame(frame.current)
@@ -2028,45 +1235,4 @@ function scheduleEntryReveal(
       reveal()
     })
   })
-}
-
-export function graphViewportOptions(element: HTMLElement | null) {
-  return { duration: element ? motionDuration("--motion-deliberate") : 0 }
-}
-
-function graphNumberToken(
-  element: HTMLElement | null,
-  name: string,
-  fallback?: number
-) {
-  if (!element) {
-    if (fallback !== undefined) return fallback
-    throw new Error(`Missing graph token host: ${name}`)
-  }
-  const value = Number(getComputedStyle(element).getPropertyValue(name))
-  if (!Number.isFinite(value)) throw new Error(`Invalid graph token: ${name}`)
-  return value
-}
-
-function resolveLayoutDirection(
-  orientation: GraphOrientation
-): LayoutDirection {
-  if (orientation === "horizontal") return "RIGHT"
-  return "DOWN"
-}
-
-function graphDensity(nodeCount: number) {
-  if (nodeCount <= 3) return "sparse"
-  if (nodeCount >= 12) return "dense"
-  return "standard"
-}
-
-function resourceGraphLayoutSignature(graph: WorkspaceResourceGraph) {
-  return [
-    graph.rootMfid,
-    ...graph.nodes.map((node) => node.unique_id),
-    ...graph.edges.map(
-      (edge) => `${edge.id}:${edge.source}:${edge.target}:${edge.relationship}`
-    ),
-  ].join("|")
 }
