@@ -39,6 +39,7 @@ export type HubConflictCode =
   | "account_pending"
   | "feature_disabled"
   | "lead_must_be_caller"
+  | "project_id_reserved"
   | "already_member"
   | "join_request_pending"
   | "too_many_pending_requests"

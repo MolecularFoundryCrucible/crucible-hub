@@ -52,6 +52,7 @@ import { ProjectIdField } from "@/features/forms/identifier-fields"
 import { useSlugConflict } from "@/features/forms/slug-availability"
 import { FormErrorRegion } from "@/components/crucible/form-error"
 import { CreationFormActions } from "@/components/crucible/creation-form-actions"
+import { reservedProjectIdMessage } from "./project-id-errors"
 
 const projectCreationSchema = z.object({
   organization: z
@@ -88,9 +89,12 @@ function projectCreationError(error: unknown) {
   ) {
     return "Only an administrator in Administrator view can make someone else the lead. Create the project with yourself as lead, then transfer it from the project's Manage tab."
   }
-  return hubErrorMessage(
-    error,
-    "The project could not be created. Your entries are still here."
+  return (
+    reservedProjectIdMessage(error) ??
+    hubErrorMessage(
+      error,
+      "The project could not be created. Your entries are still here."
+    )
   )
 }
 
