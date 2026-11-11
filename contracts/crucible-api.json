@@ -9468,7 +9468,7 @@
   },
   "info": {
     "title": "FastAPI",
-    "version": "3.3.1"
+    "version": "4.0.0a1"
   },
   "openapi": "3.1.0",
   "paths": {
