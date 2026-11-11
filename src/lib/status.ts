@@ -3,7 +3,12 @@ export type StatusTone =
 
 /** Kinds of record whose statuses read and color differently. */
 export type StatusDomain =
-  "database" | "deletion-request" | "ingestion" | "resource" | "service"
+  | "database"
+  | "deletion-request"
+  | "ingestion"
+  | "join-request"
+  | "resource"
+  | "service"
 
 type StatusEntry = { label?: string; tone: StatusTone }
 
@@ -17,6 +22,12 @@ const catalogue: Record<StatusDomain, Partial<Record<string, StatusEntry>>> = {
     approved: { tone: "success" },
     pending: { tone: "warning" },
     rejected: { tone: "destructive" },
+  },
+  "join-request": {
+    approved: { tone: "success" },
+    pending: { tone: "warning" },
+    rejected: { tone: "destructive" },
+    withdrawn: { tone: "outline" },
   },
   ingestion: {
     complete: { tone: "success" },

@@ -47,6 +47,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { PersonProfileFields } from "@/components/crucible/person-profile-fields"
 import type { SortDirection } from "@/data/crucible/collection-query"
 import { applyPersonProfileUpdate } from "@/data/crucible/cache-effects"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
@@ -76,11 +77,13 @@ import { EmailField, UsernameField } from "@/features/forms/identifier-fields"
 import { useSlugConflict } from "@/features/forms/slug-availability"
 import { resourceDisplayName } from "@/lib/resource-name"
 import { PendingUserActions } from "@/features/admin/pending-users-card"
+import {
+  DisabledAccountBanner,
+  UserAccountActions,
+} from "@/features/admin/user-account-status"
 import { PersonSecurityCard } from "@/features/account-profile/security-card"
-import { EmailValue } from "@/components/crucible/email-value"
 import { formatSignInMethods } from "@/lib/sign-in-methods"
 import { useAppForm } from "@/features/forms/app-form"
-import { formatUsername } from "@/lib/username"
 
 const platformRoleDescriptions = {
   admin: "Full platform administration.",
@@ -180,6 +183,9 @@ export function UserDetailView({
     <div className="flex flex-col gap-6">
       {user.pending_at ? (
         <PendingApprovalBanner scope={scope} user={user} />
+      ) : null}
+      {user.disabled_at ? (
+        <DisabledAccountBanner scope={scope} user={user} />
       ) : null}
       <UserProfileCard scope={scope} user={user} />
       <UserProjectsSection scope={scope} user={user} />
@@ -382,6 +388,7 @@ function UserProfileCard({
                     onClick={() => setEditing(true)}
                   />
                 ) : null}
+                <UserAccountActions scope={scope} user={user} />
               </div>
             </CardAction>
           </CardHeader>
@@ -392,71 +399,12 @@ function UserProfileCard({
                 propagate.
               </p>
             ) : null}
-            <dl className="grid grid-cols-1 gap-4 @fields-wide:grid-cols-2 @3xl:grid-cols-3">
-              <div className="min-w-0">
-                <dt className="text-label text-muted-foreground">Name</dt>
-                <dd className="mt-1 text-body break-words">
-                  {[user.first_name, user.last_name]
-                    .map((part) => part.trim())
-                    .filter(Boolean)
-                    .join(" ") || (
-                    <span className="text-muted-foreground">None</span>
-                  )}
-                </dd>
-              </div>
-              <div className="min-w-0">
-                <dt className="text-label text-muted-foreground">Username</dt>
-                <dd className="mt-1 text-body break-words">
-                  {user.username ? (
-                    <span className="font-mono">
-                      {formatUsername(user.username, "raw")}
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground">None</span>
-                  )}
-                </dd>
-              </div>
-              <div className="min-w-0">
-                <dt className="text-label text-muted-foreground">Email</dt>
-                <dd className="mt-1 text-body">
-                  {user.email ? (
-                    <EmailValue email={user.email} />
-                  ) : (
-                    <span className="text-muted-foreground">None</span>
-                  )}
-                </dd>
-              </div>
-              <div className="min-w-0">
-                <dt className="text-label text-muted-foreground">
-                  Platform role
-                </dt>
-                <dd className="mt-1">
-                  {user.platform_role ? (
-                    <PlatformRoleBadge role={user.platform_role} />
-                  ) : (
-                    <span className="text-body text-muted-foreground">
-                      No platform role
-                    </span>
-                  )}
-                </dd>
-              </div>
-              <div className="min-w-0">
-                <dt className="text-label text-muted-foreground">
-                  Last active
-                </dt>
-                <dd className="mt-1 text-body">
-                  <ActivityTime fallback="Never" value={user.last_active_at} />
-                </dd>
-              </div>
-              <div className="min-w-0">
-                <dt className="text-label text-muted-foreground">
-                  Crucible ID
-                </dt>
-                <dd className="mt-1">
-                  <MfidValue value={user.unique_id} />
-                </dd>
-              </div>
-            </dl>
+            <PersonProfileFields
+              email={user.email ?? null}
+              lastActiveAt={user.last_active_at ?? null}
+              person={user}
+              platformRole={user.platform_role ?? null}
+            />
           </CardContent>
         </Card>
         <PlatformRoleDialog

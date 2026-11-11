@@ -1,9 +1,6 @@
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
 
-import { ActivityTime } from "@/components/crucible/activity-time"
 import { ContentBoundary } from "@/components/crucible/content-layout"
-import { MfidValue } from "@/components/crucible/mfid-value"
-import { OrcidValue } from "@/components/crucible/orcid-value"
 import type { PersonIdentityProfile } from "@/components/crucible/person-identity"
 import {
   useAdministrationScope,
@@ -11,6 +8,7 @@ import {
   useWorkspaceScope,
 } from "@/components/crucible/workspace-provider"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { PersonProfileFields } from "@/components/crucible/person-profile-fields"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
 import {
   canOpenServiceAccountAdministration,
@@ -19,7 +17,6 @@ import {
 import { personQueryOptions } from "@/data/crucible/people.queries"
 import { serviceAccountAdminQueryOptions } from "@/data/crucible/service-accounts.queries"
 import { userDetailQueryOptions } from "@/data/crucible/users.queries"
-import { formatUsername } from "@/lib/username"
 
 export function usePersonPage(userId: string) {
   const scope = useWorkspaceScope()
@@ -78,10 +75,6 @@ export function ReadOnlyPersonProfileCard({
   lastActiveAt?: string | null
   person: PersonIdentityProfile
 }) {
-  const name = [person.first_name, person.last_name]
-    .map((part) => part?.trim())
-    .filter(Boolean)
-    .join(" ")
   return (
     <ContentBoundary width="reading">
       <Card>
@@ -89,49 +82,13 @@ export function ReadOnlyPersonProfileCard({
           <CardTitle>Profile</CardTitle>
         </CardHeader>
         <CardContent>
-          <dl className="grid grid-cols-1 gap-4 @fields-wide:grid-cols-2">
-            {name ? (
-              <div className="flex min-w-0 flex-col gap-1">
-                <dt className="text-label text-muted-foreground">Name</dt>
-                <dd className="text-body break-words">{name}</dd>
-              </div>
-            ) : null}
-            {person.username ? (
-              <div className="flex min-w-0 flex-col gap-1">
-                <dt className="text-label text-muted-foreground">Username</dt>
-                <dd className="font-mono text-body break-words">
-                  {formatUsername(person.username, "raw")}
-                </dd>
-              </div>
-            ) : null}
-            {lastActiveAt !== undefined ? (
-              <div className="flex min-w-0 flex-col gap-1">
-                <dt className="text-label text-muted-foreground">
-                  Last active
-                </dt>
-                <dd className="text-body">
-                  <ActivityTime fallback="Never" value={lastActiveAt} />
-                </dd>
-              </div>
-            ) : null}
-            <div className="flex min-w-0 flex-col gap-1">
-              <dt className="text-label text-muted-foreground">Crucible ID</dt>
-              <dd>
-                <MfidValue value={person.unique_id} />
-              </dd>
-            </div>
-            {person.orcid ? (
-              <div className="flex min-w-0 flex-col gap-1">
-                <dt className="text-label text-muted-foreground">ORCID</dt>
-                <dd>
-                  <OrcidValue
-                    orcid={person.orcid}
-                    verified={person.orcid_verified}
-                  />
-                </dd>
-              </div>
-            ) : null}
-          </dl>
+          <PersonProfileFields
+            hideMissing
+            lastActiveAt={lastActiveAt}
+            maxColumns={2}
+            person={person}
+            showOrcid
+          />
         </CardContent>
       </Card>
     </ContentBoundary>

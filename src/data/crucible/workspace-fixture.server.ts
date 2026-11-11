@@ -15,6 +15,8 @@ import {
   readAccountPreferencesEnabled,
   readUploadsEnabled,
 } from "./workspace-config.server"
+import { allFeaturesEnabled } from "./features"
+import type { WorkspaceFeatures } from "./features"
 import type { WorkspacePrivilegeMode } from "./privilege-mode"
 
 type ApiLinkedResource = components["schemas"]["LinkedResource"]
@@ -186,6 +188,17 @@ export function isFixtureResourceSharedWithProject(
   )
 }
 
+function fixtureFeatures(scenario: FixtureScenario): WorkspaceFeatures {
+  if (scenario !== "degraded") return allFeaturesEnabled
+  return {
+    ingestion: false,
+    passwords: false,
+    printing: false,
+    proposal_sync: false,
+    uploads: false,
+  }
+}
+
 function workspaceForScenario(scenario: FixtureScenario): Workspace {
   if (scenario === "empty") {
     return {
@@ -242,13 +255,18 @@ export function readWorkspaceFixture(
   }
 
   const workspace = workspaceForScenario(scenario)
+  const features = fixtureFeatures(scenario)
   return {
     status: "ready",
     mode: "fixture",
     accountPreferencesEnabled: readAccountPreferencesEnabled("fixture"),
+    features,
     privilegeMode,
-    uploadIngestionEnabled: readUploadIngestionEnabled("fixture"),
-    uploadsEnabled: readUploadsEnabled("fixture"),
+    uploadIngestionEnabled:
+      readUploadIngestionEnabled("fixture") &&
+      features.uploads &&
+      features.ingestion,
+    uploadsEnabled: readUploadsEnabled("fixture") && features.uploads,
     workspace: {
       ...workspace,
       account: {

@@ -9,6 +9,7 @@ import {
   checkWorkspaceUsernameExactMatch,
   patchWorkspaceAccount,
   readWorkspaceAccount,
+  syncWorkspaceAccountProjects,
 } from "./account.server"
 import { queryCancellationMiddleware } from "./query-cancellation"
 import { usernameSchema } from "./slugs"
@@ -52,6 +53,18 @@ export const updateWorkspaceAccount = createServerFn({ method: "POST" })
     setResponseHeader("Cache-Control", "no-store")
     return safeCrucibleCall(context.correlationId, () =>
       patchWorkspaceAccount(data.changes, data.scenario, context.requestSignal)
+    )
+  })
+
+export const syncWorkspaceAccountProjectsFn = createServerFn({
+  method: "POST",
+})
+  .middleware([queryCancellationMiddleware])
+  .validator(z.object({ scenario: fixtureScenarioSchema.optional() }).strict())
+  .handler(async ({ context, data }) => {
+    setResponseHeader("Cache-Control", "no-store")
+    return safeCrucibleCall(context.correlationId, () =>
+      syncWorkspaceAccountProjects(data.scenario, context.requestSignal)
     )
   })
 

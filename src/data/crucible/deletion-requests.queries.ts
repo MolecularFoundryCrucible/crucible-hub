@@ -43,7 +43,7 @@ export function deletionAuditInfiniteQueryOptions(
     getNextPageParam: (page) => page.nextCursor ?? undefined,
     placeholderData: (previousData, previousQuery) =>
       identityScopedPreviousData(scope, previousData, previousQuery),
-    retry: scenario ? false : undefined,
+    ...(scenario ? { retry: false } : {}),
   })
 }
 
@@ -70,7 +70,7 @@ export function deletionRequestsInfiniteQueryOptions(
     getNextPageParam: (page) => page.nextCursor ?? undefined,
     placeholderData: (previousData, previousQuery) =>
       identityScopedPreviousData(scope, previousData, previousQuery),
-    retry: scenario ? false : undefined,
+    ...(scenario ? { retry: false } : {}),
   })
 }
 
@@ -103,6 +103,6 @@ export function pendingDeletionRequestsCountQueryOptions(scope: IdentityScope) {
     },
     staleTime: 60_000,
     refetchOnWindowFocus: false,
-    retry: scenario ? false : undefined,
+    ...(scenario ? { retry: false } : {}),
   })
 }

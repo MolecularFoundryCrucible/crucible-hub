@@ -113,7 +113,8 @@ export async function readRecentResources(
       signal: crucibleRequestSignal(requestSignal),
     }
   )
-  if (!result.data) throw new CrucibleResponseError(result.response)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
   return result.data.map((item) => ({
     identifier: item.identifier ?? null,
     kind: item.resource_type,

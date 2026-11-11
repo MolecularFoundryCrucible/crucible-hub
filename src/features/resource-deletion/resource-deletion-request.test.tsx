@@ -32,6 +32,7 @@ function sample(
       can_view_access: true,
       can_request_deletion: canRequestDeletion,
       can_transfer: false,
+      can_delete_files: false,
       max_grant_role: null,
     },
     creation_time: null,

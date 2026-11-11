@@ -19,6 +19,7 @@ import {
   SignInMethodIcon,
   VerifiedCredentialIcon,
 } from "@/components/crucible/icons"
+import { useFeatureEnabled } from "@/components/crucible/workspace-provider"
 import { notifyError, notifySuccess } from "@/components/crucible/notifications"
 import { OrcidValue } from "@/components/crucible/orcid-value"
 import { LocalDateTime } from "@/components/crucible/local-date-time"
@@ -177,6 +178,7 @@ export function AccountSignInMethodsSection({
   const announced = useRef(false)
   const [settingPassword, setSettingPassword] = useState(false)
   const [removingPassword, setRemovingPassword] = useState(false)
+  const passwordsEnabled = useFeatureEnabled("passwords")
 
   useEffect(() => {
     if (!linkOutcome || linkOutcome === "pending" || announced.current) return
@@ -200,6 +202,7 @@ export function AccountSignInMethodsSection({
     : []
   const hasPassword = hasPasswordFrom(account?.sign_in_methods)
   const canSetPassword =
+    passwordsEnabled &&
     passwordsOffered(methods.data) &&
     hasPassword !== true &&
     account?.is_service_account !== true
@@ -224,10 +227,12 @@ export function AccountSignInMethodsSection({
           <PasswordRow
             actions={
               <PasswordRowMenu>
-                <DropdownMenuItem onClick={() => setSettingPassword(true)}>
-                  <ChangePasswordIcon aria-hidden="true" />
-                  Change password
-                </DropdownMenuItem>
+                {passwordsEnabled ? (
+                  <DropdownMenuItem onClick={() => setSettingPassword(true)}>
+                    <ChangePasswordIcon aria-hidden="true" />
+                    Change password
+                  </DropdownMenuItem>
+                ) : null}
                 <DropdownMenuItem
                   disabled={list.length === 0}
                   onClick={() => setRemovingPassword(true)}
@@ -303,12 +308,15 @@ export function PersonSignInMethodsSection({
   const methods = useQuery(signInMethodsQueryOptions(scope))
   const link = useIssuePasswordLink(scope, userId)
   const [removingPassword, setRemovingPassword] = useState(false)
+  const passwordsEnabled = useFeatureEnabled("passwords")
   if (conflictCode(identities.error) === "identity_lookup_off") return null
   const hasPassword = hasPasswordFrom(password?.signInMethods)
   const count = (identities.data?.length ?? 0) + (hasPassword ? 1 : 0)
   const own = userId === scope[2]
   const managesPasswords =
-    password?.canHavePassword === true && passwordsOffered(methods.data)
+    passwordsEnabled &&
+    password?.canHavePassword === true &&
+    passwordsOffered(methods.data)
   return (
     <SignInMethodsSection
       action={

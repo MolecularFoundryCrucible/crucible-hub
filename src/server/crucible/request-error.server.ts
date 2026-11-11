@@ -22,6 +22,15 @@ const publicationFailureSchema = z.object({
   detail: z.string().regex(/^Upload could not be published: [a-z_]+$/),
 })
 
+function isFrameworkNotFound(body: unknown) {
+  return (
+    typeof body === "object" &&
+    body !== null &&
+    "detail" in body &&
+    body.detail === "Not Found"
+  )
+}
+
 function readConflictCode(body: unknown) {
   const parsed = conflictCodeBodySchema.safeParse(body)
   if (parsed.success) return parsed.data.detail.code
@@ -34,6 +43,18 @@ function readConflictCode(body: unknown) {
 }
 
 const hubConflictCodes = new Set<string>([
+  "lead_must_be_caller",
+  "project_id_reserved",
+  "already_member",
+  "join_request_pending",
+  "too_many_pending_requests",
+  "project_not_accepting_requests",
+  "service_account_cannot_request",
+  "join_request_closed",
+  "project_not_found",
+  "filename_exists",
+  "filename_immutable",
+  "pending_deletion",
   "storage_location_invalid",
   "replace_in_progress",
   "file_changed",
@@ -87,7 +108,9 @@ export class CrucibleResponseError extends Error {
   readonly conflictFields?: HubConflictField[]
   readonly conflictCode?: string
   readonly reauthenticationRequired: boolean = false
+  readonly routeMissing: boolean = false
   readonly valueIssues?: { field: string; kind: ValueIssueKind }[]
+  readonly invalidParameters?: string[]
 
   constructor(source: number | Response, body?: unknown) {
     super("The Crucible API rejected the request.")
@@ -99,6 +122,9 @@ export class CrucibleResponseError extends Error {
     this.status = source.status
     this.retryAfterSeconds = readRetryAfterSeconds(source.headers)
     this.reauthenticationRequired = isStepUpChallenge(source)
+    this.routeMissing =
+      source.status === 405 ||
+      (source.status === 404 && isFrameworkNotFound(body))
     if (source.status === 409) this.conflictFields = readConflictFields(body)
     if ([403, 404, 409, 429, 501].includes(source.status)) {
       this.conflictCode = readConflictCode(body)
@@ -106,6 +132,8 @@ export class CrucibleResponseError extends Error {
     if (source.status === 422) {
       const issues = readValueIssues(body)
       if (issues.length > 0) this.valueIssues = issues
+      const parameters = readInvalidParameters(body)
+      if (parameters.length > 0) this.invalidParameters = parameters
     }
   }
 }
@@ -145,6 +173,16 @@ function valueIssueKind(issue: {
     default:
       return undefined
   }
+}
+
+/** Where FastAPI says a request was invalid, such as "query.affiliation.0". */
+function readInvalidParameters(body: unknown): string[] {
+  const detail = (body as { detail?: unknown } | null)?.detail
+  if (!Array.isArray(detail)) return []
+  return detail.flatMap((entry: unknown) => {
+    const loc = (entry as { loc?: unknown } | null)?.loc
+    return Array.isArray(loc) ? [loc.map(String).join(".")] : []
+  })
 }
 
 function readValueIssues(

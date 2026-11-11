@@ -414,9 +414,11 @@ export function useUploadBatch({
           message:
             conflictCode === "replace_in_progress"
               ? "Another replacement of this file is already in progress. Try again when it finishes."
-              : error instanceof HubApiClientError
-                ? error.message
-                : errorMessage(error, "The upload failed."),
+              : conflictCode === "feature_disabled"
+                ? "File uploads aren't turned on for this Crucible server."
+                : error instanceof HubApiClientError
+                  ? error.message
+                  : errorMessage(error, "The upload failed."),
           status: "error",
         })
       } finally {

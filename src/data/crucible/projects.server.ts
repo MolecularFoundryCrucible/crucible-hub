@@ -293,7 +293,8 @@ export async function readWorkspaceUserProjects(
     },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (!result.data) throw new CrucibleResponseError(result.response)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
 
   return {
     items: result.data.items.map(toWorkspaceProject),
@@ -346,7 +347,7 @@ export async function readWorkspaceProject(
   })
   if (result.response.status === 404) return null
   if (!result.data) {
-    throw new CrucibleResponseError(result.response)
+    throw new CrucibleResponseError(result.response, result.error)
   }
   return toWorkspaceProject(result.data)
 }
@@ -381,7 +382,7 @@ export async function patchWorkspaceProject(
     ) {
       throw new CrucibleResponseError(409)
     }
-    return toWorkspaceProject({ ...project, ...changes })
+    return toWorkspaceProject({ proposal_sync: false, ...project, ...changes })
   }
 
   const client = createCrucibleClient(configuration)
@@ -391,7 +392,7 @@ export async function patchWorkspaceProject(
     signal: crucibleRequestSignal(requestSignal),
   })
   if (!result.data) {
-    throw new CrucibleResponseError(result.response)
+    throw new CrucibleResponseError(result.response, result.error)
   }
   return toWorkspaceProject(result.data)
 }
@@ -418,7 +419,8 @@ export async function checkWorkspaceProjectIdExactMatch(
     params: { query: { limit: 1, project_id: projectId } },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (!result.data) throw new CrucibleResponseError(result.response)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
   return result.data.items.length > 0
 }
 
@@ -510,7 +512,7 @@ export async function addWorkspaceProjectMember(
     signal: crucibleRequestSignal(requestSignal),
   })
   if (!result.data) {
-    throw new CrucibleResponseError(result.response)
+    throw new CrucibleResponseError(result.response, result.error)
   }
   return result.data
 }
@@ -559,7 +561,7 @@ export async function updateWorkspaceProjectMemberRole(
     }
   )
   if (!result.data) {
-    throw new CrucibleResponseError(result.response)
+    throw new CrucibleResponseError(result.response, result.error)
   }
   return result.data
 }
@@ -595,7 +597,7 @@ export async function removeWorkspaceProjectMember(
     }
   )
   if (!result.data) {
-    throw new CrucibleResponseError(result.response)
+    throw new CrucibleResponseError(result.response, result.error)
   }
   return result.data
 }

@@ -9,6 +9,7 @@ export type HubApiErrorKind =
   | "cancelled"
   | "timeout"
   | "upstream"
+  | "unavailable"
   | "unexpected"
 
 export type HubConflictField = "email" | "username"
@@ -37,6 +38,18 @@ export type HubConflictCode =
   | "account_disabled"
   | "account_pending"
   | "feature_disabled"
+  | "lead_must_be_caller"
+  | "project_id_reserved"
+  | "already_member"
+  | "join_request_pending"
+  | "too_many_pending_requests"
+  | "project_not_accepting_requests"
+  | "service_account_cannot_request"
+  | "join_request_closed"
+  | "project_not_found"
+  | "filename_exists"
+  | "filename_immutable"
+  | "pending_deletion"
 
 export type HubApiError = {
   kind: HubApiErrorKind

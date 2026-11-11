@@ -318,7 +318,8 @@ export async function signWorkspaceUploadParts(
         signal: crucibleRequestSignal(requestSignal),
       }
     )
-    if (!result.data) throw new CrucibleResponseError(result.response)
+    if (!result.data)
+      throw new CrucibleResponseError(result.response, result.error)
     const signed = apiSignedPartsSchema.safeParse(result.data)
     if (!signed.success) {
       throw new CrucibleContractError("multipart-parts", signed.error.issues)
@@ -380,7 +381,8 @@ export async function readWorkspaceUploadSession(
           signal: crucibleRequestSignal(requestSignal),
         }
       )
-      if (!result.data) throw new CrucibleResponseError(result.response)
+      if (!result.data)
+        throw new CrucibleResponseError(result.response, result.error)
       const status = parseApiStatus(result.data)
       for (const part of status.parts) acknowledged.add(part.part_number)
       const next = status.next_part_number_marker ?? null
@@ -522,7 +524,8 @@ export async function abortWorkspaceUpload(
         signal: crucibleRequestSignal(requestSignal),
       }
     )
-    if (!result.response.ok) throw new CrucibleResponseError(result.response)
+    if (!result.response.ok)
+      throw new CrucibleResponseError(result.response, result.error)
     return
   }
 

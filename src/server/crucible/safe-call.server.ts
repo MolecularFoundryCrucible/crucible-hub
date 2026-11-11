@@ -26,12 +26,24 @@ export async function safeCrucibleCall<T>(
       error instanceof CrucibleResponseError ? error.status : undefined
     const cancelled =
       error instanceof DOMException && error.name === "AbortError"
-    if (!cancelled) {
+    const unavailable =
+      error instanceof CrucibleResponseError && error.routeMissing
+    if (unavailable) {
+      console.warn("[Crucible Hub] Crucible API route not available", {
+        correlationId,
+        operation: options.operation ?? "crucible-api",
+        status,
+      })
+    } else if (!cancelled) {
       console.error("[Crucible Hub] Server operation failed", {
         contract:
           error instanceof CrucibleContractError ? error.contract : undefined,
         correlationId,
         errorName: error instanceof Error ? error.name : "UnknownError",
+        invalidParameters:
+          error instanceof CrucibleResponseError
+            ? error.invalidParameters
+            : undefined,
         issues:
           error instanceof CrucibleContractError ? error.issues : undefined,
         operation: options.operation ?? "crucible-api",
@@ -62,6 +74,7 @@ export async function safeCrucibleCall<T>(
         reauthenticationRequired:
           error instanceof CrucibleResponseError &&
           error.reauthenticationRequired,
+        unavailable,
         ...(error instanceof CrucibleResponseError && error.valueIssues
           ? {
               fieldErrors: Object.fromEntries(

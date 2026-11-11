@@ -23,6 +23,7 @@ import {
 } from "@/components/crucible/person-identity"
 import { PendingRegion } from "@/components/crucible/pending-region"
 import { PlatformRoleBadge } from "@/components/crucible/platform-role-badge"
+import { Badge } from "@/components/ui/badge"
 import { ResourceCreationLink } from "@/components/crucible/resource-creation-actions"
 import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-link"
 import { SelectableTextLink } from "@/components/crucible/selectable-text-link"
@@ -498,17 +499,24 @@ function UserCollection({
                         <PersonIdentity
                           className="min-w-0"
                           nameContent={
-                            <SelectableTextLink
-                              className="block truncate"
-                              render={
-                                <Link
-                                  params={{ userId: user.unique_id }}
-                                  to="/users/$userId"
-                                />
-                              }
-                            >
-                              {personDisplayName(user)}
-                            </SelectableTextLink>
+                            <span className="flex min-w-0 items-center gap-2">
+                              <SelectableTextLink
+                                className="block truncate"
+                                render={
+                                  <Link
+                                    params={{ userId: user.unique_id }}
+                                    to="/users/$userId"
+                                  />
+                                }
+                              >
+                                {personDisplayName(user)}
+                              </SelectableTextLink>
+                              {user.disabled_at ? (
+                                <Badge className="shrink-0" variant="muted">
+                                  Disabled
+                                </Badge>
+                              ) : null}
+                            </span>
                           }
                           person={user}
                           presentation="avatar"

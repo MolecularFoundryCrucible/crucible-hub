@@ -25,6 +25,7 @@ import {
 } from "@/data/crucible/account-identities.functions"
 
 import { UserDetailView } from "./user-detail"
+import { setWorkspaceUserDisabledFn } from "@/data/crucible/users.functions"
 
 vi.mock("@tanstack/react-router", async (importOriginal) => {
   const actual = await importOriginal<Record<string, unknown>>()
@@ -79,6 +80,19 @@ vi.mock(
   })
 )
 
+vi.mock("@/data/crucible/users.functions", async (importOriginal) => ({
+  ...(await importOriginal<Record<string, unknown>>()),
+  setWorkspaceUserDisabledFn: vi.fn(
+    async ({ data }: { data: { disabled: boolean } }) => ({
+      data: {
+        ...testUser,
+        disabled_at: data.disabled ? "2026-11-10T12:00:00Z" : null,
+      },
+      status: "ok",
+    })
+  ),
+}))
+
 vi.mock("@/data/crucible/api-keys.functions", () => ({
   createWorkspaceApiKeyFn: vi.fn(),
   getWorkspaceApiKeys: vi.fn(async () => ({
@@ -102,6 +116,7 @@ const mockProjects: WorkspaceUserProject[] = [
     modification_time: "2026-03-01T00:00:00Z",
     organization: "crucible",
     project_id: "prj-alpha",
+    proposal_sync: false,
     role: "viewer",
     scientific_metadata: null,
     status: "ready",
@@ -120,6 +135,7 @@ const mockProjects: WorkspaceUserProject[] = [
     modification_time: "2026-02-01T00:00:00Z",
     organization: "crucible",
     project_id: "prj-beta",
+    proposal_sync: false,
     role: "editor",
     scientific_metadata: null,
     status: "ready",
@@ -138,6 +154,7 @@ const mockProjects: WorkspaceUserProject[] = [
     modification_time: "2026-01-01T00:00:00Z",
     organization: "crucible",
     project_id: "prj-gamma",
+    proposal_sync: false,
     role: "owner",
     scientific_metadata: null,
     status: "ready",
@@ -469,6 +486,19 @@ describe("UserDetailView API keys", () => {
     window.history.replaceState(null, "", window.location.pathname)
   })
 
+  it("keeps the chosen Security tab in the address", async () => {
+    window.history.replaceState(null, "", "/users/person-1")
+    renderUserDetail(testUser, "security")
+
+    fireEvent.click(await screen.findByRole("tab", { name: /Sessions/ }))
+    await waitFor(() => expect(window.location.hash).toBe("#sessions"))
+    expect(window.location.pathname).toBe("/users/person-1")
+
+    fireEvent.click(screen.getByRole("tab", { name: /Sign-in methods/ }))
+    await waitFor(() => expect(window.location.hash).toBe(""))
+    window.history.replaceState(null, "", "/")
+  })
+
   it("lists a person's keys and asks for a fresh sign-in to revoke one", async () => {
     vi.mocked(getWorkspaceApiKeys).mockResolvedValue({
       data: {
@@ -524,5 +554,62 @@ describe("UserDetailView API keys", () => {
     expect(vi.mocked(revokeWorkspaceApiKeyFn)).toHaveBeenCalledWith({
       data: { keyId: 7, userId: expect.any(String) },
     })
+  })
+})
+
+describe("UserDetailView account status", () => {
+  afterEach(cleanup)
+
+  it("disables an account after confirming", async () => {
+    renderUserDetail()
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "More actions for Test User" })
+    )
+    fireEvent.click(await screen.findByRole("menuitem", { name: /Disable/ }))
+    const dialog = await screen.findByRole("alertdialog", {
+      name: "Disable Test User's account?",
+    })
+    fireEvent.click(
+      within(dialog).getByRole("button", { name: "Disable account" })
+    )
+
+    await waitFor(() =>
+      expect(vi.mocked(setWorkspaceUserDisabledFn)).toHaveBeenCalledWith({
+        data: expect.objectContaining({ disabled: true, userId: "test-user" }),
+      })
+    )
+  })
+
+  it("shows a disabled account and enables it again", async () => {
+    vi.mocked(setWorkspaceUserDisabledFn).mockClear()
+    renderUserDetail({ ...testUser, disabled_at: "2026-11-09T12:00:00Z" })
+
+    expect(
+      screen.getByText("Disabled", { selector: "[data-slot=badge]" })
+    ).toBeTruthy()
+    expect(
+      screen.queryByRole("button", { name: "More actions for Test User" })
+    ).toBeNull()
+    fireEvent.click(screen.getByRole("button", { name: "Enable account" }))
+
+    await waitFor(() =>
+      expect(vi.mocked(setWorkspaceUserDisabledFn)).toHaveBeenCalledWith({
+        data: expect.objectContaining({ disabled: false }),
+      })
+    )
+  })
+
+  it("offers no switch for your own account", () => {
+    renderUserDetail({
+      ...testUser,
+      disabled_at: "2026-11-09T12:00:00Z",
+      user_capabilities: {
+        ...testUser.user_capabilities!,
+        can_change_platform_role: false,
+      },
+    })
+
+    expect(screen.queryByRole("button", { name: "Enable account" })).toBeNull()
   })
 })

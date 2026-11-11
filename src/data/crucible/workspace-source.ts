@@ -1,4 +1,5 @@
 import type { components } from "@/generated/crucible-api"
+import type { WorkspaceFeatures } from "./features"
 import type { FixtureScenario } from "./fixture-scenarios"
 import type { WorkspacePrivilegeMode } from "./privilege-mode"
 
@@ -733,6 +734,7 @@ export type WorkspaceSource =
       status: "ready"
       mode: WorkspaceMode
       accountPreferencesEnabled: boolean
+      features: WorkspaceFeatures
       privilegeMode: WorkspacePrivilegeMode
       uploadIngestionEnabled: boolean
       uploadsEnabled: boolean
@@ -744,3 +746,41 @@ export type WorkspaceSource =
       reason: string
       authRequired?: boolean
     }
+
+export type WorkspaceProjectSyncResult = {
+  orcid: string | null
+  projectsAdded: string[]
+  projectsAlreadyMember: string[]
+  projectsNotFound: string[]
+}
+
+export type WorkspacePipeline = Omit<
+  Schema<"PipelineRead">,
+  "parameters_schema"
+> & { parameters_schema: WorkspaceScientificMetadata }
+
+export type WorkspacePostprocessingParameters = Readonly<
+  Record<string, boolean | number | string | null>
+>
+
+export type WorkspacePostprocessingRun = Omit<
+  Schema<"PostprocessingRunRead">,
+  "parameters"
+> & { parameters: WorkspaceScientificMetadata }
+
+export type WorkspacePostprocessingRunPage = {
+  items: WorkspacePostprocessingRun[]
+  total: number | null
+}
+
+export type WorkspaceJoinRequest = Schema<"JoinRequestRead">
+
+export type WorkspaceJoinRequestRole = Schema<"JoinRequestRole">
+
+export type WorkspaceJoinRequestStatus = Schema<"JoinRequestStatus">
+
+export type WorkspaceJoinRequestPage = {
+  items: WorkspaceJoinRequest[]
+  nextCursor: string | null
+  total: number | null
+}

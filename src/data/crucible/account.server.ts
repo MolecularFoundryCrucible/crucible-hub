@@ -10,6 +10,7 @@ import { readWorkspaceFixture } from "./workspace-fixture.server"
 import type {
   WorkspaceAccount,
   WorkspaceAccountProfileUpdate,
+  WorkspaceProjectSyncResult,
 } from "./workspace-source"
 import type { FixtureScenario } from "./fixture-scenarios"
 import type { WorkspacePrivilegeMode } from "./privilege-mode"
@@ -42,7 +43,7 @@ export async function readWorkspaceAccount(
     signal: crucibleRequestSignal(requestSignal),
   })
   if (!result.data) {
-    throw new CrucibleResponseError(result.response)
+    throw new CrucibleResponseError(result.response, result.error)
   }
 
   return toWorkspaceAccount(result.data)
@@ -83,6 +84,42 @@ export async function patchWorkspaceAccount(
   return account
 }
 
+export async function syncWorkspaceAccountProjects(
+  scenario?: FixtureScenario,
+  requestSignal?: AbortSignal
+): Promise<WorkspaceProjectSyncResult> {
+  const configuration = readWorkspaceConfiguration()
+  if (configuration.mode === "unavailable") {
+    throw new Error(configuration.reason)
+  }
+  if (configuration.mode === "fixture") {
+    const source = readWorkspaceFixture(scenario, readGlobalPrivilegeMode())
+    if (source.status === "unavailable") throw new Error(source.reason)
+    return {
+      orcid: source.workspace.account.orcid ?? null,
+      projectsAdded: [],
+      projectsAlreadyMember: source.workspace.projects.map(
+        (project) => project.project_id
+      ),
+      projectsNotFound: [],
+    }
+  }
+
+  const client = createCrucibleClient(configuration)
+  const result = await client.POST("/account/sync-projects", {
+    signal: crucibleRequestSignal(requestSignal),
+  })
+  if (!result.data) {
+    throw new CrucibleResponseError(result.response, result.error)
+  }
+  return {
+    orcid: result.data.orcid ?? null,
+    projectsAdded: result.data.projects_added,
+    projectsAlreadyMember: result.data.projects_already_member,
+    projectsNotFound: result.data.projects_not_found,
+  }
+}
+
 export async function checkWorkspaceUsernameExactMatch(
   username: string,
   scenario?: FixtureScenario,
@@ -109,7 +146,8 @@ export async function checkWorkspaceUsernameExactMatch(
     params: { query: { username: [username], limit: 1 } },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (!result.data) throw new CrucibleResponseError(result.response)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
   return result.data.items.length > 0
 }
 

@@ -57,7 +57,7 @@ export function serviceAccountsCursorQueryOptions(
       sort: filters.sort,
     }),
     getNextPageParam: (page) => page.nextCursor ?? undefined,
-    retry: scenario ? false : undefined,
+    ...(scenario ? { retry: false } : {}),
   })
 }
 
@@ -75,6 +75,6 @@ export function serviceAccountAdminQueryOptions(
           signal,
         })
       ),
-    retry: scenario ? false : undefined,
+    ...(scenario ? { retry: false } : {}),
   })
 }

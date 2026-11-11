@@ -17,6 +17,7 @@ import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AppAccountRouteImport } from './routes/_app.account'
 import { Route as AppDataRouteImport } from './routes/_app.data'
 import { Route as AppDeletionRequestsRouteImport } from './routes/_app.deletion-requests'
+import { Route as AppJoinRequestsRouteImport } from './routes/_app.join-requests'
 import { Route as AppPreferencesRouteImport } from './routes/_app.preferences'
 import { Route as AppSearchRouteImport } from './routes/_app.search'
 import { Route as AccountSetupRouteImport } from './routes/account.setup'
@@ -66,6 +67,8 @@ import { Route as AppSamplesSampleMfidGraphRouteImport } from './routes/_app.sam
 import { Route as AppSamplesSampleMfidManageRouteImport } from './routes/_app.samples.$sampleMfid.manage'
 import { Route as AppUsersUserIdIndexRouteImport } from './routes/_app.users.$userId.index'
 import { Route as AppUsersUserIdSecurityRouteImport } from './routes/_app.users.$userId.security'
+import { Route as AppAdminServiceAccountsServiceAccountMfidIndexRouteImport } from './routes/_app.admin.service-accounts.$serviceAccountMfid.index'
+import { Route as AppAdminServiceAccountsServiceAccountMfidSecurityRouteImport } from './routes/_app.admin.service-accounts.$serviceAccountMfid.security'
 import { Route as AppInstrumentsInstrumentMfidSettingsIndexRouteImport } from './routes/_app.instruments.$instrumentMfid.settings.index'
 import { Route as AppInstrumentsInstrumentMfidSettingsLifecycleRouteImport } from './routes/_app.instruments.$instrumentMfid.settings.lifecycle'
 import { Route as AppInstrumentsInstrumentMfidSettingsOperatorsRouteImport } from './routes/_app.instruments.$instrumentMfid.settings.operators'
@@ -111,6 +114,11 @@ const AppDataRoute = AppDataRouteImport.update({
 const AppDeletionRequestsRoute = AppDeletionRequestsRouteImport.update({
   id: '/deletion-requests',
   path: '/deletion-requests',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppJoinRequestsRoute = AppJoinRequestsRouteImport.update({
+  id: '/join-requests',
+  path: '/join-requests',
   getParentRoute: () => AppRoute,
 } as any)
 const AppPreferencesRoute = AppPreferencesRouteImport.update({
@@ -379,6 +387,18 @@ const AppUsersUserIdSecurityRoute = AppUsersUserIdSecurityRouteImport.update({
   path: '/security',
   getParentRoute: () => AppUsersUserIdRoute,
 } as any)
+const AppAdminServiceAccountsServiceAccountMfidIndexRoute =
+  AppAdminServiceAccountsServiceAccountMfidIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AppAdminServiceAccountsServiceAccountMfidRoute,
+  } as any)
+const AppAdminServiceAccountsServiceAccountMfidSecurityRoute =
+  AppAdminServiceAccountsServiceAccountMfidSecurityRouteImport.update({
+    id: '/security',
+    path: '/security',
+    getParentRoute: () => AppAdminServiceAccountsServiceAccountMfidRoute,
+  } as any)
 const AppInstrumentsInstrumentMfidSettingsIndexRoute =
   AppInstrumentsInstrumentMfidSettingsIndexRouteImport.update({
     id: '/',
@@ -430,6 +450,7 @@ export interface FileRoutesByFullPath {
   '/account': typeof AppAccountRouteWithChildren
   '/data': typeof AppDataRoute
   '/deletion-requests': typeof AppDeletionRequestsRoute
+  '/join-requests': typeof AppJoinRequestsRoute
   '/preferences': typeof AppPreferencesRoute
   '/search': typeof AppSearchRoute
   '/account/setup': typeof AccountSetupRoute
@@ -457,7 +478,7 @@ export interface FileRoutesByFullPath {
   '/account/': typeof AppAccountIndexRoute
   '/instruments/': typeof AppInstrumentsIndexRoute
   '/projects/': typeof AppProjectsIndexRoute
-  '/admin/service-accounts/$serviceAccountMfid': typeof AppAdminServiceAccountsServiceAccountMfidRoute
+  '/admin/service-accounts/$serviceAccountMfid': typeof AppAdminServiceAccountsServiceAccountMfidRouteWithChildren
   '/datasets/$datasetMfid/access': typeof AppDatasetsDatasetMfidAccessRoute
   '/datasets/$datasetMfid/graph': typeof AppDatasetsDatasetMfidGraphRoute
   '/datasets/$datasetMfid/manage': typeof AppDatasetsDatasetMfidManageRoute
@@ -479,11 +500,13 @@ export interface FileRoutesByFullPath {
   '/projects/$projectMfid/': typeof AppProjectsProjectMfidIndexRoute
   '/samples/$sampleMfid/': typeof AppSamplesSampleMfidIndexRoute
   '/users/$userId/': typeof AppUsersUserIdIndexRoute
+  '/admin/service-accounts/$serviceAccountMfid/security': typeof AppAdminServiceAccountsServiceAccountMfidSecurityRoute
   '/instruments/$instrumentMfid/settings/lifecycle': typeof AppInstrumentsInstrumentMfidSettingsLifecycleRoute
   '/instruments/$instrumentMfid/settings/operators': typeof AppInstrumentsInstrumentMfidSettingsOperatorsRoute
   '/instruments/$instrumentMfid/settings/ownership': typeof AppInstrumentsInstrumentMfidSettingsOwnershipRoute
   '/projects/$projectMfid/settings/members': typeof AppProjectsProjectMfidSettingsMembersRoute
   '/projects/$projectMfid/settings/ownership': typeof AppProjectsProjectMfidSettingsOwnershipRoute
+  '/admin/service-accounts/$serviceAccountMfid/': typeof AppAdminServiceAccountsServiceAccountMfidIndexRoute
   '/instruments/$instrumentMfid/settings/': typeof AppInstrumentsInstrumentMfidSettingsIndexRoute
   '/projects/$projectMfid/settings/': typeof AppProjectsProjectMfidSettingsIndexRoute
 }
@@ -493,6 +516,7 @@ export interface FileRoutesByTo {
   '/reauthenticated': typeof ReauthenticatedRoute
   '/data': typeof AppDataRoute
   '/deletion-requests': typeof AppDeletionRequestsRoute
+  '/join-requests': typeof AppJoinRequestsRoute
   '/preferences': typeof AppPreferencesRoute
   '/search': typeof AppSearchRoute
   '/account/setup': typeof AccountSetupRoute
@@ -516,7 +540,6 @@ export interface FileRoutesByTo {
   '/account': typeof AppAccountIndexRoute
   '/instruments': typeof AppInstrumentsIndexRoute
   '/projects': typeof AppProjectsIndexRoute
-  '/admin/service-accounts/$serviceAccountMfid': typeof AppAdminServiceAccountsServiceAccountMfidRoute
   '/datasets/$datasetMfid/access': typeof AppDatasetsDatasetMfidAccessRoute
   '/datasets/$datasetMfid/graph': typeof AppDatasetsDatasetMfidGraphRoute
   '/datasets/$datasetMfid/manage': typeof AppDatasetsDatasetMfidManageRoute
@@ -536,11 +559,13 @@ export interface FileRoutesByTo {
   '/projects/$projectMfid': typeof AppProjectsProjectMfidIndexRoute
   '/samples/$sampleMfid': typeof AppSamplesSampleMfidIndexRoute
   '/users/$userId': typeof AppUsersUserIdIndexRoute
+  '/admin/service-accounts/$serviceAccountMfid/security': typeof AppAdminServiceAccountsServiceAccountMfidSecurityRoute
   '/instruments/$instrumentMfid/settings/lifecycle': typeof AppInstrumentsInstrumentMfidSettingsLifecycleRoute
   '/instruments/$instrumentMfid/settings/operators': typeof AppInstrumentsInstrumentMfidSettingsOperatorsRoute
   '/instruments/$instrumentMfid/settings/ownership': typeof AppInstrumentsInstrumentMfidSettingsOwnershipRoute
   '/projects/$projectMfid/settings/members': typeof AppProjectsProjectMfidSettingsMembersRoute
   '/projects/$projectMfid/settings/ownership': typeof AppProjectsProjectMfidSettingsOwnershipRoute
+  '/admin/service-accounts/$serviceAccountMfid': typeof AppAdminServiceAccountsServiceAccountMfidIndexRoute
   '/instruments/$instrumentMfid/settings': typeof AppInstrumentsInstrumentMfidSettingsIndexRoute
   '/projects/$projectMfid/settings': typeof AppProjectsProjectMfidSettingsIndexRoute
 }
@@ -553,6 +578,7 @@ export interface FileRoutesById {
   '/_app/account': typeof AppAccountRouteWithChildren
   '/_app/data': typeof AppDataRoute
   '/_app/deletion-requests': typeof AppDeletionRequestsRoute
+  '/_app/join-requests': typeof AppJoinRequestsRoute
   '/_app/preferences': typeof AppPreferencesRoute
   '/_app/search': typeof AppSearchRoute
   '/account/setup': typeof AccountSetupRoute
@@ -581,7 +607,7 @@ export interface FileRoutesById {
   '/_app/account/': typeof AppAccountIndexRoute
   '/_app/instruments/': typeof AppInstrumentsIndexRoute
   '/_app/projects/': typeof AppProjectsIndexRoute
-  '/_app/admin/service-accounts/$serviceAccountMfid': typeof AppAdminServiceAccountsServiceAccountMfidRoute
+  '/_app/admin/service-accounts/$serviceAccountMfid': typeof AppAdminServiceAccountsServiceAccountMfidRouteWithChildren
   '/_app/datasets/$datasetMfid/access': typeof AppDatasetsDatasetMfidAccessRoute
   '/_app/datasets/$datasetMfid/graph': typeof AppDatasetsDatasetMfidGraphRoute
   '/_app/datasets/$datasetMfid/manage': typeof AppDatasetsDatasetMfidManageRoute
@@ -603,11 +629,13 @@ export interface FileRoutesById {
   '/_app/projects/$projectMfid/': typeof AppProjectsProjectMfidIndexRoute
   '/_app/samples/$sampleMfid/': typeof AppSamplesSampleMfidIndexRoute
   '/_app/users/$userId/': typeof AppUsersUserIdIndexRoute
+  '/_app/admin/service-accounts/$serviceAccountMfid/security': typeof AppAdminServiceAccountsServiceAccountMfidSecurityRoute
   '/_app/instruments/$instrumentMfid/settings/lifecycle': typeof AppInstrumentsInstrumentMfidSettingsLifecycleRoute
   '/_app/instruments/$instrumentMfid/settings/operators': typeof AppInstrumentsInstrumentMfidSettingsOperatorsRoute
   '/_app/instruments/$instrumentMfid/settings/ownership': typeof AppInstrumentsInstrumentMfidSettingsOwnershipRoute
   '/_app/projects/$projectMfid/settings/members': typeof AppProjectsProjectMfidSettingsMembersRoute
   '/_app/projects/$projectMfid/settings/ownership': typeof AppProjectsProjectMfidSettingsOwnershipRoute
+  '/_app/admin/service-accounts/$serviceAccountMfid/': typeof AppAdminServiceAccountsServiceAccountMfidIndexRoute
   '/_app/instruments/$instrumentMfid/settings/': typeof AppInstrumentsInstrumentMfidSettingsIndexRoute
   '/_app/projects/$projectMfid/settings/': typeof AppProjectsProjectMfidSettingsIndexRoute
 }
@@ -621,6 +649,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/data'
     | '/deletion-requests'
+    | '/join-requests'
     | '/preferences'
     | '/search'
     | '/account/setup'
@@ -670,11 +699,13 @@ export interface FileRouteTypes {
     | '/projects/$projectMfid/'
     | '/samples/$sampleMfid/'
     | '/users/$userId/'
+    | '/admin/service-accounts/$serviceAccountMfid/security'
     | '/instruments/$instrumentMfid/settings/lifecycle'
     | '/instruments/$instrumentMfid/settings/operators'
     | '/instruments/$instrumentMfid/settings/ownership'
     | '/projects/$projectMfid/settings/members'
     | '/projects/$projectMfid/settings/ownership'
+    | '/admin/service-accounts/$serviceAccountMfid/'
     | '/instruments/$instrumentMfid/settings/'
     | '/projects/$projectMfid/settings/'
   fileRoutesByTo: FileRoutesByTo
@@ -684,6 +715,7 @@ export interface FileRouteTypes {
     | '/reauthenticated'
     | '/data'
     | '/deletion-requests'
+    | '/join-requests'
     | '/preferences'
     | '/search'
     | '/account/setup'
@@ -707,7 +739,6 @@ export interface FileRouteTypes {
     | '/account'
     | '/instruments'
     | '/projects'
-    | '/admin/service-accounts/$serviceAccountMfid'
     | '/datasets/$datasetMfid/access'
     | '/datasets/$datasetMfid/graph'
     | '/datasets/$datasetMfid/manage'
@@ -727,11 +758,13 @@ export interface FileRouteTypes {
     | '/projects/$projectMfid'
     | '/samples/$sampleMfid'
     | '/users/$userId'
+    | '/admin/service-accounts/$serviceAccountMfid/security'
     | '/instruments/$instrumentMfid/settings/lifecycle'
     | '/instruments/$instrumentMfid/settings/operators'
     | '/instruments/$instrumentMfid/settings/ownership'
     | '/projects/$projectMfid/settings/members'
     | '/projects/$projectMfid/settings/ownership'
+    | '/admin/service-accounts/$serviceAccountMfid'
     | '/instruments/$instrumentMfid/settings'
     | '/projects/$projectMfid/settings'
   id:
@@ -743,6 +776,7 @@ export interface FileRouteTypes {
     | '/_app/account'
     | '/_app/data'
     | '/_app/deletion-requests'
+    | '/_app/join-requests'
     | '/_app/preferences'
     | '/_app/search'
     | '/account/setup'
@@ -793,11 +827,13 @@ export interface FileRouteTypes {
     | '/_app/projects/$projectMfid/'
     | '/_app/samples/$sampleMfid/'
     | '/_app/users/$userId/'
+    | '/_app/admin/service-accounts/$serviceAccountMfid/security'
     | '/_app/instruments/$instrumentMfid/settings/lifecycle'
     | '/_app/instruments/$instrumentMfid/settings/operators'
     | '/_app/instruments/$instrumentMfid/settings/ownership'
     | '/_app/projects/$projectMfid/settings/members'
     | '/_app/projects/$projectMfid/settings/ownership'
+    | '/_app/admin/service-accounts/$serviceAccountMfid/'
     | '/_app/instruments/$instrumentMfid/settings/'
     | '/_app/projects/$projectMfid/settings/'
   fileRoutesById: FileRoutesById
@@ -876,6 +912,13 @@ declare module '@tanstack/react-router' {
       path: '/deletion-requests'
       fullPath: '/deletion-requests'
       preLoaderRoute: typeof AppDeletionRequestsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/join-requests': {
+      id: '/_app/join-requests'
+      path: '/join-requests'
+      fullPath: '/join-requests'
+      preLoaderRoute: typeof AppJoinRequestsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/preferences': {
@@ -1221,6 +1264,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppUsersUserIdSecurityRouteImport
       parentRoute: typeof AppUsersUserIdRoute
     }
+    '/_app/admin/service-accounts/$serviceAccountMfid/': {
+      id: '/_app/admin/service-accounts/$serviceAccountMfid/'
+      path: '/'
+      fullPath: '/admin/service-accounts/$serviceAccountMfid/'
+      preLoaderRoute: typeof AppAdminServiceAccountsServiceAccountMfidIndexRouteImport
+      parentRoute: typeof AppAdminServiceAccountsServiceAccountMfidRoute
+    }
+    '/_app/admin/service-accounts/$serviceAccountMfid/security': {
+      id: '/_app/admin/service-accounts/$serviceAccountMfid/security'
+      path: '/security'
+      fullPath: '/admin/service-accounts/$serviceAccountMfid/security'
+      preLoaderRoute: typeof AppAdminServiceAccountsServiceAccountMfidSecurityRouteImport
+      parentRoute: typeof AppAdminServiceAccountsServiceAccountMfidRoute
+    }
     '/_app/instruments/$instrumentMfid/settings/': {
       id: '/_app/instruments/$instrumentMfid/settings/'
       path: '/'
@@ -1431,10 +1488,29 @@ const AppUsersUserIdRouteWithChildren = AppUsersUserIdRoute._addFileChildren(
   AppUsersUserIdRouteChildren,
 )
 
+interface AppAdminServiceAccountsServiceAccountMfidRouteChildren {
+  AppAdminServiceAccountsServiceAccountMfidSecurityRoute: typeof AppAdminServiceAccountsServiceAccountMfidSecurityRoute
+  AppAdminServiceAccountsServiceAccountMfidIndexRoute: typeof AppAdminServiceAccountsServiceAccountMfidIndexRoute
+}
+
+const AppAdminServiceAccountsServiceAccountMfidRouteChildren: AppAdminServiceAccountsServiceAccountMfidRouteChildren =
+  {
+    AppAdminServiceAccountsServiceAccountMfidSecurityRoute:
+      AppAdminServiceAccountsServiceAccountMfidSecurityRoute,
+    AppAdminServiceAccountsServiceAccountMfidIndexRoute:
+      AppAdminServiceAccountsServiceAccountMfidIndexRoute,
+  }
+
+const AppAdminServiceAccountsServiceAccountMfidRouteWithChildren =
+  AppAdminServiceAccountsServiceAccountMfidRoute._addFileChildren(
+    AppAdminServiceAccountsServiceAccountMfidRouteChildren,
+  )
+
 interface AppRouteChildren {
   AppAccountRoute: typeof AppAccountRouteWithChildren
   AppDataRoute: typeof AppDataRoute
   AppDeletionRequestsRoute: typeof AppDeletionRequestsRoute
+  AppJoinRequestsRoute: typeof AppJoinRequestsRoute
   AppPreferencesRoute: typeof AppPreferencesRoute
   AppSearchRoute: typeof AppSearchRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -1450,7 +1526,7 @@ interface AppRouteChildren {
   AppUsersUserIdRoute: typeof AppUsersUserIdRouteWithChildren
   AppInstrumentsIndexRoute: typeof AppInstrumentsIndexRoute
   AppProjectsIndexRoute: typeof AppProjectsIndexRoute
-  AppAdminServiceAccountsServiceAccountMfidRoute: typeof AppAdminServiceAccountsServiceAccountMfidRoute
+  AppAdminServiceAccountsServiceAccountMfidRoute: typeof AppAdminServiceAccountsServiceAccountMfidRouteWithChildren
   AppAdminServiceAccountsIndexRoute: typeof AppAdminServiceAccountsIndexRoute
   AppAdminUsersIndexRoute: typeof AppAdminUsersIndexRoute
 }
@@ -1459,6 +1535,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAccountRoute: AppAccountRouteWithChildren,
   AppDataRoute: AppDataRoute,
   AppDeletionRequestsRoute: AppDeletionRequestsRoute,
+  AppJoinRequestsRoute: AppJoinRequestsRoute,
   AppPreferencesRoute: AppPreferencesRoute,
   AppSearchRoute: AppSearchRoute,
   AppIndexRoute: AppIndexRoute,
@@ -1476,7 +1553,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppInstrumentsIndexRoute: AppInstrumentsIndexRoute,
   AppProjectsIndexRoute: AppProjectsIndexRoute,
   AppAdminServiceAccountsServiceAccountMfidRoute:
-    AppAdminServiceAccountsServiceAccountMfidRoute,
+    AppAdminServiceAccountsServiceAccountMfidRouteWithChildren,
   AppAdminServiceAccountsIndexRoute: AppAdminServiceAccountsIndexRoute,
   AppAdminUsersIndexRoute: AppAdminUsersIndexRoute,
 }

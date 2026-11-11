@@ -6,18 +6,14 @@ import type {
   WorkspaceResourceGraphNode,
 } from "@/data/crucible/workspace-source"
 
+import { resolveGraphNodeClickAction } from "./resource-graph-canvas"
 import {
   fallbackResourceGraphLayout,
   graphViewportOptions,
   layoutResourceGraph,
   resetResourceGraphLayoutEngine,
   resolveAssociationHandleIds,
-  resolveGraphNodeClickAction,
-} from "./resource-graph-canvas"
-import {
-  graphRelationshipOrder,
-  graphRelationshipPresentations,
-} from "./resource-graph-page"
+} from "./resource-graph-layout"
 
 vi.mock("@/lib/motion", async (importOriginal) => ({
   ...(await importOriginal<object>()),
@@ -113,45 +109,76 @@ describe("graphViewportOptions", () => {
 })
 
 describe("resource graph fallback layout", () => {
-  it("computes horizontal fallback positions with offset from root", () => {
-    const rootNode = createMockNode("root-sample")
-    const childNode = createMockNode("child-sample")
-    const testGraph = createMockGraph("root-sample", [rootNode, childNode])
-    const element = createMockElement()
+  it("places lineage in layers around the current resource", () => {
+    const graph = createMockGraph(
+      "root",
+      ["parent", "root", "child", "child-two", "dataset"].map((id) =>
+        createMockNode(id, id === "dataset" ? "dataset" : "sample")
+      ),
+      [
+        createMockEdge("e1", "parent", "root"),
+        createMockEdge("e2", "root", "child"),
+        createMockEdge("e3", "root", "child-two"),
+        createMockEdge("e4", "root", "dataset", "associated"),
+      ]
+    )
 
-    const positions = fallbackResourceGraphLayout(testGraph, element, "RIGHT")
+    const positions = fallbackResourceGraphLayout(
+      graph,
+      createMockElement(),
+      "RIGHT"
+    )
 
-    const rootPos = positions.get("root-sample")
-    const childPos = positions.get("child-sample")
-
-    expect(rootPos).toBeDefined()
-    expect(childPos).toBeDefined()
-    expect(rootPos?.x).toBe(0)
-    expect(rootPos?.y).toBe(0)
-    expect(rootPos?.width).toBe(260)
-    expect(rootPos?.height).toBe(120)
-
-    expect(childPos?.x).toBe(220 + 80)
-    expect(childPos?.y).toBe(0)
-    expect(childPos?.width).toBe(220)
-    expect(childPos?.height).toBe(100)
+    expect(positions.get("root")).toEqual({
+      height: 120,
+      width: 260,
+      x: 0,
+      y: 0,
+    })
+    expect(positions.get("parent")).toMatchObject({ x: -300, y: 0 })
+    expect(positions.get("child")).toMatchObject({ x: 300, y: -70 })
+    expect(positions.get("child-two")).toMatchObject({ x: 300, y: 70 })
+    expect(positions.get("dataset")).toMatchObject({ x: 0, y: 140 })
   })
 
-  it("computes vertical fallback positions with offset from root", () => {
-    const parentNode = createMockNode("parent-sample")
-    const rootNode = createMockNode("root-sample")
-    const testGraph = createMockGraph("root-sample", [parentNode, rootNode])
-    const element = createMockElement()
+  it("stacks ancestors above the current resource top to bottom", () => {
+    const graph = createMockGraph(
+      "root",
+      [
+        createMockNode("grandparent"),
+        createMockNode("parent"),
+        createMockNode("root"),
+      ],
+      [
+        createMockEdge("e1", "grandparent", "parent"),
+        createMockEdge("e2", "parent", "root"),
+      ]
+    )
 
-    const positions = fallbackResourceGraphLayout(testGraph, element, "DOWN")
+    const positions = fallbackResourceGraphLayout(
+      graph,
+      createMockElement(),
+      "DOWN"
+    )
 
-    const parentPos = positions.get("parent-sample")
-    const rootPos = positions.get("root-sample")
+    expect(positions.get("root")).toMatchObject({ x: 0, y: 0 })
+    expect(positions.get("parent")).toMatchObject({ x: 0, y: -180 })
+    expect(positions.get("grandparent")).toMatchObject({ x: 0, y: -360 })
+  })
 
-    expect(parentPos).toBeDefined()
-    expect(rootPos).toBeDefined()
-    expect(rootPos?.y).toBe(0)
-    expect(parentPos?.y).toBe(-1 * (100 + 80))
+  it("keeps resources it cannot reach beside the current one", () => {
+    const graph = createMockGraph("root", [
+      createMockNode("root"),
+      createMockNode("loose"),
+    ])
+
+    const positions = fallbackResourceGraphLayout(
+      graph,
+      createMockElement(),
+      "DOWN"
+    )
+
+    expect(positions.get("loose")).toMatchObject({ x: 260, y: 0 })
   })
 })
 
@@ -198,87 +225,6 @@ describe("resource graph association handle routing", () => {
       sourceHandle: "association-source-top",
       targetHandle: "association-target-bottom",
     })
-  })
-})
-
-describe("resource graph relationship classification", () => {
-  it("classifies direct, multi-hop lineage, and multi-hop associated nodes in order", () => {
-    const nodes = [
-      createMockNode("grandparent-sample"),
-      createMockNode("parent-sample"),
-      createMockNode("root-sample"),
-      createMockNode("child-sample"),
-      createMockNode("grandchild-sample"),
-      createMockNode("direct-dataset", "dataset"),
-      createMockNode("indirect-dataset", "dataset"),
-    ]
-    const edges = [
-      createMockEdge("e1", "grandparent-sample", "parent-sample", "parent"),
-      createMockEdge("e2", "parent-sample", "root-sample", "parent"),
-      createMockEdge("e3", "root-sample", "child-sample", "parent"),
-      createMockEdge("e4", "child-sample", "grandchild-sample", "parent"),
-      createMockEdge("e5", "root-sample", "direct-dataset", "associated"),
-      createMockEdge("e6", "child-sample", "indirect-dataset", "associated"),
-    ]
-    const graph = createMockGraph("root-sample", nodes, edges)
-
-    const presentations = graphRelationshipPresentations(graph)
-
-    expect(presentations.get("root-sample")).toBeUndefined()
-    expect(presentations.get("parent-sample")).toEqual({
-      distance: 1,
-      label: "Parent",
-      relationship: "parent",
-      typeLabel: null,
-    })
-    expect(presentations.get("grandparent-sample")).toEqual({
-      distance: 2,
-      label: "Ancestor",
-      relationship: "ancestor",
-      typeLabel: "2 hops upstream",
-    })
-    expect(presentations.get("child-sample")).toEqual({
-      distance: 1,
-      label: "Child",
-      relationship: "child",
-      typeLabel: null,
-    })
-    expect(presentations.get("grandchild-sample")).toEqual({
-      distance: 2,
-      label: "Descendant",
-      relationship: "descendant",
-      typeLabel: "2 hops downstream",
-    })
-    expect(presentations.get("direct-dataset")).toEqual({
-      distance: 1,
-      label: "Associated",
-      relationship: "associated",
-      typeLabel: null,
-    })
-    expect(presentations.get("indirect-dataset")).toEqual({
-      distance: 2,
-      label: "Associated",
-      relationship: "associated",
-      typeLabel: "2 hops away",
-    })
-
-    const orderedIds = nodes
-      .filter((node) => node.unique_id !== "root-sample")
-      .map((node) => node.unique_id)
-      .sort(
-        (left, right) =>
-          graphRelationshipOrder(presentations.get(left)) -
-          graphRelationshipOrder(presentations.get(right))
-      )
-
-    expect(orderedIds).toEqual([
-      "parent-sample",
-      "grandparent-sample",
-      "child-sample",
-      "grandchild-sample",
-      "direct-dataset",
-      "indirect-dataset",
-    ])
   })
 })
 

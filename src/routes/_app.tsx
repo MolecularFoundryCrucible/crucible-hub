@@ -11,6 +11,7 @@ import { AppShell } from "@/components/crucible/app-shell"
 import { useReauthenticationNotice } from "@/components/crucible/reauthentication"
 import { WorkspaceProvider } from "@/components/crucible/workspace-provider"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import type { WorkspaceFeatures } from "@/data/crucible/features"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
 import {
   accountNeedsSetup,
@@ -87,6 +88,7 @@ export const Route = createFileRoute("/_app")({
       status: "ready" as const,
       mode: source.mode,
       accountPreferencesEnabled: source.accountPreferencesEnabled,
+      features: source.features,
       privilegeMode: source.privilegeMode,
       sessionAuth: source.sessionAuth ?? false,
       scope,
@@ -119,6 +121,7 @@ function WorkspaceLayout() {
   return (
     <ReadyWorkspace
       accountPreferencesEnabled={source.accountPreferencesEnabled}
+      features={source.features}
       mode={source.mode}
       privilegeMode={source.privilegeMode}
       sessionAuth={source.sessionAuth}
@@ -131,6 +134,7 @@ function WorkspaceLayout() {
 
 function ReadyWorkspace({
   accountPreferencesEnabled,
+  features,
   mode,
   privilegeMode,
   sessionAuth,
@@ -139,6 +143,7 @@ function ReadyWorkspace({
   uploadsEnabled,
 }: {
   accountPreferencesEnabled: boolean
+  features: WorkspaceFeatures
   mode: "api" | "fixture"
   privilegeMode: "elevated" | "normal"
   sessionAuth: boolean
@@ -152,6 +157,7 @@ function ReadyWorkspace({
   return (
     <WorkspaceProvider
       accountPreferencesEnabled={accountPreferencesEnabled}
+      features={features}
       mode={mode}
       privilegeMode={privilegeMode}
       scope={scope}

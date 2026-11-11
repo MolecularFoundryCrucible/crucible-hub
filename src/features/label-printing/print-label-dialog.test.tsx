@@ -24,7 +24,10 @@ vi.mock("@/data/crucible/print.functions", () => ({
   printWorkspaceResourceLabel: vi.fn(),
 }))
 
+const featuresOff = new Set<string>()
+
 vi.mock("@/components/crucible/workspace-provider", () => ({
+  useFeatureEnabled: (feature: string) => !featuresOff.has(feature),
   useWorkspaceScope: () =>
     identityScope("crucible-fixture:populated", "account"),
 }))
@@ -74,12 +77,27 @@ describe("PrintLabelButton", () => {
   afterEach(cleanup)
 
   beforeEach(() => {
+    featuresOff.clear()
     update.mockReset()
     vi.mocked(getWorkspacePrinters).mockResolvedValue({
       data: printers,
       status: "ok",
     } as never)
     vi.mocked(printWorkspaceResourceLabel).mockReset()
+  })
+
+  it("is hidden when label printing is switched off", () => {
+    featuresOff.add("printing")
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <PrintLabelButton
+          mfid="01J6Y8N4Q2R7M9K3T5V0W1X2Z9"
+          name="Catalyst map"
+        />
+      </QueryClientProvider>
+    )
+
+    expect(screen.queryByRole("button", { name: "Print" })).toBeNull()
   })
 
   it("prefills the label and picks the remembered online printer", async () => {

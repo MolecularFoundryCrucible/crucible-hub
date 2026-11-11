@@ -190,7 +190,7 @@ test("marks pending deletion requests with a dot in the icon rail", async ({
   await page.setViewportSize({ height: 800, width: 900 })
   await page.goto("/hub/?scenario=populated")
   await page.waitForLoadState("networkidle")
-  const badge = page.locator('[data-sidebar="menu-badge"]')
+  const badge = page.getByLabel(/pending deletion requests/)
   await expect(badge).toBeVisible()
   const box = (await badge.boundingBox())!
   expect(box.width).toBeLessThanOrEqual(10)

@@ -163,7 +163,7 @@ export function samplesQueryOptions(
       ),
     placeholderData: (previousData, previousQuery) =>
       identityScopedPreviousData(scope, previousData, previousQuery),
-    retry: scenario ? false : undefined,
+    ...(scenario ? { retry: false } : {}),
   })
 }
 
@@ -195,7 +195,7 @@ export function samplesCursorQueryOptions(
     getNextPageParam: (page) => page.nextCursor ?? undefined,
     placeholderData: (previousData, previousQuery) =>
       identityScopedPreviousData(scope, previousData, previousQuery),
-    retry: scenario ? false : undefined,
+    ...(scenario ? { retry: false } : {}),
   })
 }
 
@@ -225,7 +225,7 @@ export function samplesAnchorQueryOptions(
           signal,
         })
       ),
-    retry: scenario ? false : undefined,
+    ...(scenario ? { retry: false } : {}),
   })
 }
 
@@ -258,7 +258,7 @@ export function datasetsQueryOptions(
       ),
     placeholderData: (previousData, previousQuery) =>
       identityScopedPreviousData(scope, previousData, previousQuery),
-    retry: scenario ? false : undefined,
+    ...(scenario ? { retry: false } : {}),
   })
 }
 
@@ -290,7 +290,7 @@ export function datasetsCursorQueryOptions(
     getNextPageParam: (page) => page.nextCursor ?? undefined,
     placeholderData: (previousData, previousQuery) =>
       identityScopedPreviousData(scope, previousData, previousQuery),
-    retry: scenario ? false : undefined,
+    ...(scenario ? { retry: false } : {}),
   })
 }
 
@@ -320,6 +320,6 @@ export function datasetsAnchorQueryOptions(
           signal,
         })
       ),
-    retry: scenario ? false : undefined,
+    ...(scenario ? { retry: false } : {}),
   })
 }

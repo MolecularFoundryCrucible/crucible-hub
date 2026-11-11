@@ -71,6 +71,7 @@ const project = {
     can_manage_access: true,
     can_view_access: true,
     can_transfer: true,
+    can_delete_files: false,
     max_grant_role: "editor",
   },
   creation_time: "2026-06-12T18:30:00Z",

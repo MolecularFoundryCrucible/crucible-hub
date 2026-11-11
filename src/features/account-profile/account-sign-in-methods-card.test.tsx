@@ -28,6 +28,8 @@ import {
   issueWorkspaceUserPasswordLinkFn,
   setWorkspaceAccountPasswordFn,
 } from "@/data/crucible/passwords.functions"
+import { WorkspaceProvider } from "@/components/crucible/workspace-provider"
+import { allFeaturesEnabled } from "@/data/crucible/features"
 import { identityScope } from "@/data/crucible/query-keys"
 import { getHubSignInOptions } from "@/data/crucible/session.functions"
 import type { WorkspaceAccountIdentity } from "@/data/crucible/workspace-source"
@@ -440,6 +442,39 @@ describe("AccountSignInMethodsCard", () => {
     ).toBeTruthy()
     expect(screen.getByRole("dialog", { name: "Change password" })).toBeTruthy()
     expect(screen.getByLabelText("Current password")).toBeTruthy()
+  })
+
+  it("keeps only Remove for a password when passwords are switched off", async () => {
+    vi.mocked(getHubSignInOptions).mockResolvedValue({
+      methods: [orcidMethod, passwordMethod],
+      origin: null,
+    })
+    mockAccount(["password", "ORCID"])
+    vi.mocked(getWorkspaceAccountIdentities).mockResolvedValue(ok([orcidLogin]))
+    const scope = identityScope("server-1", "person-1")
+    render(
+      <QueryClientProvider
+        client={
+          new QueryClient({ defaultOptions: { queries: { retry: false } } })
+        }
+      >
+        <WorkspaceProvider
+          features={{ ...allFeaturesEnabled, passwords: false }}
+          mode="api"
+          scope={scope}
+        >
+          <AccountSignInMethodsSection
+            onLinkOutcomeHandled={vi.fn()}
+            scope={scope}
+          />
+        </WorkspaceProvider>
+      </QueryClientProvider>
+    )
+
+    expect(await chooseFromMenu("Actions for Password", /Remove/)).toBeTruthy()
+    expect(
+      screen.queryByRole("menuitem", { name: "Change password" })
+    ).toBeNull()
   })
 
   it("lists a password and offers to change it", async () => {

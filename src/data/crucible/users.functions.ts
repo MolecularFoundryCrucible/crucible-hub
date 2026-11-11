@@ -15,6 +15,7 @@ import {
   patchWorkspaceUser,
   readWorkspaceUserDetail,
   readWorkspaceUsers,
+  setWorkspaceUserDisabled,
   updateWorkspaceUserPlatformRole,
 } from "./users.server"
 
@@ -49,6 +50,14 @@ const userDetailInputSchema = z
 const userPlatformRoleInputSchema = z
   .object({
     platformRole: z.enum(["none", "contributor", "admin"]),
+    scenario: fixtureScenarioSchema.optional(),
+    userId: userIdSchema,
+  })
+  .strict()
+
+const userDisabledInputSchema = z
+  .object({
+    disabled: z.boolean(),
     scenario: fixtureScenarioSchema.optional(),
     userId: userIdSchema,
   })
@@ -141,6 +150,21 @@ export const updateWorkspaceUserPlatformRoleFn = createServerFn({
       updateWorkspaceUserPlatformRole(
         data.userId,
         data.platformRole,
+        data.scenario,
+        context.requestSignal
+      )
+    )
+  })
+
+export const setWorkspaceUserDisabledFn = createServerFn({ method: "POST" })
+  .middleware([queryCancellationMiddleware])
+  .validator(userDisabledInputSchema)
+  .handler(async ({ context, data }) => {
+    setResponseHeader("Cache-Control", "no-store")
+    return safeCrucibleCall(context.correlationId, () =>
+      setWorkspaceUserDisabled(
+        data.userId,
+        data.disabled,
         data.scenario,
         context.requestSignal
       )

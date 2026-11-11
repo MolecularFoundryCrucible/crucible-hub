@@ -140,7 +140,8 @@ export async function readWorkspaceInstrumentMembers(
     },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (!result.data) throw new CrucibleResponseError(result.response)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
   return result.data.members ?? null
 }
 
@@ -165,7 +166,8 @@ export async function readWorkspaceInstrumentOperators(
       signal: crucibleRequestSignal(requestSignal),
     }
   )
-  if (!result.data) throw new CrucibleResponseError(result.response)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
   return result.data
 }
 
@@ -211,7 +213,8 @@ export async function addWorkspaceInstrumentOperator(
       signal: crucibleRequestSignal(requestSignal),
     }
   )
-  if (!result.data) throw new CrucibleResponseError(result.response)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
   return result.data
 }
 
@@ -244,7 +247,8 @@ export async function removeWorkspaceInstrumentOperator(
       signal: crucibleRequestSignal(requestSignal),
     }
   )
-  if (!result.data) throw new CrucibleResponseError(result.response)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
   return result.data
 }
 
@@ -288,7 +292,8 @@ export async function createWorkspaceInstrumentResource(
     body: instrument,
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (!result.data) throw new CrucibleResponseError(result.response)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
   return toWorkspaceResourceDetail(result.data)
 }
 
@@ -372,7 +377,7 @@ export async function patchWorkspaceInstrument(
     signal: crucibleRequestSignal(requestSignal),
   })
   if (!result.data) {
-    throw new CrucibleResponseError(result.response)
+    throw new CrucibleResponseError(result.response, result.error)
   }
   return workspaceInstrumentDescriptiveUpdate({
     description: result.data.description ?? null,
@@ -433,7 +438,7 @@ export async function setWorkspaceInstrumentStatus(
     signal: crucibleRequestSignal(requestSignal),
   })
   if (!result.data) {
-    throw new CrucibleResponseError(result.response)
+    throw new CrucibleResponseError(result.response, result.error)
   }
   const update = workspaceInstrumentLifecycleUpdate(result.data)
   if (update.unique_id !== instrumentMfid) {
@@ -563,7 +568,7 @@ export async function readWorkspaceInstruments(
     signal: crucibleRequestSignal(requestSignal),
   })
   if (!result.data) {
-    throw new CrucibleResponseError(result.response)
+    throw new CrucibleResponseError(result.response, result.error)
   }
   return {
     items: result.data.items.map(toWorkspaceInstrument),
@@ -601,6 +606,7 @@ export async function checkWorkspaceInstrumentIdExactMatch(
     },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (!result.data) throw new CrucibleResponseError(result.response)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
   return result.data.items.length > 0
 }

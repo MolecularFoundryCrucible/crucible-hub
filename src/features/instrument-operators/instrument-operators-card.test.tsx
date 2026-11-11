@@ -73,6 +73,7 @@ const instrument = {
     can_manage_access: true,
     can_view_access: true,
     can_transfer: true,
+    can_delete_files: false,
     max_grant_role: "admin" as const,
   },
   creation_time: "2026-09-18T23:45:26.816156Z",

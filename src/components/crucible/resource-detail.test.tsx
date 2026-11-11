@@ -58,14 +58,18 @@ vi.mock("@/data/crucible/resources.functions", () => ({
 const scope = identityScope("crucible-fixture:populated", "0000-0000-0000-000X")
 const datasetMfid = "01J6Y8N4Q2R7M9K3T5V0W1X2Z7"
 
-function renderFiles() {
+function renderFiles(canDelete = false) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   })
   render(
     <QueryClientProvider client={queryClient}>
       <WorkspaceProvider mode="fixture" scope={scope}>
-        <DatasetFiles canEdit={false} datasetMfid={datasetMfid} />
+        <DatasetFiles
+          canDelete={canDelete}
+          canEdit={false}
+          datasetMfid={datasetMfid}
+        />
       </WorkspaceProvider>
     </QueryClientProvider>
   )
@@ -143,6 +147,28 @@ describe("DatasetFiles", () => {
     expect(
       isResourceOverviewPath(`/datasets/${datasetMfid}/graph`, datasetMfid)
     ).toBe(false)
+  })
+
+  it("offers Remove only with the delete capability", async () => {
+    vi.mocked(getWorkspaceDatasetFiles).mockResolvedValue({
+      status: "ok",
+      data: [demoWorkspace.files[0]],
+    })
+    const name = demoWorkspace.files[0].filename
+
+    renderFiles(true)
+    fireEvent.click(
+      await screen.findByRole("button", { name: `Actions for ${name}` })
+    )
+    expect(await screen.findByRole("menuitem", { name: "Remove" })).toBeTruthy()
+    expect(screen.queryByRole("menuitem", { name: /Rename/ })).toBeNull()
+    cleanup()
+
+    renderFiles(false)
+    await screen.findByText(name)
+    expect(
+      screen.queryByRole("button", { name: `Actions for ${name}` })
+    ).toBeNull()
   })
 
   it("keeps resource files local and retries an initial failure", async () => {

@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest"
 
 import { WorkspaceProvider } from "@/components/crucible/workspace-provider"
 import { identityScope } from "@/data/crucible/query-keys"
+import { HubApiClientError } from "@/data/crucible/result"
 
 import {
   MAX_PARALLEL_FILES,
@@ -15,7 +16,10 @@ import type { WorkspaceDatasetFile } from "@/data/crucible/workspace-source"
 import type { UploadItem } from "./upload-batch"
 import { uploadDatasetFile } from "./upload-orchestrator"
 
-vi.mock("./upload-orchestrator", () => ({ uploadDatasetFile: vi.fn() }))
+vi.mock("./upload-orchestrator", async (importOriginal) => ({
+  ...(await importOriginal<Record<string, unknown>>()),
+  uploadDatasetFile: vi.fn(),
+}))
 vi.mock("./upload-leave-guard", () => ({
   useUploadLeaveGuard: () => ({
     onLeave: () => undefined,
@@ -190,5 +194,42 @@ describe("upload batch", () => {
     expect(
       result.current.items.every((entry) => entry.state.status === "done")
     ).toBe(true)
+  })
+
+  it("says uploads are not turned on when the API has them switched off", async () => {
+    vi.mocked(uploadDatasetFile).mockRejectedValue(
+      new HubApiClientError({
+        conflictCode: "feature_disabled",
+        correlationId: "c-1",
+        kind: "unavailable",
+        message: "This isn't turned on for this Crucible server.",
+        retryable: false,
+      })
+    )
+    const queryClient = new QueryClient()
+    const { result } = renderHook(() => useUploadBatch(), {
+      wrapper: ({ children }) => (
+        <QueryClientProvider client={queryClient}>
+          <WorkspaceProvider
+            mode="fixture"
+            scope={identityScope("crucible-fixture:populated", "account")}
+          >
+            {children}
+          </WorkspaceProvider>
+        </QueryClientProvider>
+      ),
+    })
+
+    act(() =>
+      result.current.add([{ file: new File(["x"], "a.h5"), path: "a.h5" }])
+    )
+    await act(async () => {
+      await result.current.start("dataset-1")
+    })
+
+    expect(result.current.items[0].state).toEqual({
+      message: "File uploads aren't turned on for this Crucible server.",
+      status: "error",
+    })
   })
 })

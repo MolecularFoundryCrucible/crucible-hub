@@ -56,7 +56,7 @@ export function usersCursorQueryOptions(
       sort: filters.sort,
     }),
     getNextPageParam: (page) => page.nextCursor ?? undefined,
-    retry: scenario ? false : undefined,
+    ...(scenario ? { retry: false } : {}),
   })
 }
 
@@ -71,6 +71,6 @@ export function userDetailQueryOptions(scope: IdentityScope, userId: string) {
           signal,
         })
       ),
-    retry: scenario ? false : undefined,
+    ...(scenario ? { retry: false } : {}),
   })
 }

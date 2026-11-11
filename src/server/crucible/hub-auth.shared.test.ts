@@ -34,6 +34,7 @@ import {
   closePostgresSessionPool,
 } from "./hub-session-postgres.server"
 import { readSession, replaceSession } from "./hub-session-store.server"
+import { oauthForm, oauthRoute, oauthTokenAnswer } from "@/test/oauth"
 import { startRequestScope } from "@/test/start-request"
 
 const databaseUrl = process.env.HUB_TEST_SESSION_DATABASE_URL
@@ -64,16 +65,6 @@ function stubSharedEnv() {
   vi.stubEnv("HUB_SESSION_KEYS", sessionKeys)
 }
 
-function pathOf(input: string | URL | Request) {
-  return new URL(
-    typeof input === "string"
-      ? input
-      : input instanceof URL
-        ? input.href
-        : input.url
-  ).pathname
-}
-
 async function signedInSession(
   respond: (path: string) => Response | Promise<Response>
 ) {
@@ -83,11 +74,12 @@ async function signedInSession(
   const requests: string[] = []
   vi.stubGlobal(
     "fetch",
-    vi.fn(async (input: string | URL | Request) => {
-      const path = pathOf(input)
+    vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+      const path = oauthRoute(input, init)
       requests.push(path)
-      if (path === "/auth/hub/token") return Response.json(tokenResponse)
-      if (path === "/auth/hub/revoke") return new Response(null)
+      if (path === "/oauth/token:authorization_code")
+        return Response.json(oauthTokenAnswer(tokenResponse))
+      if (path === "/oauth/revoke") return new Response(null)
       return respond(path)
     })
   )
@@ -197,11 +189,16 @@ describe.skipIf(!databaseUrl)("Hub sessions shared through Postgres", () => {
       .split(";")[0]
     vi.stubGlobal(
       "fetch",
-      vi.fn(async (input: string | URL | Request) => {
-        const path = pathOf(input)
+      vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+        const path = oauthRoute(input, init)
         requests.push(path)
-        return path === "/auth/hub/token"
-          ? Response.json({ ...tokenResponse, user_unique_id: "mfid-other" })
+        return path === "/oauth/token:authorization_code"
+          ? Response.json(
+              oauthTokenAnswer({
+                ...tokenResponse,
+                user_unique_id: "mfid-other",
+              })
+            )
           : new Response(null)
       })
     )
@@ -217,7 +214,10 @@ describe.skipIf(!databaseUrl)("Hub sessions shared through Postgres", () => {
     expect(hubSignInFailureDetails(error)).toEqual({
       reason: "account-mismatch",
     })
-    expect(requests.slice(-2)).toEqual(["/auth/hub/token", "/auth/hub/revoke"])
+    expect(requests.slice(-2)).toEqual([
+      "/oauth/token:authorization_code",
+      "/oauth/revoke",
+    ])
     const after = startRequestScope("http://127.0.0.1:3000/hub/data", {
       headers: { cookie: sessionCookie },
     })
@@ -247,16 +247,18 @@ describe.skipIf(!databaseUrl)("Hub sessions shared through Postgres", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
-        const path = pathOf(input)
-        if (path === "/auth/hub/revoke") {
-          revoked.push(JSON.parse(String(init?.body)))
+        const path = oauthRoute(input, init)
+        if (path === "/oauth/revoke") {
+          revoked.push(oauthForm(init))
         }
-        return path === "/auth/hub/token"
-          ? Response.json({
-              ...tokenResponse,
-              auth_time: new Date().toISOString(),
-              refresh_token: "refresh-2",
-            })
+        return path === "/oauth/token:authorization_code"
+          ? Response.json(
+              oauthTokenAnswer({
+                ...tokenResponse,
+                auth_time: new Date().toISOString(),
+                refresh_token: "refresh-2",
+              })
+            )
           : new Response(null)
       })
     )
@@ -269,7 +271,9 @@ describe.skipIf(!databaseUrl)("Hub sessions shared through Postgres", () => {
         finishHubLogin("code", state, null, "https://api.example.test")
       )
     ).resolves.toBe("/hub/reauthenticated")
-    expect(revoked).toEqual([{ token: "refresh-1" }])
+    expect(revoked).toEqual([
+      { token: "refresh-1", token_type_hint: "refresh_token" },
+    ])
   })
 
   it("keeps a pending sign-in link in the database for its own session only", async () => {
@@ -322,7 +326,11 @@ describe.skipIf(!databaseUrl)("Hub sessions shared through Postgres", () => {
     const second = await call()
     expect(first.response?.status).toBe(200)
     expect(second.signedIn).toBe(true)
-    expect(requests).toEqual(["/auth/hub/token", "/datasets", "/datasets"])
+    expect(requests).toEqual([
+      "/oauth/token:authorization_code",
+      "/datasets",
+      "/datasets",
+    ])
   })
 
   it("keeps the session and the current access token when a refresh is rate limited", async () => {
@@ -330,7 +338,7 @@ describe.skipIf(!databaseUrl)("Hub sessions shared through Postgres", () => {
     vi.setSystemTime(new Date("2026-10-06T22:59:45.000Z"))
     stubSharedEnv()
     const { call, requests } = await signedInSession((path) =>
-      path === "/auth/hub/refresh"
+      path === "/oauth/token:refresh_token"
         ? new Response(null, { headers: { "Retry-After": "20" }, status: 429 })
         : Response.json([])
     )
@@ -341,8 +349,8 @@ describe.skipIf(!databaseUrl)("Hub sessions shared through Postgres", () => {
     expect(second.response?.status).toBe(200)
     expect(second.signedIn).toBe(true)
     expect(requests).toEqual([
-      "/auth/hub/token",
-      "/auth/hub/refresh",
+      "/oauth/token:authorization_code",
+      "/oauth/token:refresh_token",
       "/datasets",
       "/datasets",
     ])
@@ -354,11 +362,11 @@ describe.skipIf(!databaseUrl)("Hub sessions shared through Postgres", () => {
     stubSharedEnv()
     let refreshes = 0
     const { call } = await signedInSession((path) => {
-      if (path !== "/auth/hub/refresh") return Response.json([])
+      if (path !== "/oauth/token:refresh_token") return Response.json([])
       refreshes += 1
       return refreshes === 1
         ? new Response(null, { headers: { "Retry-After": "10" }, status: 429 })
-        : Response.json(refreshedTokens)
+        : Response.json(oauthTokenAnswer(refreshedTokens))
     })
 
     const failed = await call()
@@ -380,8 +388,8 @@ describe.skipIf(!databaseUrl)("Hub sessions shared through Postgres", () => {
     vi.setSystemTime(new Date("2026-10-06T23:00:30.000Z"))
     stubSharedEnv()
     const { call, inRequest, sessionId } = await signedInSession((path) =>
-      path === "/auth/hub/refresh"
-        ? Response.json(refreshedTokens)
+      path === "/oauth/token:refresh_token"
+        ? Response.json(oauthTokenAnswer(refreshedTokens))
         : Response.json([])
     )
     await inRequest(async () => {
@@ -404,10 +412,10 @@ describe.skipIf(!databaseUrl)("Hub sessions shared through Postgres", () => {
     stubSharedEnv()
     let refreshes = 0
     const { call } = await signedInSession(async (path) => {
-      if (path !== "/auth/hub/refresh") return Response.json([])
+      if (path !== "/oauth/token:refresh_token") return Response.json([])
       refreshes += 1
       await new Promise((resolve) => setTimeout(resolve, 50))
-      return Response.json(refreshedTokens)
+      return Response.json(oauthTokenAnswer(refreshedTokens))
     })
 
     const results = await Promise.all([call(), call()])
@@ -420,7 +428,7 @@ describe.skipIf(!databaseUrl)("Hub sessions shared through Postgres", () => {
     vi.setSystemTime(new Date("2026-10-06T23:00:30.000Z"))
     stubSharedEnv()
     const { call } = await signedInSession((path) =>
-      path === "/auth/hub/refresh"
+      path === "/oauth/token:refresh_token"
         ? new Response(null, { status: 504 })
         : Response.json([])
     )
@@ -459,7 +467,7 @@ describe.skipIf(!databaseUrl)("Hub sessions shared through Postgres", () => {
     )
 
     expect(await inRequest(() => logoutHubSession())).toBe(true)
-    expect(requests).toContain("/auth/hub/revoke")
+    expect(requests).toContain("/oauth/revoke")
     const after = await call()
     expect(after.signedIn).toBe(false)
   })

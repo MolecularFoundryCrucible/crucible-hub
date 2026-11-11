@@ -17,6 +17,7 @@ type ErrorInput = {
   conflictFields?: HubConflictField[]
   conflictCode?: HubConflictCode
   reauthenticationRequired?: boolean
+  unavailable?: boolean
   message?: string
 }
 
@@ -42,6 +43,7 @@ const messages: Record<HubApiErrorKind, string> = {
   cancelled: "The request was cancelled.",
   timeout: "Crucible did not respond in time.",
   upstream: "Crucible could not complete the request.",
+  unavailable: "This isn't available on this Crucible server yet.",
   unexpected: "An unexpected error occurred.",
 }
 
@@ -52,13 +54,19 @@ export function toHubApiError(input: ErrorInput): HubApiError {
       ? "timeout"
       : input.reauthenticationRequired
         ? "reauthentication-required"
-        : input.status
-          ? (statusKinds[input.status] ?? "upstream")
-          : "unexpected"
+        : input.unavailable || input.status === 501
+          ? "unavailable"
+          : input.status
+            ? (statusKinds[input.status] ?? "upstream")
+            : "unexpected"
 
   return {
     kind,
-    message: input.message ?? messages[kind],
+    message:
+      input.message ??
+      (kind === "unavailable" && input.status === 501
+        ? "This isn't turned on for this Crucible server."
+        : messages[kind]),
     correlationId: input.correlationId,
     retryable: ["rate-limited", "timeout", "upstream", "unexpected"].includes(
       kind

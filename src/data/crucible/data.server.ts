@@ -594,7 +594,7 @@ export async function readWorkspaceSamples(
     signal: crucibleRequestSignal(requestSignal),
   })
   if (!result.data) {
-    throw new CrucibleResponseError(result.response)
+    throw new CrucibleResponseError(result.response, result.error)
   }
   return {
     items: result.data.items.map(toWorkspaceSample),
@@ -685,7 +685,7 @@ export async function readWorkspaceDatasets(
     signal: crucibleRequestSignal(requestSignal),
   })
   if (!result.data) {
-    throw new CrucibleResponseError(result.response)
+    throw new CrucibleResponseError(result.response, result.error)
   }
   return {
     items: result.data.items.map(toWorkspaceDataset),
@@ -802,7 +802,8 @@ export async function readWorkspaceSampleFacets(
       signal: crucibleRequestSignal(requestSignal),
     }
   )
-  if (!result.data) throw new CrucibleResponseError(result.response)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
   return toWorkspaceFacetPage(result.data, input.field)
 }
 
@@ -898,6 +899,7 @@ export async function readWorkspaceDatasetFacets(
       signal: crucibleRequestSignal(requestSignal),
     }
   )
-  if (!result.data) throw new CrucibleResponseError(result.response)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
   return toWorkspaceFacetPage(result.data, input.field)
 }

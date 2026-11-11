@@ -51,6 +51,6 @@ export function apiKeysInfiniteQueryOptions(
         })
       ),
     getNextPageParam: (page) => page.nextCursor ?? undefined,
-    retry: scenario ? false : undefined,
+    ...(scenario ? { retry: false } : {}),
   })
 }

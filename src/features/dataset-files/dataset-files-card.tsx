@@ -57,15 +57,20 @@ import { useExitSafeMount } from "@/hooks/use-exit-safe"
 import { formatBytes } from "@/lib/format"
 import { PendingIcon } from "@/components/crucible/pending-icon"
 
+import { FileRowActions } from "./file-row-actions"
+import type { FileRowPermissions } from "./file-row-actions"
+
 const UploadFilesDialog = lazyNamed(
   () => import("./upload-dialog"),
   "UploadFilesDialog"
 )
 
 export function DatasetFiles({
+  canDelete = false,
   canEdit,
   datasetMfid,
 }: {
+  canDelete?: boolean
   canEdit: boolean
   datasetMfid: string
 }) {
@@ -110,7 +115,14 @@ export function DatasetFiles({
               </div>
             ) : null}
             {files.length ? (
-              <FilesTable files={files} />
+              <FilesTable
+                files={files}
+                permissions={{
+                  canRemove: canDelete,
+                  canRename: canEdit,
+                  datasetMfid,
+                }}
+              />
             ) : (
               <PanelState
                 description="No file records are attached to this dataset."
@@ -202,8 +214,10 @@ function compareFiles(
 
 export function FilesTable({
   files,
+  permissions,
 }: {
   files: readonly WorkspaceDatasetFile[]
+  permissions?: FileRowPermissions
 }) {
   const scope = useWorkspaceScope()
   const identity = JSON.stringify(scope)
@@ -281,11 +295,16 @@ export function FilesTable({
                 {formatBytes(file.size)}
               </TableCell>
               <TableCell kind="action">
-                <FileDownloadAction
-                  file={file}
-                  identity={identity}
-                  scenario={scenario}
-                />
+                <span className="flex items-center justify-end gap-1">
+                  <FileDownloadAction
+                    file={file}
+                    identity={identity}
+                    scenario={scenario}
+                  />
+                  {permissions ? (
+                    <FileRowActions file={file} permissions={permissions} />
+                  ) : null}
+                </span>
               </TableCell>
             </TableRow>
           ))}

@@ -187,7 +187,8 @@ export async function readWorkspaceServiceAccounts(
     },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (!result.data) throw new CrucibleResponseError(result.response)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
   return {
     items: result.data.items.map(toWorkspaceServiceAccount),
     limit: result.data.limit,
@@ -220,7 +221,8 @@ export async function readWorkspaceServiceAccount(
     signal: crucibleRequestSignal(requestSignal),
   })
   if (result.response.status === 404) return null
-  if (!result.data) throw new CrucibleResponseError(result.response)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
   if (!result.data.is_service_account) return null
   return toWorkspaceServiceAccountDetail(result.data)
 }
@@ -320,7 +322,8 @@ export async function patchWorkspaceServiceAccountPlatformRole(
     params: { path: { service_account_ref: serviceAccountMfid } },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (!result.data) throw new CrucibleResponseError(result.response)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
   return toWorkspaceServiceAccountDetail(result.data)
 }
 
@@ -357,6 +360,7 @@ export async function rotateWorkspaceServiceAccountKey(
       signal: crucibleRequestSignal(requestSignal),
     }
   )
-  if (!result.data) throw new CrucibleResponseError(result.response)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
   return result.data
 }

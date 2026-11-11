@@ -42,6 +42,7 @@ export function toWorkspaceAdminUser(
   return {
     api_key_status:
       "api_key_status" in user ? (user.api_key_status ?? null) : null,
+    disabled_at: "disabled_at" in user ? (user.disabled_at ?? null) : null,
     email: "email" in user ? (user.email ?? null) : null,
     first_name: user.first_name,
     is_service_account: user.is_service_account ?? false,
@@ -180,7 +181,8 @@ export async function readWorkspaceUsers(
     },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (!result.data) throw new CrucibleResponseError(result.response)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
   return {
     items: result.data.items.map(toWorkspaceAdminUser),
     limit: result.data.limit,
@@ -239,7 +241,8 @@ export async function readWorkspaceUserDetail(
     signal: crucibleRequestSignal(requestSignal),
   })
   if (result.response.status === 404) return null
-  if (!result.data) throw new CrucibleResponseError(result.response)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
   return toWorkspaceAdminUser(result.data)
 }
 
@@ -315,7 +318,42 @@ export async function updateWorkspaceUserPlatformRole(
     params: { path: { user_ref: userId } },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (!result.data) throw new CrucibleResponseError(result.response)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
+  return toWorkspaceAdminUser(result.data)
+}
+
+export async function setWorkspaceUserDisabled(
+  userId: string,
+  disabled: boolean,
+  scenario?: FixtureScenario,
+  requestSignal?: AbortSignal
+): Promise<WorkspaceAdminUser> {
+  const configuration = readWorkspaceConfiguration()
+  if (configuration.mode === "unavailable") {
+    throw new Error(configuration.reason)
+  }
+  if (configuration.mode === "fixture") {
+    const existing = fixtureUsers(scenario).find((u) => u.unique_id === userId)
+    if (!existing) throw new CrucibleResponseError(404)
+    return {
+      ...existing,
+      disabled_at: disabled ? new Date().toISOString() : null,
+    }
+  }
+
+  const client = createCrucibleClient(configuration, {
+    privilegeMode: requireAdministratorView(),
+  })
+  const options = {
+    params: { path: { user_ref: userId } },
+    signal: crucibleRequestSignal(requestSignal),
+  }
+  const result = disabled
+    ? await client.POST("/users/{user_ref}/disable", options)
+    : await client.POST("/users/{user_ref}/enable", options)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
   return toWorkspaceAdminUser(result.data)
 }
 
@@ -386,6 +424,7 @@ export async function checkWorkspaceEmailExactMatch(
     params: { query: { email, limit: 1 } },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (!result.data) throw new CrucibleResponseError(result.response)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
   return result.data.items.length > 0
 }

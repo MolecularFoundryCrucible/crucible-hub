@@ -12,6 +12,7 @@ import {
 
 import { createCrucibleClient } from "../../server/crucible/client.server"
 import { crucibleRequestSignal } from "../../server/crucible/request-signal.server"
+import { fixtureResourceGraph } from "./fixture-resource-graph.server"
 import { readWorkspaceConfiguration } from "./workspace-config.server"
 import { readWorkspaceFixture } from "./workspace-fixture.server"
 import { apiDatasetFileSchema } from "./dataset-files.schema"
@@ -48,7 +49,6 @@ import type {
   WorkspaceRelationshipOperation,
   WorkspaceResourceDetail,
   WorkspaceResourceGraph,
-  WorkspaceResourceGraphEdge,
   WorkspaceResourceGraphRequest,
   WorkspaceSampleDescriptiveUpdate,
   WorkspaceScientificMetadataUpdate,
@@ -545,7 +545,7 @@ export async function readWorkspaceResource(
   })
   if (result.response.status === 404) return null
   if (!result.data) {
-    throw new CrucibleResponseError(result.response)
+    throw new CrucibleResponseError(result.response, result.error)
   }
   return toWorkspaceResourceDetail(result.data)
 }
@@ -575,7 +575,7 @@ export async function readWorkspaceDatasetFiles(
     signal: crucibleRequestSignal(requestSignal),
   })
   if (!result.data) {
-    throw new CrucibleResponseError(result.response)
+    throw new CrucibleResponseError(result.response, result.error)
   }
   const files = apiDatasetFilesSchema.safeParse(result.data)
   if (!files.success) {
@@ -632,7 +632,7 @@ export async function readWorkspaceDatasetIngestionRequests(
     signal: crucibleRequestSignal(requestSignal),
   })
   if (!result.data) {
-    throw new CrucibleResponseError(result.response)
+    throw new CrucibleResponseError(result.response, result.error)
   }
   const page = apiIngestionRequestPageSchema.safeParse(result.data)
   if (!page.success) {
@@ -685,7 +685,7 @@ export async function readWorkspaceIngestionClasses(
     signal: crucibleRequestSignal(requestSignal),
   })
   if (!result.data) {
-    throw new CrucibleResponseError(result.response)
+    throw new CrucibleResponseError(result.response, result.error)
   }
   return [...new Set(result.data.map((value) => value.trim()).filter(Boolean))]
 }
@@ -832,7 +832,7 @@ export async function readWorkspaceDatasetThumbnails(
     signal: crucibleRequestSignal(requestSignal),
   })
   if (!result.data) {
-    throw new CrucibleResponseError(result.response)
+    throw new CrucibleResponseError(result.response, result.error)
   }
   return result.data.map(workspaceDatasetThumbnail)
 }
@@ -865,7 +865,7 @@ export async function readWorkspaceDatasetThumbnailPreviews(
     signal: crucibleRequestSignal(requestSignal),
   })
   if (!result.data) {
-    throw new CrucibleResponseError(result.response)
+    throw new CrucibleResponseError(result.response, result.error)
   }
   return Object.fromEntries(
     Object.entries(result.data).map(([datasetMfid, thumbnail]) => [
@@ -941,7 +941,8 @@ export async function mutateWorkspaceDatasetThumbnails(
       params: { path: { dataset_mfid: operation.datasetMfid } },
       signal: crucibleRequestSignal(requestSignal),
     })
-    if (!result.data) throw new CrucibleResponseError(result.response)
+    if (!result.data)
+      throw new CrucibleResponseError(result.response, result.error)
   } else if (operation.action === "rename") {
     const result = await client.PATCH(
       "/datasets/{dataset_mfid}/thumbnails/{thumbnail_id}",
@@ -956,7 +957,8 @@ export async function mutateWorkspaceDatasetThumbnails(
         signal: crucibleRequestSignal(requestSignal),
       }
     )
-    if (!result.data) throw new CrucibleResponseError(result.response)
+    if (!result.data)
+      throw new CrucibleResponseError(result.response, result.error)
   } else {
     const result = await client.DELETE(
       "/datasets/{dataset_mfid}/thumbnails/{thumbnail_id}",
@@ -970,152 +972,14 @@ export async function mutateWorkspaceDatasetThumbnails(
         signal: crucibleRequestSignal(requestSignal),
       }
     )
-    if (!result.data) throw new CrucibleResponseError(result.response)
+    if (!result.data)
+      throw new CrucibleResponseError(result.response, result.error)
   }
   return readWorkspaceDatasetThumbnails(
     operation.datasetMfid,
     operation.scenario,
     requestSignal
   )
-}
-
-function fixtureResourceGraph(
-  resource: Extract<WorkspaceResourceDetail, { kind: "dataset" | "sample" }>,
-  requestedDepth: number,
-  scenario?: FixtureScenario
-): WorkspaceResourceGraph {
-  const fixture = readWorkspaceFixture(scenario)
-  const samplesByMfid = new Map(
-    fixture.status === "ready"
-      ? fixture.workspace.samples.map((sample) => [sample.unique_id, sample])
-      : []
-  )
-  const datasetsByMfid = new Map(
-    fixture.status === "ready"
-      ? fixture.workspace.datasets.map((dataset) => [
-          dataset.unique_id,
-          dataset,
-        ])
-      : []
-  )
-  const nodes = new Map([
-    [
-      resource.unique_id,
-      {
-        context:
-          resource.kind === "sample"
-            ? resource.sample_type
-            : resource.measurement,
-        dataFormat: resource.kind === "dataset" ? resource.data_format : null,
-        expansionAvailability: {
-          ancestors: false,
-          associations: false,
-          descendants: false,
-        },
-        hasMoreRelationships: false,
-        instrument: resource.kind === "dataset" ? resource.instrument : null,
-        kind: resource.kind,
-        name: resource.name,
-        project: resource.project,
-        traversalDepth: 0,
-        unique_id: resource.unique_id,
-      },
-    ],
-  ])
-  const edges = (requestedDepth === 0 ? [] : (resource.links ?? [])).flatMap(
-    (link): WorkspaceResourceGraphEdge[] => {
-      if (link.resource_type !== "dataset" && link.resource_type !== "sample") {
-        return []
-      }
-      const linkedSample =
-        link.resource_type === "sample"
-          ? samplesByMfid.get(link.unique_id)
-          : undefined
-      const linkedDataset =
-        link.resource_type === "dataset"
-          ? datasetsByMfid.get(link.unique_id)
-          : undefined
-      nodes.set(link.unique_id, {
-        context:
-          (link.resource_type === "sample"
-            ? linkedSample?.sample_type
-            : linkedDataset?.measurement) ?? null,
-        dataFormat: linkedDataset?.data_format ?? null,
-        expansionAvailability: {
-          ancestors: false,
-          associations: false,
-          descendants: false,
-        },
-        hasMoreRelationships: false,
-        instrument: linkedDataset?.instrument ?? null,
-        kind: link.resource_type,
-        name: link.name || link.unique_id,
-        project: linkedSample?.project ?? linkedDataset?.project ?? null,
-        traversalDepth: 1,
-        unique_id: link.unique_id,
-      })
-      if (link.relationship === "parent") {
-        return [
-          {
-            directed: true,
-            id: `fixture:lineage:${link.unique_id}:${resource.unique_id}`,
-            relationship: "parent" as const,
-            relationshipType:
-              link.relationship_type === "is_derived_from" ||
-              link.relationship_type === "is_part_of"
-                ? link.relationship_type
-                : null,
-            source: link.unique_id,
-            target: resource.unique_id,
-          },
-        ]
-      }
-      if (link.relationship === "child") {
-        return [
-          {
-            directed: true,
-            id: `fixture:lineage:${resource.unique_id}:${link.unique_id}`,
-            relationship: "parent" as const,
-            relationshipType:
-              link.relationship_type === "is_derived_from" ||
-              link.relationship_type === "is_part_of"
-                ? link.relationship_type
-                : null,
-            source: resource.unique_id,
-            target: link.unique_id,
-          },
-        ]
-      }
-      return [
-        {
-          directed: false,
-          id: `fixture:association:${
-            resource.kind === "sample" ? resource.unique_id : link.unique_id
-          }:${
-            resource.kind === "sample" ? link.unique_id : resource.unique_id
-          }`,
-          relationship: "associated" as const,
-          relationshipType: null,
-          source:
-            resource.kind === "sample" ? resource.unique_id : link.unique_id,
-          target:
-            resource.kind === "sample" ? link.unique_id : resource.unique_id,
-        },
-      ]
-    }
-  )
-  return {
-    edgeLimit: 1_000,
-    edges,
-    hasMore: false,
-    nodeLimit: 500,
-    nodes: [...nodes.values()],
-    requestedDepth,
-    returnedDepth: edges.length > 0 ? 1 : 0,
-    rootMfid: resource.unique_id,
-    truncated: false,
-    truncationReasons: [],
-  }
 }
 
 function normalizeApiResourceGraph(
@@ -1238,7 +1102,13 @@ export async function readWorkspaceResourceGraph(
     ) {
       throw new CrucibleResponseError(404)
     }
-    return fixtureResourceGraph(resource, graphRequest.depth ?? 1, scenario)
+    const fixture = readWorkspaceFixture(scenario)
+    if (fixture.status === "unavailable") throw new Error(fixture.reason)
+    return fixtureResourceGraph(
+      resource.unique_id,
+      graphRequest,
+      fixture.workspace
+    )
   }
 
   const client = createCrucibleClient(configuration)
@@ -1258,7 +1128,8 @@ export async function readWorkspaceResourceGraph(
     },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (!result.data) throw new CrucibleResponseError(result.response)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
   return normalizeApiResourceGraph(
     result.data,
     resourceMfid,
@@ -1324,7 +1195,8 @@ export async function transferWorkspaceResourceOwnership(
     params: { path: { mfid: resourceMfid }, query: { confirm } },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (!result.data) throw new CrucibleResponseError(result.response)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
   if (result.data.resource_mfid !== resourceMfid) {
     throw new Error("The ownership response identifies another resource.")
   }
@@ -1374,7 +1246,8 @@ export async function reassignWorkspaceResourceProject(
     params: { path: { mfid: resourceMfid }, query: { confirm } },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (!result.data) throw new CrucibleResponseError(result.response)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
   if (
     result.data.resource_id !== resourceMfid &&
     result.data.resource_mfid !== resourceMfid
@@ -1427,7 +1300,8 @@ export async function setWorkspaceDatasetInstrument(
     params: { path: { dataset_mfid: datasetMfid } },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (!result.data) throw new CrucibleResponseError(result.response)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
   if (
     result.data.dataset_mfid !== datasetMfid ||
     result.data.instrument.unique_id !== instrumentMfid
@@ -1512,7 +1386,7 @@ export async function createWorkspaceFileDownload(
     throw conflict
   }
   if (!result.response.ok) {
-    throw new CrucibleResponseError(result.response)
+    throw new CrucibleResponseError(result.response, result.error)
   }
   return workspaceFileDownload(result.data)
 }
@@ -1574,7 +1448,7 @@ export async function patchWorkspaceSampleDescription(
     signal: crucibleRequestSignal(requestSignal),
   })
   if (!result.data) {
-    throw new CrucibleResponseError(result.response)
+    throw new CrucibleResponseError(result.response, result.error)
   }
   return workspaceSampleDescriptiveUpdate({
     description: result.data.description ?? null,
@@ -1649,7 +1523,7 @@ export async function patchWorkspaceDatasetDescription(
     signal: crucibleRequestSignal(requestSignal),
   })
   if (!result.data) {
-    throw new CrucibleResponseError(result.response)
+    throw new CrucibleResponseError(result.response, result.error)
   }
   return workspaceDatasetDescriptiveUpdate({
     data_format: result.data.data_format ?? null,
@@ -1720,7 +1594,7 @@ export async function requestWorkspaceResourceDeletion(
     signal: crucibleRequestSignal(requestSignal),
   })
   if (!result.data) {
-    throw new CrucibleResponseError(result.response)
+    throw new CrucibleResponseError(result.response, result.error)
   }
   if (result.data.resource_mfid !== resourceMfid) {
     throw new Error(
@@ -1757,7 +1631,8 @@ export async function deleteWorkspaceResource(
     },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (!result.data) throw new CrucibleResponseError(result.response)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
   const preview = workspaceDeletionPreview(result.data)
   if (!preview) {
     throw new Error("The deletion response is invalid.")
@@ -1950,7 +1825,7 @@ export async function writeWorkspaceResourceMetadata(
           signal: crucibleRequestSignal(requestSignal),
         })
   if (!result.data) {
-    throw new CrucibleResponseError(result.response)
+    throw new CrucibleResponseError(result.response, result.error)
   }
   const normalized = workspaceScientificMetadataUpdate(result.data)
   if (normalized.unique_id !== resourceMfid) {
@@ -2171,7 +2046,7 @@ export async function mutateWorkspaceRelationship(
               }
             )
   if (!result.response.ok) {
-    throw new CrucibleResponseError(result.response)
+    throw new CrucibleResponseError(result.response, result.error)
   }
 
   const [source, target] = await Promise.all([

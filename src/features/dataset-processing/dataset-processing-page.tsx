@@ -88,6 +88,8 @@ import { useExitSafeMount } from "@/hooks/use-exit-safe"
 import { formatBytes } from "@/lib/format"
 import { cn } from "@/lib/utils"
 
+import { PostprocessingCard } from "./postprocessing-card"
+
 const UploadFilesDialog = lazyNamed(
   () => import("@/features/dataset-files/upload-dialog"),
   "UploadFilesDialog"
@@ -113,14 +115,10 @@ export function DatasetProcessingPage({
         filesResult={filesResult}
         requestsResult={requestsResult}
       />
-      <Card>
-        <CardHeader>
-          <CardTitle>Dataset processes</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <PanelState title="No dataset processes are available" />
-        </CardContent>
-      </Card>
+      <PostprocessingCard
+        canRun={resourceResult.data?.capabilities?.can_edit === true}
+        datasetMfid={datasetMfid}
+      />
     </div>
   )
 }

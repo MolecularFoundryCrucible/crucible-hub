@@ -234,7 +234,8 @@ export async function readWorkspaceDeletionRequests(
     },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (!result.data) throw new CrucibleResponseError(result.response)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
   const page = deletionRequestPageSchema.safeParse(result.data)
   if (!page.success) throw new Error("The deletion request list is invalid.")
   return {
@@ -300,7 +301,8 @@ export async function readWorkspaceDeletionAudit(
     },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (!result.data) throw new CrucibleResponseError(result.response)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
   const page = deletionAuditPageSchema.safeParse(result.data)
   if (!page.success) throw new Error("The deletion audit list is invalid.")
   return {
@@ -451,6 +453,7 @@ export async function reviewWorkspaceDeletionRequest(
     },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (!result.data) throw new CrucibleResponseError(result.response)
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
   return workspaceDeletionRequest(result.data)
 }

@@ -49,6 +49,7 @@ import {
 } from "@/features/forms/identifier-fields"
 import { useSlugConflict } from "@/features/forms/slug-availability"
 import { SaveError } from "@/components/crucible/form-error"
+import { reservedProjectIdMessage } from "@/features/project-creation/project-id-errors"
 
 type InstrumentDetail = Extract<WorkspaceResourceDetail, { kind: "instrument" }>
 type ProjectDetail = WorkspaceProject & {
@@ -289,7 +290,9 @@ export function ProjectSettingsForm({
         ) {
           projectIdConflict.reject(changes.project_id)
         }
-        setSaveError(saveErrorMessage(error, "project"))
+        setSaveError(
+          reservedProjectIdMessage(error) ?? saveErrorMessage(error, "project")
+        )
       }
     },
   })
