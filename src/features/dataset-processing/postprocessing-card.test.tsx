@@ -16,7 +16,10 @@ import {
   startDatasetPostprocessingFn,
 } from "@/data/crucible/postprocessing.functions"
 
+const featuresOff = new Set<string>()
+
 vi.mock("@/components/crucible/workspace-provider", () => ({
+  useFeatureEnabled: (feature: string) => !featuresOff.has(feature),
   useWorkspaceScope: () => ["server-1", "person-1"],
 }))
 
@@ -54,6 +57,7 @@ function renderCard(canRun = true) {
 describe("PostprocessingCard", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    featuresOff.clear()
     vi.mocked(getDatasetPostprocessingRuns).mockResolvedValue({
       data: { items: [run], total: 1 },
       status: "ok",
@@ -112,6 +116,20 @@ describe("PostprocessingCard", () => {
 
     await screen.findByRole("table", { name: "Post-processing runs" })
     expect(screen.queryByRole("button", { name: "Run pipeline" })).toBeNull()
+    expect(vi.mocked(getWorkspacePipelines)).not.toHaveBeenCalled()
+  })
+
+  it("asks nothing of the API when ingestion is switched off", () => {
+    featuresOff.add("ingestion")
+    renderCard()
+
+    expect(
+      screen.getByText(
+        "Post-processing isn't turned on for this Crucible server"
+      )
+    ).toBeTruthy()
+    expect(screen.queryByRole("button", { name: "Run pipeline" })).toBeNull()
+    expect(vi.mocked(getDatasetPostprocessingRuns)).not.toHaveBeenCalled()
     expect(vi.mocked(getWorkspacePipelines)).not.toHaveBeenCalled()
   })
 

@@ -7,9 +7,15 @@ import {
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import type { WorkspacePrivilegeMode } from "@/data/crucible/privilege-mode"
 import type { WorkspaceMode } from "@/data/crucible/workspace-source"
+import { allFeaturesEnabled } from "@/data/crucible/features"
+import type {
+  WorkspaceFeature,
+  WorkspaceFeatures,
+} from "@/data/crucible/features"
 
 type WorkspaceContextValue = {
   accountPreferencesEnabled: boolean
+  features: WorkspaceFeatures
   mode: WorkspaceMode
   privilegeMode: WorkspacePrivilegeMode
   scope: IdentityScope
@@ -24,6 +30,7 @@ const WorkspaceContext = createContext<WorkspaceContextValue | undefined>(
 export function WorkspaceProvider({
   accountPreferencesEnabled = false,
   children,
+  features = allFeaturesEnabled,
   mode,
   scope,
   privilegeMode = privilegeModeFromScope(scope),
@@ -32,6 +39,7 @@ export function WorkspaceProvider({
 }: {
   accountPreferencesEnabled?: boolean
   children: React.ReactNode
+  features?: WorkspaceFeatures
   mode: WorkspaceMode
   privilegeMode?: WorkspacePrivilegeMode
   scope: IdentityScope
@@ -42,6 +50,7 @@ export function WorkspaceProvider({
     <WorkspaceContext.Provider
       value={{
         accountPreferencesEnabled,
+        features,
         mode,
         privilegeMode,
         scope,
@@ -96,6 +105,10 @@ export function useUploadIngestionEnabled() {
     )
   }
   return context.uploadIngestionEnabled
+}
+
+export function useFeatureEnabled(feature: WorkspaceFeature) {
+  return (useContext(WorkspaceContext)?.features ?? allFeaturesEnabled)[feature]
 }
 
 export function useAdministrationScope() {

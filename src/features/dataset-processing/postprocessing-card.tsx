@@ -6,7 +6,10 @@ import { PanelState } from "@/components/crucible/collection-state"
 import { notifySuccess } from "@/components/crucible/notifications"
 import { DelayedPendingIcon } from "@/components/crucible/pending-icon"
 import { StatusBadge } from "@/components/crucible/status-badge"
-import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
+import {
+  useFeatureEnabled,
+  useWorkspaceScope,
+} from "@/components/crucible/workspace-provider"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -78,18 +81,22 @@ export function PostprocessingCard({
   datasetMfid: string
 }) {
   const scope = useWorkspaceScope()
-  const runsResult = useQuery(
-    datasetPostprocessingRunsQueryOptions(scope, datasetMfid)
-  )
+  const ingestionEnabled = useFeatureEnabled("ingestion")
+  const runsResult = useQuery({
+    ...datasetPostprocessingRunsQueryOptions(scope, datasetMfid),
+    enabled: ingestionEnabled,
+  })
   const pipelinesResult = useQuery({
     ...pipelinesQueryOptions(scope),
-    enabled: canRun,
+    enabled: canRun && ingestionEnabled,
   })
   const [open, setOpen] = useState(false)
   const pipelines = pipelinesResult.data ?? []
   const runs = runsResult.data?.items ?? []
   const turnedOff =
-    unavailable(runsResult.error) || unavailable(pipelinesResult.error)
+    !ingestionEnabled ||
+    unavailable(runsResult.error) ||
+    unavailable(pipelinesResult.error)
 
   return (
     <Card aria-busy={runsResult.isFetching}>

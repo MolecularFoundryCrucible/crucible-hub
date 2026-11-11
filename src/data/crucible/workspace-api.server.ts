@@ -11,6 +11,8 @@ import {
   readAccountPreferencesEnabled,
   readUploadsEnabled,
 } from "./workspace-config.server"
+import { workspaceFeatures } from "./features"
+import type { WorkspaceFeatures } from "./features"
 import type { WorkspacePrivilegeMode } from "./privilege-mode"
 
 type ApiWorkspaceConfiguration = {
@@ -58,6 +60,16 @@ function unavailable(error: unknown): WorkspaceSource {
   }
 }
 
+async function readFeatures(
+  client: ReturnType<typeof createCrucibleClient>,
+  signal?: AbortSignal
+): Promise<WorkspaceFeatures> {
+  const result = await client
+    .GET("/features", { signal: crucibleRequestSignal(signal) })
+    .catch(() => undefined)
+  return workspaceFeatures(result?.data)
+}
+
 export async function readWorkspaceFromApi({
   baseUrl,
   bearerToken,
@@ -71,9 +83,10 @@ export async function readWorkspaceFromApi({
       { baseUrl, bearerToken, fetch },
       { privilegeMode }
     )
-    const accountResult = await client.GET("/account/profile", {
-      signal: crucibleRequestSignal(signal),
-    })
+    const [accountResult, features] = await Promise.all([
+      client.GET("/account/profile", { signal: crucibleRequestSignal(signal) }),
+      readFeatures(client, signal),
+    ])
 
     if (!accountResult.data) {
       throw failure("account", accountResult.response)
@@ -107,8 +120,12 @@ export async function readWorkspaceFromApi({
       mode: "api",
       accountPreferencesEnabled: readAccountPreferencesEnabled("api"),
       privilegeMode,
-      uploadIngestionEnabled: readUploadIngestionEnabled("api"),
-      uploadsEnabled: readUploadsEnabled("api"),
+      features,
+      uploadIngestionEnabled:
+        readUploadIngestionEnabled("api") &&
+        features.uploads &&
+        features.ingestion,
+      uploadsEnabled: readUploadsEnabled("api") && features.uploads,
       workspace,
     }
   } catch (error) {

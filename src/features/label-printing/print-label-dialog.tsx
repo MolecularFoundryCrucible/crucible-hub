@@ -6,7 +6,10 @@ import { PrintLabelIcon } from "@/components/crucible/icons"
 import { MfidText } from "@/components/crucible/mfid-text"
 import { notifySuccess } from "@/components/crucible/notifications"
 import { PendingIcon } from "@/components/crucible/pending-icon"
-import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
+import {
+  useFeatureEnabled,
+  useWorkspaceScope,
+} from "@/components/crucible/workspace-provider"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -39,6 +42,8 @@ export function PrintLabelButton({
   const [pending, setPending] = useState(false)
 
   const exit = useExitSafeMount(open)
+  const printingEnabled = useFeatureEnabled("printing")
+  if (!printingEnabled) return null
   return (
     <Dialog
       onOpenChange={(next) => {

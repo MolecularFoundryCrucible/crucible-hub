@@ -84,7 +84,17 @@ describe("API workspace adapter", () => {
     expect(source.workspace.projects).toEqual([])
     expect(source.workspace.samples).toEqual([])
     expect(source.workspace.datasets).toEqual([])
-    expect(requests).toHaveLength(1)
+    expect(source.features).toEqual({
+      ingestion: true,
+      passwords: true,
+      printing: true,
+      proposal_sync: true,
+      uploads: true,
+    })
+    expect(requests.map((request) => new URL(request.url).pathname)).toEqual([
+      "/account/profile",
+      "/features",
+    ])
     expect(
       requests.every(
         (request) =>
@@ -97,6 +107,42 @@ describe("API workspace adapter", () => {
       )
     ).toBe(true)
     expect(JSON.stringify(source)).not.toContain("test-token")
+  })
+
+  it("hides uploads and ingestion the API reports switched off", async () => {
+    vi.stubEnv("HUB_UPLOADS_ENABLED", "true")
+    vi.stubEnv("HUB_UPLOAD_INGESTION_ENABLED", "true")
+    const fetch = vi.fn<typeof globalThis.fetch>(async (input, init) => {
+      const path = new URL(new Request(input, init).url).pathname
+      if (path === "/features") {
+        return json({ ingestion: false, proposal_sync: false })
+      }
+      return json({
+        authorization: {
+          can_elevate: false,
+          effective_privilege_mode: "normal",
+          platform_role: "none",
+        },
+        unique_id: "0000-0000-0000-0001",
+      })
+    })
+
+    const source = await readWorkspaceFromApi({
+      baseUrl: "https://api.example.test",
+      bearerToken: "test-token",
+      fetch,
+    })
+
+    expect(source.status).toBe("ready")
+    if (source.status !== "ready") return
+    expect(source.uploadsEnabled).toBe(true)
+    expect(source.uploadIngestionEnabled).toBe(false)
+    expect(source.features).toMatchObject({
+      ingestion: false,
+      printing: true,
+      proposal_sync: false,
+    })
+    vi.unstubAllEnvs()
   })
 
   it("returns a browser-safe unavailable state for an API rejection", async () => {
@@ -138,12 +184,12 @@ describe("API workspace adapter", () => {
       fetch,
       signal: controller.signal,
     })
-    await vi.waitFor(() => expect(fetch).toHaveBeenCalledOnce())
+    await vi.waitFor(() => expect(fetch).toHaveBeenCalledTimes(2))
     controller.abort(new DOMException("Query cancelled", "AbortError"))
     const source = await sourcePromise
 
-    expect(upstreamSignals).toHaveLength(1)
-    expect(upstreamSignals[0]?.aborted).toBe(true)
+    expect(upstreamSignals).toHaveLength(2)
+    expect(upstreamSignals.every((signal) => signal.aborted)).toBe(true)
     expect(source).toEqual({
       status: "unavailable",
       reason: "The local Hub server could not reach the Crucible API.",
@@ -171,13 +217,13 @@ describe("API workspace adapter", () => {
       bearerToken: "test-token",
       fetch,
     })
-    await vi.waitFor(() => expect(fetch).toHaveBeenCalledOnce())
+    await vi.waitFor(() => expect(fetch).toHaveBeenCalledTimes(2))
     timeoutController.abort(new DOMException("Timed out", "TimeoutError"))
     const source = await sourcePromise
 
     expect(AbortSignal.timeout).toHaveBeenCalledWith(15_000)
-    expect(upstreamSignals).toHaveLength(1)
-    expect(upstreamSignals[0]?.aborted).toBe(true)
+    expect(upstreamSignals).toHaveLength(2)
+    expect(upstreamSignals.every((signal) => signal.aborted)).toBe(true)
     expect(source).toEqual({
       status: "unavailable",
       reason: "The Crucible API did not respond before the local timeout.",

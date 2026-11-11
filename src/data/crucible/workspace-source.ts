@@ -1,4 +1,5 @@
 import type { components } from "@/generated/crucible-api"
+import type { WorkspaceFeatures } from "./features"
 import type { FixtureScenario } from "./fixture-scenarios"
 import type { WorkspacePrivilegeMode } from "./privilege-mode"
 
@@ -733,6 +734,7 @@ export type WorkspaceSource =
       status: "ready"
       mode: WorkspaceMode
       accountPreferencesEnabled: boolean
+      features: WorkspaceFeatures
       privilegeMode: WorkspacePrivilegeMode
       uploadIngestionEnabled: boolean
       uploadsEnabled: boolean

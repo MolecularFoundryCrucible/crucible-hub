@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 import { notifyError, notifySuccess } from "@/components/crucible/notifications"
 import { DelayedPendingIcon } from "@/components/crucible/pending-icon"
+import { useFeatureEnabled } from "@/components/crucible/workspace-provider"
 import { Button } from "@/components/ui/button"
 import { syncWorkspaceAccountProjectsFn } from "@/data/crucible/account.functions"
 import type { WorkspaceProjectSyncResult } from "@/data/crucible/workspace-source"
@@ -71,7 +72,9 @@ export function SyncProjectsButton({ scope }: { scope: IdentityScope }) {
       )
     },
   })
+  const proposalSyncEnabled = useFeatureEnabled("proposal_sync")
 
+  if (!proposalSyncEnabled) return null
   return (
     <Button
       disabled={mutation.isPending}
