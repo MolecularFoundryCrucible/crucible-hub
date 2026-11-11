@@ -105,8 +105,10 @@ jobs:
           version="${REF_NAME#v}"
           sources=()
           for digest in digests/*; do sources+=("$IMAGE@sha256:$(basename "$digest")"); done
-          docker buildx imagetools create \
-            --tag "$IMAGE:$version" \
-            --tag "$IMAGE:${version%.*}" \
-            "${sources[@]}"
+          tags=(--tag "$IMAGE:$version")
+          case "$version" in
+            *-*) ;;
+            *) tags+=(--tag "$IMAGE:${version%.*}") ;;
+          esac
+          docker buildx imagetools create "${tags[@]}" "${sources[@]}"
           docker buildx imagetools inspect "$IMAGE:$version"

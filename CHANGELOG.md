@@ -6,6 +6,7 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- Pre-release tags such as `v1.8.0-alpha.1` publish only their exact image tag, so they never move the `1.8` tag.
 - Graph layouts run one at a time: a layout waiting behind another is dropped when a newer one replaces it, and the six-second limit counts only from when a layout starts, so quick successive changes (expanding, filtering, switching direction) no longer pile up or fall back to the simple arrangement because of time spent waiting.
 - The graph re-renders only the resources that change when you hover, inspect, expand or move nodes, which keeps large graphs responsive. If the automatic arrangement fails or times out, resources are laid out in layers around the current one instead of a single row. Keyboard users keep focus on a resource after expanding it and can reach every resource with Tab in large graphs, and the legend explains the expand icons.
 - Graph fixes: Reset layout is now Reset graph and also removes expanded resources; dragging a node while the graph rearranges no longer loses newly expanded resources; rearranging after a rename no longer brings back the old name; a slow layout no longer cancels a newer one, and Reset graph no longer restarts the layout worker; opening a resource from fullscreen leaves fullscreen so the inspector is visible; phones get the tighter graph spacing that was meant for them; screen readers hear the graph's real keyboard actions instead of React Flow's default "press delete to remove".
