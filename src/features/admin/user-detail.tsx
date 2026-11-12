@@ -19,6 +19,10 @@ import { personDisplayName } from "@/components/crucible/person-identity"
 import { PersonLink } from "@/components/crucible/person-link"
 import { PlatformRoleBadge } from "@/components/crucible/platform-role-badge"
 import { PlatformRoleDialog } from "@/components/crucible/platform-role-dialog"
+import {
+  hubActionError,
+  withReauthentication,
+} from "@/components/crucible/reauthentication"
 import type { PlatformRole } from "@/components/crucible/platform-role-dialog"
 import { ProjectRoleBadge } from "@/components/crucible/project-members"
 import {
@@ -53,11 +57,7 @@ import { applyPersonProfileUpdate } from "@/data/crucible/cache-effects"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import { crucibleKeys } from "@/data/crucible/query-keys"
-import {
-  hubConflictFields,
-  hubErrorMessage,
-  unwrapHubResult,
-} from "@/data/crucible/result"
+import { hubConflictFields, unwrapHubResult } from "@/data/crucible/result"
 import { emailSchema, usernameSchema } from "@/data/crucible/slugs"
 import {
   updateWorkspaceUser,
@@ -235,7 +235,7 @@ function UserProfileCard({
 }) {
   const queryClient = useQueryClient()
   const [editing, setEditing] = useState(false)
-  const [saveError, setSaveError] = useState<string>()
+  const [saveError, setSaveError] = useState<React.ReactNode>()
   const usernameConflict = useSlugConflict()
   const emailConflict = useSlugConflict()
   const resetUsernameConflict = usernameConflict.reset
@@ -283,7 +283,9 @@ function UserProfileCard({
         return
       }
       try {
-        const updated = await mutation.mutateAsync(changes)
+        const updated = await withReauthentication(() =>
+          mutation.mutateAsync(changes)
+        )
         queryClient.setQueryData(
           crucibleKeys.userAdminDetail(scope, user.unique_id),
           (current: WorkspaceAdminUser | undefined) =>
@@ -307,9 +309,11 @@ function UserProfileCard({
           usernameConflict.reject(changes.username)
         if (conflicts.includes("email")) emailConflict.reject(changes.email)
         setSaveError(
-          hubErrorMessage(
+          hubActionError(
             cause,
-            "User details could not be updated. Your changes are still here."
+            "User details could not be updated. Your changes are still here.",
+            "Changing an administrator's profile needs a recent sign-in.",
+            () => void form.handleSubmit()
           )
         )
       }

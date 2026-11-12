@@ -5,6 +5,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -67,6 +68,16 @@ const conflict = (conflictCode: string) => ({
   },
 })
 
+const reauthentication = {
+  status: "error" as const,
+  error: {
+    correlationId: "request-1",
+    kind: "reauthentication-required" as const,
+    message: "Sign in again to continue.",
+    retryable: false,
+  },
+}
+
 describe("PendingUsersCard", () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -125,6 +136,40 @@ describe("PendingUsersCard", () => {
     )
     expect(
       await screen.findByText(/Other records refer to this account/)
+    ).toBeTruthy()
+  })
+
+  it("asks for a fresh sign-in when approving needs one", async () => {
+    vi.mocked(approveWorkspaceUserFn).mockResolvedValue(reauthentication)
+    renderCard()
+
+    fireEvent.click(await screen.findByRole("button", { name: "Approve" }))
+    const signIn = await screen.findByRole("button", { name: "Sign in again" })
+    const href = new URL(signIn.getAttribute("href") ?? "", "https://hub.test")
+    expect(href.pathname).toBe("/hub/auth/login")
+    expect(href.searchParams.get("max_age")).toBe("0")
+    expect(
+      screen.getByText(/Approving accounts needs a recent sign-in/)
+    ).toBeTruthy()
+    expect(screen.queryByText(/Reference:/)).toBeNull()
+  })
+
+  it("asks for a fresh sign-in in the dialog when rejecting needs one", async () => {
+    vi.mocked(rejectWorkspaceUserFn).mockResolvedValue(reauthentication)
+    renderCard()
+
+    fireEvent.click(await screen.findByRole("button", { name: "Reject" }))
+    fireEvent.click(
+      (await screen.findAllByRole("button", { name: "Reject" })).find(
+        (button) => button.closest("[role=alertdialog]")
+      )!
+    )
+    const dialog = await screen.findByRole("alertdialog")
+    expect(
+      await within(dialog).findByRole("button", { name: "Sign in again" })
+    ).toBeTruthy()
+    expect(
+      within(dialog).getByText(/Rejecting accounts needs a recent sign-in/)
     ).toBeTruthy()
   })
 

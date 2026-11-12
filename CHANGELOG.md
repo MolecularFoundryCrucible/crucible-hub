@@ -53,6 +53,7 @@ The public surface that versions protect is shareable URLs and their search para
 - The dataset ingestion history asks the API by `dataset_mfid` instead of the deprecated `dataset_id`.
 - The Hub now refuses to start when a secret setting (`HUB_AUTH_CLIENT_SECRET`, `HUB_SESSION_KEYS`, `HUB_SESSION_DATABASE_URL`, `HUB_SESSION_DATABASE_PASSWORD`, `CRUCIBLE_API_KEY`) is given more than one way among `NAME_FILE`, `/run/secrets/NAME`, and `NAME`, matching the Crucible API, instead of silently preferring the file. Remove the extra copy before upgrading. `scripts/migrate-session-store.mjs` now reads its database URL and password the same way, and `scripts/secret-settings.mjs` holds the shared reader in the image.
 - Resolved `glob` 14 for the Cloud SQL connector's dependencies, which fixes advisories for `glob` and `minimatch` on the server; development-only advisories for ESLint's `minimatch` and the shadcn CLI's `deepmerge` have no compatible fix yet.
+- Approving or rejecting a waiting account, and saving another administrator's profile, now ask for a recent sign-in with the same Sign in again prompt as other account actions, instead of an error with a reference.
 
 ## 1.7.3 - 2026-11-04
 

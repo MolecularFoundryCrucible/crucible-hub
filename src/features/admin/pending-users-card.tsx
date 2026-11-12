@@ -6,6 +6,10 @@ import { ActivityTime } from "@/components/crucible/activity-time"
 import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
 import { notifySuccess } from "@/components/crucible/notifications"
 import {
+  hubActionError,
+  withReauthentication,
+} from "@/components/crucible/reauthentication"
+import {
   PersonIdentity,
   personDisplayName,
 } from "@/components/crucible/person-identity"
@@ -15,11 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { HubConflictCode } from "@/data/crucible/errors"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import { crucibleKeys } from "@/data/crucible/query-keys"
-import {
-  HubApiClientError,
-  hubErrorMessage,
-  unwrapHubResult,
-} from "@/data/crucible/result"
+import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
 import {
   approveWorkspaceUserFn,
   rejectWorkspaceUserFn,
@@ -34,10 +34,18 @@ const approvalErrors: Partial<Record<HubConflictCode, string>> = {
     "Other records refer to this account, so it can't be deleted. Approve it instead, or ask a developer to look at what refers to it.",
 }
 
-function approvalError(error: unknown, fallback: string) {
+function approvalError(
+  error: unknown,
+  fallback: string,
+  reason: string,
+  retry: () => void
+) {
   const code =
     error instanceof HubApiClientError ? error.details.conflictCode : undefined
-  return (code && approvalErrors[code]) ?? hubErrorMessage(error, fallback)
+  return (
+    (code && approvalErrors[code]) ??
+    hubActionError(error, fallback, reason, retry)
+  )
 }
 
 function useRefreshUsers(scope: IdentityScope) {
@@ -120,14 +128,12 @@ export function PendingUserActions({
   const refresh = useRefreshUsers(scope)
   const name = personDisplayName(user)
   const [rejecting, setRejecting] = useState(false)
-  const [error, setError] = useState<string>()
+  const [error, setError] = useState<React.ReactNode>()
   const approve = useMutation({
     mutationFn: async () =>
       unwrapHubResult(
         await approveWorkspaceUserFn({ data: { userId: user.unique_id } })
       ),
-    onError: (cause) =>
-      setError(approvalError(cause, "The account could not be approved.")),
     onSuccess: () => {
       setError(undefined)
       notifySuccess("Account approved", `${name} can now sign in.`)
@@ -139,8 +145,6 @@ export function PendingUserActions({
       unwrapHubResult(
         await rejectWorkspaceUserFn({ data: { userId: user.unique_id } })
       ),
-    onError: (cause) =>
-      setError(approvalError(cause, "The request could not be rejected.")),
     onSuccess: () => {
       setRejecting(false)
       setError(undefined)
@@ -150,6 +154,38 @@ export function PendingUserActions({
     },
   })
   const busy = approve.isPending || reject.isPending
+
+  async function runApprove() {
+    setError(undefined)
+    try {
+      await withReauthentication(() => approve.mutateAsync())
+    } catch (cause) {
+      setError(
+        approvalError(
+          cause,
+          "The account could not be approved.",
+          "Approving accounts needs a recent sign-in.",
+          () => void runApprove()
+        )
+      )
+    }
+  }
+
+  async function runReject() {
+    setError(undefined)
+    try {
+      await withReauthentication(() => reject.mutateAsync())
+    } catch (cause) {
+      setError(
+        approvalError(
+          cause,
+          "The request could not be rejected.",
+          "Rejecting accounts needs a recent sign-in.",
+          () => void runReject()
+        )
+      )
+    }
+  }
 
   return (
     <div className="flex flex-col items-end gap-1">
@@ -162,14 +198,7 @@ export function PendingUserActions({
         >
           Reject
         </Button>
-        <Button
-          disabled={busy}
-          onClick={() => {
-            setError(undefined)
-            approve.mutate()
-          }}
-          size="sm"
-        >
+        <Button disabled={busy} onClick={() => void runApprove()} size="sm">
           Approve
         </Button>
       </div>
@@ -186,7 +215,7 @@ export function PendingUserActions({
         description={`This deletes ${name}'s waiting account and frees its username and login. They can sign in again later to ask for access.`}
         error={rejecting ? error : undefined}
         kind="alert"
-        onConfirm={() => reject.mutate()}
+        onConfirm={() => void runReject()}
         onOpenChange={(open) => {
           setRejecting(open)
           if (!open) setError(undefined)

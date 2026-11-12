@@ -25,7 +25,10 @@ import {
 } from "@/data/crucible/account-identities.functions"
 
 import { UserDetailView } from "./user-detail"
-import { setWorkspaceUserDisabledFn } from "@/data/crucible/users.functions"
+import {
+  setWorkspaceUserDisabledFn,
+  updateWorkspaceUser,
+} from "@/data/crucible/users.functions"
 
 vi.mock("@tanstack/react-router", async (importOriginal) => {
   const actual = await importOriginal<Record<string, unknown>>()
@@ -91,6 +94,7 @@ vi.mock("@/data/crucible/users.functions", async (importOriginal) => ({
       status: "ok",
     })
   ),
+  updateWorkspaceUser: vi.fn(),
 }))
 
 vi.mock("@/data/crucible/api-keys.functions", () => ({
@@ -559,6 +563,37 @@ describe("UserDetailView API keys", () => {
 
 describe("UserDetailView account status", () => {
   afterEach(cleanup)
+
+  it("asks for a fresh sign-in when saving a profile needs one", async () => {
+    vi.mocked(updateWorkspaceUser).mockResolvedValue({
+      error: {
+        correlationId: "request-1",
+        kind: "reauthentication-required",
+        message: "Sign in again to continue.",
+        retryable: false,
+      },
+      status: "error",
+    })
+    renderUserDetail()
+
+    fireEvent.click(screen.getByRole("button", { name: "Edit profile" }))
+    fireEvent.change(await screen.findByLabelText(/First name/), {
+      target: { value: "Tess" },
+    })
+    fireEvent.click(await screen.findByRole("button", { name: "Save" }))
+
+    const signIn = await screen.findByRole("button", { name: "Sign in again" })
+    const href = new URL(signIn.getAttribute("href") ?? "", "https://hub.test")
+    expect(href.searchParams.get("max_age")).toBe("0")
+    expect(
+      screen.getByText(
+        /Changing an administrator's profile needs a recent sign-in/
+      )
+    ).toBeTruthy()
+    expect(vi.mocked(updateWorkspaceUser)).toHaveBeenCalledWith({
+      data: expect.objectContaining({ changes: { first_name: "Tess" } }),
+    })
+  })
 
   it("disables an account after confirming", async () => {
     renderUserDetail()
