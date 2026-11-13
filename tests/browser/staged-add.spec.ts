@@ -9,7 +9,7 @@ test("staged member commit flow", async ({ page }) => {
   await page.getByRole("button", { name: "Edit access" }).click()
   await page.getByRole("button", { name: "Add member" }).click()
 
-  const dialog = page.getByRole("dialog", { name: "Add direct access" })
+  const dialog = page.getByRole("dialog", { name: "Add member" })
   const input = dialog.getByRole("combobox", { name: "Search people" })
   await input.click()
   await input.pressSequentially("jam")
@@ -31,7 +31,7 @@ test("staged member commit flow", async ({ page }) => {
 
   await expect(dialog).toBeHidden()
   await expect(
-    page.getByRole("list", { name: "Instrument direct access" })
+    page.getByRole("list", { name: "Instrument members" })
   ).toContainText("Jamie Patel")
 })
 

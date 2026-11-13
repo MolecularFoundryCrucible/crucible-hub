@@ -275,6 +275,7 @@ export const demoWorkspace = {
       description: "Scanning hard X-ray microprobe for operando mapping.",
       instrument_type: "X-ray microscope",
       resource_type: "instrument",
+      role: "owner",
       creation_time: "2025-11-04T20:00:00Z",
       modification_time: "2026-08-20T14:25:00Z",
       last_activity_at: "2026-08-31T19:11:00Z",

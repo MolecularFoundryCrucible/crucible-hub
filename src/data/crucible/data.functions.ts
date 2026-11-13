@@ -182,6 +182,7 @@ export const datasetCursorPageInputSchema = z
   .object({
     ...cursorPageInputFields,
     ...datasetFacetFilterFields,
+    includeInstrumentAccess: z.literal(true).optional(),
     instrumentMfid: z.string().trim().min(1).max(255).optional(),
   })
   .superRefine(validateCursorInput)
@@ -217,6 +218,7 @@ const datasetFacetPageInputSchema = z
     ...facetPageInputFields,
     ...datasetFacetFilterFields,
     field: datasetFacetFieldSchema,
+    includeInstrumentAccess: z.literal(true).optional(),
     instrumentMfid: z.string().trim().min(1).max(255).optional(),
   })
   .superRefine((input, context) => {

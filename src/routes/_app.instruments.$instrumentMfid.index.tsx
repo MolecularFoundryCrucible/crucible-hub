@@ -78,6 +78,7 @@ import {
   datasetsCursorQueryOptions,
   datasetsQueryOptions,
 } from "@/data/crucible/data.queries"
+import { resourceSummaryQueryOptions } from "@/data/crucible/resources.queries"
 import { prefetchInfiniteQueryWithReadableCache } from "@/data/query-prefetch"
 import {
   useDataGroupBy,
@@ -96,9 +97,17 @@ const instrumentDatasetSearchSchema = resourcePreviewSearchSchema.extend({
   createdTo: collectionFilterFields.createdTo.catch(undefined),
   cursor: z.string().min(1).max(2048).optional().catch(undefined),
   direction: sortDirectionSchema.optional().catch(undefined),
+  instrumentAccess: z.literal(true).optional().catch(undefined),
   publicData: publicDataSearchSchema.optional().catch(undefined),
   sort: resourceSortSchema.optional().catch(undefined),
 })
+
+const instrumentAccessRoles = new Set(["owner", "admin", "editor"])
+
+/** Whether this role reads the instrument's datasets as a member of it. */
+function hasInstrumentAccess(role: string | null | undefined) {
+  return Boolean(role && instrumentAccessRoles.has(role))
+}
 
 const instrumentRoute = getRouteApi("/_app/instruments/$instrumentMfid")
 
@@ -113,6 +122,7 @@ export const Route = createFileRoute("/_app/instruments/$instrumentMfid/")({
     groupValue: search.groupValue,
     groupValueIsNull: search.groupValueIsNull,
     groupValueSet: search.groupValueSet,
+    instrumentAccess: search.instrumentAccess,
     publicData: search.publicData,
     sort: search.sort,
     view: search.view,
@@ -143,6 +153,9 @@ export const Route = createFileRoute("/_app/instruments/$instrumentMfid/")({
         includePublicByDefault: instrument.includePublicByDefault,
         publicData: deps.publicData,
       }),
+      ...(deps.instrumentAccess && hasInstrumentAccess(instrument.role)
+        ? { includeInstrumentAccess: true as const }
+        : {}),
     }
     const filters =
       browse.view === "grouped"
@@ -206,6 +219,7 @@ function InstrumentDatasetsPending() {
               updateBrowse({
                 createdFrom: values.createdFrom,
                 createdTo: values.createdTo,
+                instrumentAccess: values.instrumentAccess,
                 publicData: values.publicData,
                 ...collectionOrderingSearchState(values.sort, values.direction),
               })
@@ -214,6 +228,7 @@ function InstrumentDatasetsPending() {
               createdFrom: search.createdFrom,
               createdTo: search.createdTo,
               direction: search.direction,
+              instrumentAccess: search.instrumentAccess,
               publicData: search.publicData,
               sort: search.sort,
             }}
@@ -258,6 +273,12 @@ function InstrumentDatasetsPage() {
     instrumentDatasetBrowseOptions,
     dataGroupBy?.datasets
   )
+  const resource = useQuery(
+    resourceSummaryQueryOptions(scope, routeInstrumentMfid)
+  ).data
+  const instrumentAccessAvailable = hasInstrumentAccess(
+    resource?.kind === "instrument" ? resource.role : undefined
+  )
   const baseFilters = {
     createdFrom: search.createdFrom,
     createdTo: search.createdTo,
@@ -274,6 +295,9 @@ function InstrumentDatasetsPage() {
       includePublicByDefault,
       publicData: search.publicData,
     }),
+    ...(search.instrumentAccess && instrumentAccessAvailable
+      ? { includeInstrumentAccess: true as const }
+      : {}),
   }
   const collectionFilters =
     browse.view === "grouped"
@@ -431,6 +455,7 @@ function InstrumentDatasetsPage() {
                 updateBrowse({
                   createdFrom: values.createdFrom,
                   createdTo: values.createdTo,
+                  instrumentAccess: values.instrumentAccess,
                   publicData: values.publicData,
                   ...collectionOrderingSearchState(
                     values.sort,
@@ -443,6 +468,7 @@ function InstrumentDatasetsPage() {
                 createdFrom: search.createdFrom,
                 createdTo: search.createdTo,
                 direction: search.direction,
+                instrumentAccess: search.instrumentAccess,
                 publicData: search.publicData,
                 sort: search.sort,
               }}
@@ -475,6 +501,7 @@ type InstrumentDatasetFilterValues = {
   createdFrom?: string
   createdTo?: string
   direction?: SortDirection
+  instrumentAccess?: true
   publicData?: PublicDataChoice
   sort?: ResourceSort
 }
@@ -503,19 +530,39 @@ function InstrumentDatasetFilters({
     includePublicByDefault,
     publicData: draft.publicData,
   })
+  const resource = useQuery(
+    resourceSummaryQueryOptions(scope, instrumentMfid)
+  ).data
+  const instrumentAccessAvailable = hasInstrumentAccess(
+    resource?.kind === "instrument" ? resource.role : undefined
+  )
+  const draftAffiliation = resolveCollectionAffiliation({
+    elevated,
+    includePublicByDefault,
+    publicData: draft.publicData,
+  })
+  const instrumentAccessShown =
+    instrumentAccessAvailable && draftAffiliation === "member"
+  const instrumentAccessActive =
+    instrumentAccessAvailable &&
+    values.instrumentAccess === true &&
+    resolveCollectionAffiliation({
+      elevated,
+      includePublicByDefault,
+      publicData: values.publicData,
+    }) === "member"
   const rangeValid =
     !draft.createdFrom ||
     !draft.createdTo ||
     draft.createdFrom <= draft.createdTo
   const countKey = useDebouncedValue(
     JSON.stringify({
-      affiliation: resolveCollectionAffiliation({
-        elevated,
-        includePublicByDefault,
-        publicData: draft.publicData,
-      }),
+      affiliation: draftAffiliation,
       createdFrom: draft.createdFrom,
       createdTo: draft.createdTo,
+      ...(instrumentAccessShown && draft.instrumentAccess
+        ? { includeInstrumentAccess: true }
+        : {}),
     }),
     searchDebounceMs
   )
@@ -523,7 +570,7 @@ function InstrumentDatasetFilters({
     ...datasetsQueryOptions(scope, {
       ...(JSON.parse(countKey) as Pick<
         Parameters<typeof datasetsQueryOptions>[1],
-        "affiliation" | "createdFrom" | "createdTo"
+        "affiliation" | "createdFrom" | "createdTo" | "includeInstrumentAccess"
       >),
       includeTotal: true,
       instrumentMfid,
@@ -533,12 +580,10 @@ function InstrumentDatasetFilters({
   })
 
   const boundsFilters = {
-    affiliation: (
-      JSON.parse(countKey) as Pick<
-        Parameters<typeof datasetsQueryOptions>[1],
-        "affiliation"
-      >
-    ).affiliation,
+    ...(JSON.parse(countKey) as Pick<
+      Parameters<typeof datasetsQueryOptions>[1],
+      "affiliation" | "includeInstrumentAccess"
+    >),
     includeTotal: false,
     instrumentMfid,
     limit: 1,
@@ -564,6 +609,10 @@ function InstrumentDatasetFilters({
     collectionActiveFilter(
       "public",
       publicState.included ? "Public" : undefined
+    ),
+    collectionActiveFilter(
+      "instrument-access",
+      instrumentAccessActive ? "Instrument access" : undefined
     ),
     collectionActiveFilter(
       "created",
@@ -600,6 +649,7 @@ function InstrumentDatasetFilters({
       createdFrom: undefined,
       createdTo: undefined,
       direction: values.direction,
+      instrumentAccess: undefined,
       publicData: undefined,
       sort: values.sort,
     })
@@ -617,6 +667,8 @@ function InstrumentDatasetFilters({
         ...values,
         publicData: publicDataSearchValue(false, includePublicByDefault),
       })
+    } else if (id === "instrument-access") {
+      onApply({ ...values, instrumentAccess: undefined })
     } else if (id === "created") {
       onApply({ ...values, createdFrom: undefined, createdTo: undefined })
     }
@@ -659,6 +711,23 @@ function InstrumentDatasetFilters({
                 Include public data
               </FieldLabel>
             </Field>
+            {instrumentAccessShown ? (
+              <Field orientation="horizontal">
+                <Checkbox
+                  checked={draft.instrumentAccess === true}
+                  id="instrument-dataset-instrument-access"
+                  onCheckedChange={(checked) =>
+                    setDraft((current) => ({
+                      ...current,
+                      instrumentAccess: checked ? true : undefined,
+                    }))
+                  }
+                />
+                <FieldLabel htmlFor="instrument-dataset-instrument-access">
+                  Include instrument access
+                </FieldLabel>
+              </Field>
+            ) : null}
           </FilterSection>
         ) : null}
         <FilterSection title="Created">

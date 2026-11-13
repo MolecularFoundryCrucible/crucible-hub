@@ -27,3 +27,32 @@ test("shows instrument people on the Overview", async ({ page }) => {
   await expect(page.getByText("People", { exact: true })).toBeVisible()
   await expect(page.getByText("Manager", { exact: true })).toBeVisible()
 })
+
+test("lets an instrument manager include instrument access in its datasets", async ({
+  page,
+}) => {
+  await page.goto(
+    "/hub/instruments/01J6Y8N4Q2R7M9K3T5V0W1X2Z4?scenario=populated"
+  )
+  await page.waitForLoadState("networkidle")
+
+  await page.getByRole("button", { name: /^Filters/ }).click()
+  await page
+    .getByRole("checkbox", { name: "Include instrument access" })
+    .click()
+  await page
+    .getByRole("button", { name: /^(Apply filters|Show \d+ \w+)$/ })
+    .click()
+
+  await expect(page).toHaveURL(/instrumentAccess=true/)
+  await page
+    .getByRole("button", { name: "Remove filter: Instrument access" })
+    .click()
+  await expect(page).not.toHaveURL(/instrumentAccess/)
+
+  await page.getByRole("button", { name: /^Filters/ }).click()
+  await page.getByRole("checkbox", { name: "Include public data" }).click()
+  await expect(
+    page.getByRole("checkbox", { name: "Include instrument access" })
+  ).toHaveCount(0)
+})

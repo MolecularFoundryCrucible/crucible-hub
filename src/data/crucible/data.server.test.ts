@@ -129,6 +129,55 @@ describe("workspace data sources", () => {
     )
   })
 
+  it("adds instrument access to the member affiliation only when asked", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    vi.stubEnv("HUB_DATA_SOURCE", "api")
+    vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
+    vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
+    const requests: Request[] = []
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (request: Request) => {
+        requests.push(request)
+        return crucibleApiResponse(
+          new URL(request.url).pathname.endsWith("/facets")
+            ? { field: "measurement", items: [], limit: 100, next_cursor: null }
+            : { items: [], limit: 50, next_cursor: null, total: 0 }
+        )
+      })
+    )
+
+    await readWorkspaceDatasets({
+      affiliation: "member",
+      includeInstrumentAccess: true,
+      instrumentMfid: "instrument-mfid",
+      limit: 50,
+    })
+    await readWorkspaceDatasets({
+      affiliation: "owner",
+      includeInstrumentAccess: true,
+      limit: 50,
+    })
+    await readWorkspaceDatasets({ includeInstrumentAccess: true, limit: 50 })
+    await readWorkspaceDatasetFacets({
+      affiliation: "member",
+      field: "measurement",
+      includeInstrumentAccess: true,
+      limit: 100,
+    })
+
+    expect(
+      requests.map((request) =>
+        new URL(request.url).searchParams.getAll("affiliation")
+      )
+    ).toEqual([
+      ["member", "instrument"],
+      ["owner"],
+      [],
+      ["member", "instrument"],
+    ])
+  })
+
   it("uses opaque cursor pagination for fixture samples", async () => {
     vi.stubEnv("NODE_ENV", "development")
     vi.stubEnv("HUB_DATA_SOURCE", "fixture")

@@ -28,7 +28,7 @@ import { unwrapHubResult } from "./result"
 const facetPageLimit = 100
 
 export type FacetContext = CollectionFilters &
-  Pick<CollectionQueryOptions, "affiliation"> & {
+  Pick<CollectionQueryOptions, "affiliation" | "includeInstrumentAccess"> & {
     instrumentMfid?: string
     instrumentMfidIsNull?: true
     ownerId?: string
@@ -134,6 +134,9 @@ function normalizeFacetContext(filters: FacetContext, omitProject: boolean) {
   return {
     ...normalizeCollectionFilters(filters),
     ...(filters.affiliation ? { affiliation: filters.affiliation } : {}),
+    ...(filters.affiliation === "member" && filters.includeInstrumentAccess
+      ? { includeInstrumentAccess: true as const }
+      : {}),
     ...(!omitProject && filters.projectMfid
       ? {
           projectMfid: filters.projectMfid,

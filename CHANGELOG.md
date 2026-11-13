@@ -6,6 +6,7 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- An instrument's owner, admins and editors can include the datasets they see as instrument members on the instrument page, with Include instrument access in Dataset filters (`instrumentAccess=true` in the address). Without it the page lists only datasets they reach through their own access, as before.
 - Instrument Manage lists the instrument's members (its manager plus admins, editors and viewers) and adds, changes and removes them through the instrument member routes of Crucible API 4.0.0; projects can no longer be given access to an instrument. Members see the datasets recorded on the instrument. A dataset's access list shows that access as an Instrument members entry linked to the instrument, and the service-account entry is now labelled Instrument operators. Pinned the contract to crucible-api main `b30c7c7` (4.0.0a1, API PRs #511 and #512).
 - Projects and records read their owner from `owner` instead of the deprecated project `lead` and `project_lead_orcid`. Creating a project sends `owner_ref`, transferring ownership sends `new_owner_ref`, and owner filters send `owner_ref` and `owner_is_null`, as Crucible API 4.0.0 names them.
 - Pre-release tags such as `v1.8.0-alpha.1` publish only their exact image tag, so they never move the `1.8` tag.

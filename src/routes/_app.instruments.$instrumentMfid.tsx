@@ -77,6 +77,7 @@ export const Route = createFileRoute("/_app/instruments/$instrumentMfid")({
         mfid: resource.unique_id,
       }),
       isInstrument: true,
+      role: resource.role ?? null,
       scope: source.scope,
     }
   },

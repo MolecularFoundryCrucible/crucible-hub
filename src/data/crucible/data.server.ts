@@ -17,7 +17,10 @@ import { createCrucibleClient } from "../../server/crucible/client.server"
 import { crucibleRequestSignal } from "../../server/crucible/request-signal.server"
 import type { CollectionFilters } from "./collection-filters"
 import { normalizeCollectionFilters } from "./collection-filters"
-import { normalizeCollectionQueryOptions } from "./collection-query"
+import {
+  datasetAffiliationQuery,
+  normalizeCollectionQueryOptions,
+} from "./collection-query"
 import { fixtureCursorPage, fixtureResourcePageLimit } from "./pagination"
 import {
   normalizeDatasetFacetFilters,
@@ -663,9 +666,7 @@ export async function readWorkspaceDatasets(
   const result = await client.GET("/datasets", {
     params: {
       query: {
-        affiliation: collectionQuery.affiliation
-          ? [collectionQuery.affiliation]
-          : undefined,
+        affiliation: datasetAffiliationQuery(collectionQuery),
         anchor_mfid: input.anchorMfid,
         cursor: input.cursor,
         direction: collectionQuery.direction,
@@ -727,7 +728,7 @@ function fixtureAnchorCursor<TItem extends { unique_id: string }>(
 }
 
 type FacetContextInput = CollectionFilters &
-  Pick<CollectionQueryOptions, "affiliation"> &
+  Pick<CollectionQueryOptions, "affiliation" | "includeInstrumentAccess"> &
   ProjectFilterInput & {
     cursor?: string
     direction?: SortDirection
@@ -881,7 +882,7 @@ export async function readWorkspaceDatasetFacets(
     {
       params: {
         query: {
-          affiliation: input.affiliation ? [input.affiliation] : undefined,
+          affiliation: datasetAffiliationQuery(input),
           cursor: input.cursor,
           direction: input.direction,
           field: input.field,
