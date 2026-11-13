@@ -550,9 +550,7 @@ function resolveProjectRole(
 ): string | null {
   return (
     project.role ??
-    (accountUserMfid &&
-    (project.lead?.unique_id === accountUserMfid ||
-      project.project_lead_orcid === accountUserMfid)
+    (accountUserMfid && project.owner?.unique_id === accountUserMfid
       ? "owner"
       : (project.members?.find((m) => m.unique_id === accountUserMfid)?.role ??
         null))
@@ -684,10 +682,10 @@ function ProjectCollection({
                         className="resource-directory-person"
                         data-label="Lead"
                       >
-                        {complete && project.lead ? (
+                        {complete && project.owner ? (
                           <PersonLink
                             nameStyle="abbreviated"
-                            person={project.lead}
+                            person={project.owner}
                             presentation="collection"
                           />
                         ) : (

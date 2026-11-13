@@ -454,7 +454,7 @@ export function toWorkspaceResourceDetail(
       resource,
       "project",
       resource.title ?? resource.project_id,
-      resource.lead
+      resource.owner
     ),
     kind: "project",
     project_id: resource.project_id,
@@ -1191,7 +1191,7 @@ export async function transferWorkspaceResourceOwnership(
 
   const client = createCrucibleClient(configuration)
   const result = await client.POST("/resources/{mfid}/transfer_ownership", {
-    body: { new_owner: newOwner },
+    body: { new_owner_ref: newOwner },
     params: { path: { mfid: resourceMfid }, query: { confirm } },
     signal: crucibleRequestSignal(requestSignal),
   })

@@ -36,14 +36,14 @@ describe("workspace creation source", () => {
 
     expect(project).toMatchObject({
       organization: "Molecular Foundry",
+      owner: { unique_id: "0000-0000-0000-000X" },
       project_id: "fixture-study",
-      project_lead_orcid: "0000-0000-0000-000X",
       status: "active",
       title: "Fixture study",
     })
   })
 
-  it("creates a project with one canonical lead field", async () => {
+  it("creates a project with its owner reference", async () => {
     useApi()
     const requests: Request[] = []
     vi.stubGlobal(
@@ -52,8 +52,12 @@ describe("workspace creation source", () => {
         requests.push(request)
         return crucibleApiResponse({
           organization: "Molecular Foundry",
+          owner: {
+            first_name: "Pat",
+            last_name: "Lee",
+            unique_id: "person-mfid",
+          },
           project_id: "perovskite-1",
-          project_lead_orcid: "person-mfid",
           status: "active",
           title: "Perovskite study",
           unique_id: "project-mfid",
@@ -72,8 +76,8 @@ describe("workspace creation source", () => {
     expect(new URL(requests[0].url).pathname).toBe("/projects")
     await expect(requests[0].json()).resolves.toEqual({
       organization: "Molecular Foundry",
+      owner_ref: "person-mfid",
       project_id: "perovskite-1",
-      project_lead: "person-mfid",
       status: "active",
       title: "Perovskite study",
     })

@@ -120,33 +120,43 @@ function fixturePublicGrant(
   }
 }
 
-function fixtureInstrumentSeedGrants(
+const noEntryCapabilities = {
+  assignable_roles: [],
+  can_change_role: false,
+  can_remove: false,
+}
+
+function fixtureInstrumentMembersGrant(
   resource: WorkspaceResourceDetail
-): WorkspaceResourceAccessGrant[] {
-  if (
-    resource.kind !== "instrument" ||
-    resource.unique_id !== "01J6Y8N4Q2R7M9K3T5V0W1X2Z4"
-  ) {
-    return []
+): WorkspaceResourceAccessGrant | null {
+  if (resource.kind === "instrument") {
+    return {
+      capabilities: noEntryCapabilities,
+      display_name: resource.name,
+      permission: "owner",
+      principal_id: resource.unique_id,
+      principal_type: "instrument_members",
+      slug: resource.instrument_id,
+    }
   }
-  return [
-    {
-      display_name: "Morgan Lee",
-      permission: "editor",
-      principal_id: "0000-0000-0000-0018",
-      principal_type: "user",
-      slug: "morgan.lee",
-    },
-  ]
+  if (resource.kind !== "dataset" || !resource.instrument) return null
+  return {
+    capabilities: noEntryCapabilities,
+    display_name: resource.instrument.instrument_name,
+    permission: "viewer",
+    principal_id: resource.instrument.unique_id,
+    principal_type: "instrument_members",
+    slug: resource.instrument.instrument_id ?? null,
+  }
 }
 
 function fixtureAccessGrants(
   resource: WorkspaceResourceDetail
 ): WorkspaceResourceAccessGrant[] {
   return [
-    fixtureOwnerGrant(resource),
-    ...fixtureInstrumentSeedGrants(resource),
+    resource.kind === "instrument" ? null : fixtureOwnerGrant(resource),
     fixtureProjectGrant(resource),
+    fixtureInstrumentMembersGrant(resource),
     fixturePublicGrant(resource),
   ].filter((grant): grant is WorkspaceResourceAccessGrant => grant !== null)
 }

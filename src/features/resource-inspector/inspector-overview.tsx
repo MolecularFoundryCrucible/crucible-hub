@@ -3,10 +3,6 @@ import type { ReactNode } from "react"
 import { useQuery } from "@tanstack/react-query"
 
 import {
-  AccessRoleBadge,
-  sortAccessGrants,
-} from "@/components/crucible/access-role-badge"
-import {
   COLLAPSED_LIST_LIMIT,
   ListExpansionToggle,
 } from "@/components/crucible/list-expansion-toggle"
@@ -26,8 +22,7 @@ import {
 } from "@/data/crucible/data.queries"
 import { instrumentMembersQueryOptions } from "@/data/crucible/instruments.queries"
 import { projectQueryOptions } from "@/data/crucible/projects.queries"
-import { grantKey } from "@/data/crucible/resource-access"
-import { InstrumentMemberIdentity } from "@/features/instrument-people/instrument-people-card"
+import { instrumentPeopleEntries } from "@/features/instrument-people/instrument-people-card"
 
 type TotalResult = { data?: { total: number | null }; isPending: boolean }
 
@@ -106,20 +101,7 @@ export function InspectorInstrumentOverview({
         totals={[{ kind: "dataset", label: "Datasets", result: datasets }]}
       />
       <InspectorPeople
-        entries={
-          people.data
-            ? sortAccessGrants(people.data).map((grant) => ({
-                key: grantKey(grant),
-                person: <InstrumentMemberIdentity grant={grant} />,
-                role: (
-                  <AccessRoleBadge
-                    label={grant.permission === "owner" ? "Manager" : undefined}
-                    role={grant.permission}
-                  />
-                ),
-              }))
-            : undefined
-        }
+        entries={people.data ? instrumentPeopleEntries(people.data) : undefined}
         error={people.isError && !people.data}
         pending={people.isPending}
         resetKey={instrumentMfid}

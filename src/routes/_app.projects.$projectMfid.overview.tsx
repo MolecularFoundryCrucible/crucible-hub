@@ -65,9 +65,7 @@ function ProjectOverviewPage() {
   const { canUseMembership } = projectMembershipActions(project, scope[2])
   const userRole =
     project.role ??
-    (scope[2] &&
-    (project.lead?.unique_id === scope[2] ||
-      project.project_lead_orcid === scope[2])
+    (scope[2] && project.owner?.unique_id === scope[2]
       ? "owner"
       : (project.members?.find((m) => m.unique_id === scope[2])?.role ?? null))
 
@@ -193,18 +191,10 @@ function ProjectIdentity({
                   <dt className="text-label text-muted-foreground">Lead</dt>
                   <dd className="mt-1 flex items-start gap-2 text-body">
                     <IdentityFieldIcon type="owner" />
-                    {project.lead ? (
+                    {project.owner ? (
                       <PersonLink
                         nameStyle="abbreviated"
-                        person={project.lead}
-                      />
-                    ) : project.project_lead_orcid ? (
-                      <PersonLink
-                        nameStyle="abbreviated"
-                        person={{
-                          name: project.project_lead_orcid,
-                          unique_id: project.project_lead_orcid,
-                        }}
+                        person={project.owner}
                       />
                     ) : (
                       "Unknown lead"

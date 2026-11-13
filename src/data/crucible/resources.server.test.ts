@@ -1727,7 +1727,7 @@ describe("workspace resource sources", () => {
       )
     ).toEqual([{ confirm: "false" }, { confirm: "true" }])
     await expect(requests[0].json()).resolves.toEqual({
-      new_owner: "person-mfid",
+      new_owner_ref: "person-mfid",
     })
   })
 

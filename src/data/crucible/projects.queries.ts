@@ -222,7 +222,7 @@ export function projectResourceDetail(
     modification_time: project.modification_time ?? null,
     name: project.title ?? project.project_id,
     organization: project.organization,
-    owner: project.lead,
+    owner: project.owner,
     project_id: project.project_id,
     role: project.role ?? null,
     scientific_metadata: project.scientific_metadata,

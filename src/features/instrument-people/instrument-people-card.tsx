@@ -1,20 +1,16 @@
 import { useQuery } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
 
-import {
-  AccessRoleBadge,
-  sortAccessGrants,
-} from "@/components/crucible/access-role-badge"
+import { AccessRoleBadge } from "@/components/crucible/access-role-badge"
 import { PanelState } from "@/components/crucible/collection-state"
 import { PeopleCard } from "@/components/crucible/people-card"
+import type { PeopleCardEntry } from "@/components/crucible/people-card"
 import { PersonLink } from "@/components/crucible/person-link"
-import { ResourceIdentityLink } from "@/components/crucible/resource-identity-link"
-import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
+import { sortProjectMembers } from "@/components/crucible/project-members"
 import { buttonVariants } from "@/components/ui/button"
 import { instrumentMembersQueryOptions } from "@/data/crucible/instruments.queries"
 import type { IdentityScope } from "@/data/crucible/query-keys"
-import { grantKey, grantName } from "@/data/crucible/resource-access"
-import type { WorkspaceResourceAccessGrant } from "@/data/crucible/workspace-source"
+import type { WorkspaceInstrumentMember } from "@/data/crucible/workspace-source"
 
 export function InstrumentPeopleCard({
   canManageAccess,
@@ -40,20 +36,7 @@ export function InstrumentPeopleCard({
           </Link>
         ) : undefined
       }
-      entries={
-        query.data
-          ? sortAccessGrants(query.data).map((grant) => ({
-              key: grantKey(grant),
-              person: <InstrumentMemberIdentity grant={grant} />,
-              role: (
-                <AccessRoleBadge
-                  label={grant.permission === "owner" ? "Manager" : undefined}
-                  role={grant.permission}
-                />
-              ),
-            }))
-          : query.data
-      }
+      entries={query.data ? instrumentPeopleEntries(query.data) : query.data}
       error={
         query.isError ? (
           <PanelState
@@ -68,44 +51,23 @@ export function InstrumentPeopleCard({
   )
 }
 
-export function InstrumentMemberIdentity({
-  grant,
-}: {
-  grant: WorkspaceResourceAccessGrant
-}) {
-  if (grant.principal_type === "project") {
-    return (
-      <div className="flex min-w-0 flex-1 items-center gap-3">
-        <span className="entity-icon-well entity-icon-well-lg rounded-full">
-          <ResourceTypeIcon type="project" />
-        </span>
-        <div className="min-w-0">
-          <ResourceIdentityLink
-            className="block truncate text-label"
-            context={grant.slug}
-            kind="project"
-            mfid={grant.principal_id}
-            name={grantName(grant)}
-          >
-            {grantName(grant)}
-          </ResourceIdentityLink>
-          <p className="truncate text-supporting text-muted-foreground">
-            {grant.slug ?? grant.principal_id}
-          </p>
-        </div>
-      </div>
-    )
-  }
+export function instrumentPeopleEntries(
+  members: readonly WorkspaceInstrumentMember[]
+): PeopleCardEntry[] {
+  return sortProjectMembers(members).map((member) => ({
+    key: member.unique_id,
+    person: (
+      <PersonLink className="flex-1" person={member} presentation="avatar" />
+    ),
+    role: <InstrumentRoleBadge role={member.role} />,
+  }))
+}
+
+export function InstrumentRoleBadge({ role }: { role: string }) {
   return (
-    <PersonLink
-      className="flex-1"
-      person={{
-        is_service_account: grant.principal_type === "service_account",
-        name: grantName(grant),
-        unique_id: grant.principal_id,
-        username: grant.slug,
-      }}
-      presentation="avatar"
+    <AccessRoleBadge
+      label={role === "owner" ? "Manager" : undefined}
+      role={role}
     />
   )
 }

@@ -24,17 +24,15 @@ export function joinRequestError(error: unknown, fallback: string) {
 
 export function isProjectMember(
   project: {
-    lead?: { unique_id: string } | null
     members?: readonly { unique_id: string }[] | null
-    project_lead_orcid?: string | null
+    owner?: { unique_id: string } | null
     role?: string | null
   },
   accountId: string
 ) {
   return (
     Boolean(project.role) ||
-    project.lead?.unique_id === accountId ||
-    project.project_lead_orcid === accountId ||
+    project.owner?.unique_id === accountId ||
     project.members?.some((member) => member.unique_id === accountId) === true
   )
 }

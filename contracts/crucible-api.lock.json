@@ -1,10 +1,10 @@
 {
   "sourceRepository": "crucible-api",
   "sourceRelease": null,
-  "sourceAsset": "export of main d407ca1 (4.0.0a1, includes API PRs #498 to #501 and #507), scripts/export_openapi.py",
-  "sourceRevision": "d407ca1",
+  "sourceAsset": "export of main b30c7c7 (4.0.0a1, includes API PRs #511 and #512), scripts/export_openapi.py",
+  "sourceRevision": "b30c7c7",
   "minimumRelease": null,
-  "sha256": "8cc20b4d78cc5fa3a9a1df23d731ac7c1b4f9029525241c6631031a326367e42",
+  "sha256": "1558fdcf0f3f229b51c18fa489dc746e65b8571d49ad523ccbb2ba90dad814e1",
   "openapi": "3.1.0",
-  "generatedAt": "2026-11-11T19:23:34.000Z"
+  "generatedAt": "2026-11-13T22:38:54.000Z"
 }

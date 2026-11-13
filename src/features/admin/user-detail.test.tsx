@@ -110,7 +110,7 @@ vi.mock("@/data/crucible/api-keys.functions", () => ({
 const mockProjects: WorkspaceUserProject[] = [
   {
     creation_time: "2026-01-01T00:00:00Z",
-    lead: {
+    owner: {
       first_name: "Alice",
       is_service_account: false,
       last_name: "Smith",
@@ -129,7 +129,7 @@ const mockProjects: WorkspaceUserProject[] = [
   },
   {
     creation_time: "2026-02-01T00:00:00Z",
-    lead: {
+    owner: {
       first_name: "Bob",
       is_service_account: false,
       last_name: "Jones",
@@ -148,7 +148,7 @@ const mockProjects: WorkspaceUserProject[] = [
   },
   {
     creation_time: "2026-03-01T00:00:00Z",
-    lead: {
+    owner: {
       first_name: "Charlie",
       is_service_account: false,
       last_name: "Brown",

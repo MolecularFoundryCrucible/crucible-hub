@@ -126,7 +126,7 @@ const spectroscopyDatasetSummary = {
   measurement: "X-ray absorption spectroscopy",
   data_type: "spectrum series",
   session_name: "operando-cycle-04",
-} satisfies Schema<"DatasetRead">
+} satisfies Omit<Schema<"DatasetResponse">, "resource_type">
 
 const diffractionDatasetSummary = {
   unique_id: "01J6Y8N4Q2R7M9K3T5V0W1X2Z8",
@@ -141,7 +141,7 @@ const diffractionDatasetSummary = {
   measurement: "X-ray diffraction",
   data_type: "diffraction series",
   session_name: "operando-cycle-04",
-} satisfies Schema<"DatasetRead">
+} satisfies Omit<Schema<"DatasetResponse">, "resource_type">
 
 export const publicOnlySamples = [
   {
@@ -214,10 +214,12 @@ export const demoWorkspace = {
       ...projectReference,
       proposal_sync: false,
       organization: "Example National Laboratory",
+      resource_type: "project",
       project_lead_orcid: account.unique_id,
       status: "active",
       capabilities,
       lead: account,
+      owner: account,
       role: "owner",
       scientific_metadata: {
         research_area: "electrocatalysis",
@@ -249,10 +251,12 @@ export const demoWorkspace = {
       title: "Porous Framework Screening",
       proposal_sync: false,
       organization: "Example National Laboratory",
+      resource_type: "project",
       project_lead_orcid: collaborator.unique_id,
       status: "active",
       capabilities: null,
       lead: collaborator,
+      owner: collaborator,
       role: "contributor",
       scientific_metadata: null,
       creation_time: "2026-07-02T09:45:00Z",
@@ -302,7 +306,10 @@ export const demoWorkspace = {
         electrolyte: "1 M KOH",
         nominal_iron_fraction: 0.2,
       },
-      datasets: [spectroscopyDatasetSummary, diffractionDatasetSummary],
+      datasets: [
+        { ...spectroscopyDatasetSummary, resource_type: "dataset" },
+        { ...diffractionDatasetSummary, resource_type: "dataset" },
+      ],
       deletion_request: null,
       links: [
         {

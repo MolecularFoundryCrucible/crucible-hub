@@ -40,8 +40,7 @@ export function toWorkspaceProject(
     project_id: project.project_id,
     title: project.title,
     organization: project.organization,
-    lead: "lead" in project ? (project.lead ?? null) : null,
-    project_lead_orcid: project.project_lead_orcid,
+    owner: "owner" in project ? (project.owner ?? null) : null,
     role: "role" in project ? (project.role ?? null) : null,
     scientific_metadata:
       "scientific_metadata" in project
@@ -124,8 +123,7 @@ export async function readWorkspaceProjects(
               : undefined
           const effectiveRole =
             member?.role ??
-            (project.lead?.unique_id === ref ||
-            project.project_lead_orcid === ref
+            (project.owner?.unique_id === ref
               ? "owner"
               : isAccount
                 ? (project.role ?? null)
@@ -144,8 +142,7 @@ export async function readWorkspaceProjects(
               : undefined
           const role =
             member?.role ??
-            (project.lead?.unique_id === memberRef ||
-            project.project_lead_orcid === memberRef
+            (project.owner?.unique_id === memberRef
               ? "owner"
               : (project.role ?? null))
           return {
@@ -157,8 +154,7 @@ export async function readWorkspaceProjects(
     } else if (affiliation) {
       projects = projects.filter(
         (project) =>
-          "lead" in project &&
-          project.lead?.unique_id === source.workspace.account.unique_id
+          project.owner?.unique_id === source.workspace.account.unique_id
       )
     }
     if (activeSinceTimestamp) {
@@ -382,7 +378,12 @@ export async function patchWorkspaceProject(
     ) {
       throw new CrucibleResponseError(409)
     }
-    return toWorkspaceProject({ proposal_sync: false, ...project, ...changes })
+    return toWorkspaceProject({
+      proposal_sync: false,
+      resource_type: "project",
+      ...project,
+      ...changes,
+    })
   }
 
   const client = createCrucibleClient(configuration)

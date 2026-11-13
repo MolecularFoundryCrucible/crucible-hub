@@ -92,17 +92,15 @@ export type WorkspaceProject = Pick<
   Schema<"ProjectWithLead">,
   | "creation_time"
   | "last_activity_at"
-  | "lead"
   | "modification_time"
   | "organization"
   | "project_id"
-  | "project_lead_orcid"
   | "scientific_metadata"
   | "title"
   | "unique_id"
 > & {
   capabilities: WorkspaceResourceCapabilities | null
-  lead: WorkspacePerson | null
+  owner: WorkspacePerson | null
   members?: Schema<"AccessGroupMemberRead">[] | null
   role?: string | null
   scientific_metadata: WorkspaceScientificMetadata | null
@@ -114,7 +112,11 @@ export type WorkspaceSortDirection = Schema<"SortDirection">
 
 export type WorkspaceUserProject = Omit<
   Schema<"ProjectWithLead">,
-  "deletion_request" | "scientific_metadata"
+  | "deletion_request"
+  | "lead"
+  | "project_lead_orcid"
+  | "resource_type"
+  | "scientific_metadata"
 > & {
   role?: string | null
   scientific_metadata: WorkspaceScientificMetadata | null
@@ -223,6 +225,9 @@ export type WorkspaceInstrumentStatus = Schema<"InstrumentStatus">
 export type WorkspaceInstrumentSort = Schema<"InstrumentSort">
 
 export type WorkspaceInstrumentOperator = Schema<"AccessGroupMemberRead">
+export type WorkspaceInstrumentMember = Schema<"AccessGroupMemberRead">
+export type WorkspaceInstrumentMembershipRole =
+  Schema<"InstrumentMembershipRole">
 
 export type WorkspaceInstrumentCreate = Pick<
   Schema<"InstrumentCreate">,

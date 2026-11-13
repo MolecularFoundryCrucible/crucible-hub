@@ -166,20 +166,8 @@ function fixtureItems(
 
 function fixtureOwnedMfids(workspace: Workspace) {
   const accountMfid = workspace.account.unique_id
-  const ownerOf = (item: object) => {
-    const record = item as {
-      lead?: { unique_id?: string } | null
-      owner?: { unique_id?: string } | null
-      owner_orcid?: string | null
-      project_lead_orcid?: string | null
-    }
-    return (
-      record.owner?.unique_id ??
-      record.owner_orcid ??
-      record.lead?.unique_id ??
-      record.project_lead_orcid
-    )
-  }
+  const ownerOf = (item: { owner?: { unique_id?: string } | null }) =>
+    item.owner?.unique_id
   return new Set(
     [
       ...workspace.projects,

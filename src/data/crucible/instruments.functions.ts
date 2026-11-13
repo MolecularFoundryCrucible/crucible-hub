@@ -10,6 +10,7 @@ import {
 } from "./collection-query"
 
 import {
+  addWorkspaceInstrumentMember as addWorkspaceInstrumentMemberServer,
   addWorkspaceInstrumentOperator as addWorkspaceInstrumentOperatorServer,
   checkWorkspaceInstrumentIdExactMatch,
   createWorkspaceInstrumentResource,
@@ -17,8 +18,10 @@ import {
   readWorkspaceInstrumentMembers,
   readWorkspaceInstrumentOperators,
   readWorkspaceInstruments,
+  removeWorkspaceInstrumentMember as removeWorkspaceInstrumentMemberServer,
   removeWorkspaceInstrumentOperator as removeWorkspaceInstrumentOperatorServer,
   setWorkspaceInstrumentStatus,
+  updateWorkspaceInstrumentMemberRole as updateWorkspaceInstrumentMemberRoleServer,
 } from "./instruments.server"
 import { instrumentStatuses } from "./instrument-status"
 import { queryCancellationMiddleware } from "./query-cancellation"
@@ -157,6 +160,23 @@ const instrumentOperatorsInputSchema = z
   })
   .strict()
 
+const instrumentMemberInputFields = {
+  instrumentMfid: canonicalInstrumentMfidSchema,
+  scenario: fixtureScenarioSchema.optional(),
+  userId: canonicalInstrumentMfidSchema,
+}
+
+const instrumentMemberRoleInputSchema = z
+  .object({
+    ...instrumentMemberInputFields,
+    role: z.enum(["viewer", "editor", "admin"]),
+  })
+  .strict()
+
+const removeInstrumentMemberInputSchema = z
+  .object(instrumentMemberInputFields)
+  .strict()
+
 export const instrumentCreateInputSchema = z
   .object({
     instrument: z
@@ -204,6 +224,57 @@ export const getWorkspaceInstrumentMembers = createServerFn({ method: "GET" })
     return safeCrucibleCall(context.correlationId, () =>
       readWorkspaceInstrumentMembers(
         data.instrumentMfid,
+        data.scenario,
+        context.requestSignal
+      )
+    )
+  })
+
+export const addWorkspaceInstrumentMember = createServerFn({ method: "POST" })
+  .middleware([queryCancellationMiddleware])
+  .validator(instrumentMemberRoleInputSchema)
+  .handler(async ({ context, data }) => {
+    setResponseHeader("Cache-Control", "no-store")
+    return safeCrucibleCall(context.correlationId, () =>
+      addWorkspaceInstrumentMemberServer(
+        data.instrumentMfid,
+        data.userId,
+        data.role,
+        data.scenario,
+        context.requestSignal
+      )
+    )
+  })
+
+export const updateWorkspaceInstrumentMemberRole = createServerFn({
+  method: "POST",
+})
+  .middleware([queryCancellationMiddleware])
+  .validator(instrumentMemberRoleInputSchema)
+  .handler(async ({ context, data }) => {
+    setResponseHeader("Cache-Control", "no-store")
+    return safeCrucibleCall(context.correlationId, () =>
+      updateWorkspaceInstrumentMemberRoleServer(
+        data.instrumentMfid,
+        data.userId,
+        data.role,
+        data.scenario,
+        context.requestSignal
+      )
+    )
+  })
+
+export const removeWorkspaceInstrumentMember = createServerFn({
+  method: "POST",
+})
+  .middleware([queryCancellationMiddleware])
+  .validator(removeInstrumentMemberInputSchema)
+  .handler(async ({ context, data }) => {
+    setResponseHeader("Cache-Control", "no-store")
+    return safeCrucibleCall(context.correlationId, () =>
+      removeWorkspaceInstrumentMemberServer(
+        data.instrumentMfid,
+        data.userId,
         data.scenario,
         context.requestSignal
       )

@@ -69,7 +69,7 @@ describe("workspace project source", () => {
       can_manage_access: true,
     })
     expect(project).toMatchObject({
-      lead: {
+      owner: {
         first_name: "Avery",
         last_name: "Chen",
         unique_id: "0000-0000-0000-000X",
@@ -82,7 +82,7 @@ describe("workspace project source", () => {
     await expect(readWorkspaceProject("missing-project")).resolves.toBeNull()
   })
 
-  it("preserves the public-safe project lead without unsupported query parameters", async () => {
+  it("preserves the public-safe project owner without unsupported query parameters", async () => {
     vi.stubEnv("NODE_ENV", "development")
     vi.stubEnv("HUB_DATA_SOURCE", "api")
     vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
@@ -97,15 +97,14 @@ describe("workspace project source", () => {
         })
       )
       return crucibleApiResponse({
-        lead: {
+        organization: "Example Lab",
+        owner: {
           first_name: "Ada",
           last_name: "Lovelace",
           unique_id: "lead-mfid",
           username: "ada",
         },
-        organization: "Example Lab",
         project_id: "project",
-        project_lead_orcid: "lead-mfid",
         scientific_metadata: {
           context: { technique: "XAS", values: [1, true, null] },
         },
@@ -116,8 +115,7 @@ describe("workspace project source", () => {
     vi.stubGlobal("fetch", fetchMock)
 
     await expect(readWorkspaceProject("project-mfid")).resolves.toMatchObject({
-      lead: { first_name: "Ada", unique_id: "lead-mfid" },
-      project_lead_orcid: "lead-mfid",
+      owner: { first_name: "Ada", unique_id: "lead-mfid" },
       scientific_metadata: {
         context: { technique: "XAS", values: [1, true, null] },
       },
@@ -140,7 +138,7 @@ describe("workspace project source", () => {
         {
           items: [
             {
-              lead: {
+              owner: {
                 first_name: "Ada",
                 last_name: "Lovelace",
                 unique_id: "lead-mfid",

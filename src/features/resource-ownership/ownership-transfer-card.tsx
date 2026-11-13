@@ -112,8 +112,7 @@ export function OwnershipTransferCard({
                   capabilities: current.capabilities
                     ? { ...current.capabilities, can_transfer: false }
                     : null,
-                  lead: result.new_owner,
-                  project_lead_orcid: result.new_owner.unique_id,
+                  owner: result.new_owner,
                 }
               : current
         )

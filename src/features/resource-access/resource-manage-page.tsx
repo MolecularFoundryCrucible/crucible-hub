@@ -654,7 +654,8 @@ export function ResourceAccessCard({
 function principalLabel(grant: WorkspaceResourceAccessGrant) {
   const labels: Record<WorkspaceResourceAccessGrant["principal_type"], string> =
     {
-      instrument: "Instrument",
+      instrument: "Instrument operators",
+      instrument_members: "Instrument members",
       project: "Project",
       public: "Public",
       service_account: "Service account",
@@ -684,13 +685,14 @@ function PrincipalName({ grant }: { grant: WorkspaceResourceAccessGrant }) {
   }
   if (
     grant.principal_type === "project" ||
-    grant.principal_type === "instrument"
+    grant.principal_type === "instrument" ||
+    grant.principal_type === "instrument_members"
   ) {
     return (
       <ResourceIdentityLink
         className="inline"
         context={grant.slug}
-        kind={grant.principal_type}
+        kind={grant.principal_type === "project" ? "project" : "instrument"}
         mfid={grant.principal_id}
         name={name}
       >

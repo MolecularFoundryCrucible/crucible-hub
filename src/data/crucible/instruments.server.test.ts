@@ -183,7 +183,7 @@ describe("workspace instrument source", () => {
       limit: "20",
       location: "Beamline 5.3.2",
       manufacturer: "Example Instruments",
-      owner_id: "0000-0000-0000-000X",
+      owner_ref: "0000-0000-0000-000X",
       status: "decommissioned",
     })
   })

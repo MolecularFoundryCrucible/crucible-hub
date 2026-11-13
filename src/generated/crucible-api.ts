@@ -1994,6 +1994,59 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/instruments/{instrument_ref}/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Instrument Users
+         * @description List the instrument's members, highest role first. Members read every dataset assigned to the instrument.
+         *     Readable by members and platform administrators.
+         */
+        get: operations["list_instrument_users_instruments__instrument_ref__users_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/instruments/{instrument_ref}/users/{user_ref}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add Instrument User
+         * @description Add a person to the instrument at `role` (viewer, editor or admin). Every member reads the instrument's datasets.
+         *     Requires admin on the instrument, granting at most your own role. The owner changes only through
+         *     POST /resources/{mfid}/transfer_ownership. Service accounts are bound instead of added.
+         */
+        post: operations["add_instrument_user_instruments__instrument_ref__users__user_ref__post"];
+        /**
+         * Remove Instrument User
+         * @description Remove a member. Members may leave on their own; otherwise this requires admin on the instrument and a member
+         *     whose role is at most your own. The owner cannot be removed; transfer ownership first.
+         */
+        delete: operations["remove_instrument_user_instruments__instrument_ref__users__user_ref__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Set Instrument User Role
+         * @description Change a member's role. Requires admin on the instrument; both the new and the current role must be at most
+         *     your own. The owner's role changes only through POST /resources/{mfid}/transfer_ownership.
+         */
+        patch: operations["set_instrument_user_role_instruments__instrument_ref__users__user_ref__patch"];
+        trace?: never;
+    };
     "/join_requests": {
         parameters: {
             query?: never;
@@ -2359,7 +2412,7 @@ export interface paths {
         };
         /**
          * Password Form
-         * @description The password form for a sign-in started at /oauth/authorize with provider=password.
+         * @description The password form for a sign-in started at /oauth/authorize, with the listed providers offered below it.
          */
         get: operations["password_form_oauth_password_get"];
         put?: never;
@@ -2652,11 +2705,8 @@ export interface paths {
          * @description Search projects by title or project_id across all projects, not just ones the
          *     caller is a member of. This is how a user discovers a project to request to
          *     join via POST /projects/{project_ref}/join_requests. Returns results ordered by
-         *     match quality. Maximum 50 results.
-         *
-         *     Note: ProjectRead has no lead/scientific_metadata fields, so this is safe to
-         *     open regardless of membership. See GET /projects/{proj_id} for the fields
-         *     that stay member-only.
+         *     match quality. Maximum 50 results. Items have the GET /projects shape without
+         *     scientific metadata and members, which stay member-only.
          */
         get: operations["search_projects_projects_search_get"];
         put?: never;
@@ -2909,8 +2959,9 @@ export interface paths {
          *     `kind` is `users` or `projects`. Requires admin on the resource, and you
          *     may not grant above your own role nor overwrite a grant above it. Owner
          *     grants and changes to an existing owner require transfer_ownership.
-         *     Projects are shared through /projects/{project_ref}/users, and a record's
-         *     own project grant changes only with POST /resources/{mfid}/project (409).
+         *     Projects and instruments are shared through /projects/{project_ref}/users and
+         *     /instruments/{instrument_ref}/users, and a record's own project grant changes
+         *     only with POST /resources/{mfid}/project (409).
          */
         put: operations["set_resource_access_resources__mfid__access__kind___principal__put"];
         post?: never;
@@ -4073,7 +4124,7 @@ export interface components {
          * AccessPrincipalType
          * @enum {string}
          */
-        AccessPrincipalType: "user" | "service_account" | "project" | "instrument" | "public" | "system" | "unknown";
+        AccessPrincipalType: "user" | "service_account" | "project" | "instrument" | "instrument_members" | "public" | "system" | "unknown";
         /** AccountAuthorizationRead */
         AccountAuthorizationRead: {
             /** Can Elevate */
@@ -4172,6 +4223,38 @@ export interface components {
             last_name?: string;
             /** Username */
             username?: string | null;
+        };
+        /**
+         * ActiveDeletionRequestRead
+         * @description The deletion request pending or approved on a record, as embedded in the record's response.
+         */
+        ActiveDeletionRequestRead: {
+            /** Id */
+            id: number;
+            /** Reason */
+            reason?: string | null;
+            /** Request Time */
+            request_time?: string | null;
+            /** Requester Id */
+            requester_id: string;
+            /**
+             * Resource Id
+             * @deprecated
+             * @description Deprecated: use resource_mfid.
+             */
+            resource_id: string;
+            /** Resource Mfid */
+            resource_mfid: string;
+            /** Resource Name */
+            resource_name?: string | null;
+            /** Review Time */
+            review_time?: string | null;
+            /** Reviewer Id */
+            reviewer_id?: string | null;
+            /** Reviewer Notes */
+            reviewer_notes?: string | null;
+            /** Status */
+            status: string;
         };
         /**
          * Affiliation
@@ -4496,6 +4579,8 @@ export interface components {
         };
         /** Body_password_sign_in_oauth_password_post */
         Body_password_sign_in_oauth_password_post: {
+            /** Max Age */
+            max_age?: number | null;
             /** Password */
             password: string;
             /** State */
@@ -4590,6 +4675,11 @@ export interface components {
              */
             status: "ok" | "error";
         };
+        /**
+         * DatasetAffiliation
+         * @enum {string}
+         */
+        DatasetAffiliation: "owner" | "member" | "instrument";
         /** DatasetCreate */
         DatasetCreate: {
             /** Data Format */
@@ -4608,25 +4698,25 @@ export interface components {
              * @description Canonical registered instrument MFID. May be combined with a matching instrument_id.
              */
             instrument_mfid?: string | null;
-            /**
-             * Instrument Name
-             * @deprecated
-             * @description Deprecated. Display-name lookup used only when instrument_id and instrument_mfid are omitted; returns 409 when the name matches more than one instrument. Use instrument_id or instrument_mfid.
-             */
-            instrument_name?: string | null;
             /** Measurement */
             measurement?: string | null;
             /**
              * Owner
-             * @description Owner reference: ORCID, service-account MFID, username, or email. Defaults to the authenticated identity.
+             * @deprecated
+             * @description Deprecated: use owner_ref.
              */
             owner?: string | null;
             /**
              * Owner Orcid
              * @deprecated
-             * @description Deprecated canonical owner identity (human ORCID or service-account MFID). Use owner.
+             * @description Deprecated canonical owner identity (human ORCID or service-account MFID). Use owner_ref.
              */
             owner_orcid?: string | null;
+            /**
+             * Owner Ref
+             * @description Owner: unique_id, linked ORCID, username or email. Defaults to the authenticated identity.
+             */
+            owner_ref?: string | null;
             /**
              * Project Id
              * @description Project slug. May be combined with a matching project_mfid.
@@ -4723,40 +4813,6 @@ export interface components {
             relationship_type?: string | null;
         };
         /**
-         * DatasetRead
-         * @description Response model for Dataset. Includes all server-generated fields.
-         */
-        DatasetRead: {
-            /** Data Format */
-            data_format?: string | null;
-            /** Data Type */
-            data_type?: string | null;
-            /** Dataset Name */
-            dataset_name?: string | null;
-            instrument?: components["schemas"]["InstrumentReferenceRead"] | null;
-            /** Instrument Id */
-            instrument_id?: string | null;
-            /** Instrument Name */
-            instrument_name?: string | null;
-            /** Measurement */
-            measurement?: string | null;
-            /** Owner Orcid */
-            owner_orcid?: string | null;
-            project?: components["schemas"]["ProjectReferenceRead"] | null;
-            /** Project Id */
-            project_id?: string | null;
-            /** Public */
-            public: boolean;
-            /** Session Name */
-            session_name?: string | null;
-            /** Size */
-            size?: number | null;
-            /** Timestamp */
-            timestamp?: string | null;
-            /** Unique Id */
-            unique_id: string;
-        };
-        /**
          * DatasetResponse
          * @description DatasetRead extended with Resource timestamps, optional scientific metadata, and deletion status.
          */
@@ -4770,14 +4826,19 @@ export interface components {
             data_type?: string | null;
             /** Dataset Name */
             dataset_name?: string | null;
-            /** Deletion Request */
-            deletion_request?: {
-                [key: string]: unknown;
-            } | null;
+            deletion_request?: components["schemas"]["ActiveDeletionRequestRead"] | null;
             instrument?: components["schemas"]["InstrumentReferenceRead"] | null;
-            /** Instrument Id */
+            /**
+             * Instrument Id
+             * @deprecated
+             * @description Deprecated: use instrument.instrument_id.
+             */
             instrument_id?: string | null;
-            /** Instrument Name */
+            /**
+             * Instrument Name
+             * @deprecated
+             * @description Deprecated: use instrument.instrument_name.
+             */
             instrument_name?: string | null;
             /** Links */
             links?: components["schemas"]["LinkedResource"][] | null;
@@ -4786,10 +4847,18 @@ export interface components {
             /** Modification Time */
             modification_time?: string | null;
             owner?: components["schemas"]["UserPublicRead"] | null;
-            /** Owner Orcid */
+            /**
+             * Owner Orcid
+             * @deprecated
+             * @description Deprecated: use owner.unique_id.
+             */
             owner_orcid?: string | null;
             project?: components["schemas"]["ProjectReferenceRead"] | null;
-            /** Project Id */
+            /**
+             * Project Id
+             * @deprecated
+             * @description Deprecated: use project.project_id.
+             */
             project_id?: string | null;
             /** Project Relation */
             project_relation?: ("assigned" | "shared") | null;
@@ -4800,6 +4869,8 @@ export interface components {
              * @default dataset
              */
             resource_type: string | null;
+            /** @description The caller's effective role on the record, ignoring access that every user has because the record is public. Null when the caller holds none. */
+            role?: components["schemas"]["AccessPermission"] | null;
             /** Scientific Metadata */
             scientific_metadata?: {
                 [key: string]: unknown;
@@ -4858,12 +4929,6 @@ export interface components {
              * @description Deprecated for dataset updates. Only the current value is accepted. Use PUT /datasets/{dataset_mfid}/instrument.
              */
             instrument_id?: string | null;
-            /**
-             * Instrument Name
-             * @deprecated
-             * @description Deprecated for dataset updates. Only the current value is accepted. Use PUT /datasets/{dataset_mfid}/instrument.
-             */
-            instrument_name?: string | null;
             /** Measurement */
             measurement?: string | null;
             /** Session Name */
@@ -5352,7 +5417,7 @@ export interface components {
          * InstrumentAffiliation
          * @enum {string}
          */
-        InstrumentAffiliation: "owner" | "maintainer";
+        InstrumentAffiliation: "owner" | "maintainer" | "member";
         /**
          * InstrumentCreate
          * @description Fields required to register a new instrument.
@@ -5378,15 +5443,21 @@ export interface components {
             other_id_source?: string | null;
             /**
              * Owner
-             * @description Owner reference: ORCID, service-account MFID, username, or email. Defaults to the authenticated identity.
+             * @deprecated
+             * @description Deprecated: use owner_ref.
              */
             owner?: string | null;
             /**
              * Owner Orcid
              * @deprecated
-             * @description Deprecated canonical owner identity (human ORCID or service-account MFID). Use owner.
+             * @description Deprecated canonical owner identity (human ORCID or service-account MFID). Use owner_ref.
              */
             owner_orcid?: string | null;
+            /**
+             * Owner Ref
+             * @description Owner: unique_id, linked ORCID, username or email. Defaults to the authenticated identity.
+             */
+            owner_ref?: string | null;
         };
         /** InstrumentFacetBucket */
         InstrumentFacetBucket: {
@@ -5401,6 +5472,11 @@ export interface components {
             /** Value */
             value: string | null;
         };
+        /**
+         * InstrumentMembershipRole
+         * @enum {string}
+         */
+        InstrumentMembershipRole: "viewer" | "editor" | "admin";
         /** InstrumentReferenceRead */
         InstrumentReferenceRead: {
             /** Instrument Id */
@@ -5418,10 +5494,7 @@ export interface components {
             capabilities?: components["schemas"]["ResourceCapabilities"] | null;
             /** Creation Time */
             creation_time?: string | null;
-            /** Deletion Request */
-            deletion_request?: {
-                [key: string]: unknown;
-            } | null;
+            deletion_request?: components["schemas"]["ActiveDeletionRequestRead"] | null;
             /** Description */
             description?: string | null;
             /** Instrument Id */
@@ -5438,9 +5511,9 @@ export interface components {
             manufacturer?: string | null;
             /**
              * Members
-             * @description People and projects holding a role on the instrument record. Null unless requested and visible to the caller.
+             * @description The instrument's members, highest role first. Null unless requested and visible to the caller.
              */
-            members?: components["schemas"]["AccessGrantRead"][] | null;
+            members?: components["schemas"]["AccessGroupMemberRead"][] | null;
             /** Model */
             model?: string | null;
             /** Modification Time */
@@ -5452,7 +5525,8 @@ export interface components {
             owner?: components["schemas"]["UserPublicRead"] | null;
             /**
              * Owner Orcid
-             * @description Canonical owner identity: human ORCID or service-account MFID. Null when the instrument has no owner.
+             * @deprecated
+             * @description Deprecated: use owner.unique_id.
              */
             owner_orcid?: string | null;
             /**
@@ -5460,7 +5534,7 @@ export interface components {
              * @default instrument
              */
             resource_type: string | null;
-            /** @description The caller's effective role on the instrument record. Null when the caller holds none; bound service accounts are operators, not record roles. */
+            /** @description The caller's membership role on the instrument. Null when the caller holds none; bound service accounts are operators, not members. */
             role?: components["schemas"]["AccessPermission"] | null;
             /** Scientific Metadata */
             scientific_metadata?: {
@@ -5842,19 +5916,6 @@ export interface components {
             /** Total */
             total?: number | null;
         };
-        /** PaginatedResponse[DatasetRead] */
-        PaginatedResponse_DatasetRead_: {
-            /** Items */
-            items: components["schemas"]["DatasetRead"][];
-            /** Limit */
-            limit: number;
-            /** Next Cursor */
-            next_cursor?: string | null;
-            /** Offset */
-            offset?: number | null;
-            /** Total */
-            total?: number | null;
-        };
         /** PaginatedResponse[DatasetResponse] */
         PaginatedResponse_DatasetResponse_: {
             /** Items */
@@ -5946,19 +6007,6 @@ export interface components {
             /** Total */
             total?: number | null;
         };
-        /** PaginatedResponse[ProjectRead] */
-        PaginatedResponse_ProjectRead_: {
-            /** Items */
-            items: components["schemas"]["ProjectRead"][];
-            /** Limit */
-            limit: number;
-            /** Next Cursor */
-            next_cursor?: string | null;
-            /** Offset */
-            offset?: number | null;
-            /** Total */
-            total?: number | null;
-        };
         /** PaginatedResponse[ProjectWithLead] */
         PaginatedResponse_ProjectWithLead_: {
             /** Items */
@@ -5989,19 +6037,6 @@ export interface components {
         PaginatedResponse_ResourceSearchResult_: {
             /** Items */
             items: components["schemas"]["ResourceSearchResult"][];
-            /** Limit */
-            limit: number;
-            /** Next Cursor */
-            next_cursor?: string | null;
-            /** Offset */
-            offset?: number | null;
-            /** Total */
-            total?: number | null;
-        };
-        /** PaginatedResponse[SampleRead] */
-        PaginatedResponse_SampleRead_: {
-            /** Items */
-            items: components["schemas"]["SampleRead"][];
             /** Limit */
             limit: number;
             /** Next Cursor */
@@ -6216,15 +6251,36 @@ export interface components {
         ProjectCreate: {
             /** Organization */
             organization: string;
+            /**
+             * Owner Ref
+             * @description Owner: unique_id, linked ORCID, username or email. Only an administrator may name someone other than the caller.
+             */
+            owner_ref?: string | null;
             /** Project Id */
             project_id: string;
-            /** Project Lead */
+            /**
+             * Project Lead
+             * @deprecated
+             * @description Deprecated: use owner_ref.
+             */
             project_lead?: string | null;
-            /** Project Lead Email */
+            /**
+             * Project Lead Email
+             * @deprecated
+             * @description Deprecated: use owner_ref.
+             */
             project_lead_email?: string | null;
-            /** Project Lead Orcid */
+            /**
+             * Project Lead Orcid
+             * @deprecated
+             * @description Deprecated: use owner_ref.
+             */
             project_lead_orcid?: string | null;
-            /** Project Lead Username */
+            /**
+             * Project Lead Username
+             * @deprecated
+             * @description Deprecated: use owner_ref.
+             */
             project_lead_username?: string | null;
             /** Status */
             status?: string | null;
@@ -6259,13 +6315,22 @@ export interface components {
             organization: string;
             /** Project Id */
             project_id: string;
-            /** Project Lead Orcid */
+            /**
+             * Project Lead Orcid
+             * @deprecated
+             * @description Deprecated: use owner.unique_id.
+             */
             project_lead_orcid?: string | null;
             /**
              * Proposal Sync
              * @default false
              */
             proposal_sync: boolean;
+            /**
+             * Resource Type
+             * @default project
+             */
+            resource_type: string | null;
             /** Status */
             status?: string | null;
             /** Title */
@@ -6335,19 +6400,20 @@ export interface components {
         };
         /**
          * ProjectWithLead
-         * @description ProjectRead extended with a public-safe lead profile. Project metadata and
+         * @description ProjectRead extended with the owner's public profile. Project metadata and
          *     members remain restricted to project members and platform administrators.
          */
         ProjectWithLead: {
             capabilities?: components["schemas"]["ResourceCapabilities"] | null;
             /** Creation Time */
             creation_time?: string | null;
-            /** Deletion Request */
-            deletion_request?: {
-                [key: string]: unknown;
-            } | null;
+            deletion_request?: components["schemas"]["ActiveDeletionRequestRead"] | null;
             /** Last Activity At */
             last_activity_at?: string | null;
+            /**
+             * @deprecated
+             * @description Deprecated: use owner.
+             */
             lead?: components["schemas"]["UserPublicRead"] | null;
             /** Members */
             members?: components["schemas"]["AccessGroupMemberRead"][] | null;
@@ -6355,15 +6421,25 @@ export interface components {
             modification_time?: string | null;
             /** Organization */
             organization: string;
+            owner?: components["schemas"]["UserPublicRead"] | null;
             /** Project Id */
             project_id: string;
-            /** Project Lead Orcid */
+            /**
+             * Project Lead Orcid
+             * @deprecated
+             * @description Deprecated: use owner.unique_id.
+             */
             project_lead_orcid?: string | null;
             /**
              * Proposal Sync
              * @default false
              */
             proposal_sync: boolean;
+            /**
+             * Resource Type
+             * @default project
+             */
+            resource_type: string | null;
             /**
              * Role
              * @description Project membership role. On GET /projects and project singletons it is the caller's role; on GET /users/{user_id}/projects it is that user's role. Null when not a member.
@@ -6481,12 +6557,20 @@ export interface components {
          * @enum {string}
          */
         ResourceAffiliation: "owner" | "member";
-        /** ResourceCapabilities */
+        /**
+         * ResourceCapabilities
+         * @description What the caller may do to this record, decided by the same rules as the routes. Returned on detail
+         *     routes and GET /resources/{mfid}; null in list items. A field that does not apply to the record type is false.
+         */
         ResourceCapabilities: {
-            /** Can Change Status */
+            /**
+             * Can Change Status
+             * @description Projects: PATCH status (editor). Instruments: POST /instruments/{instrument_ref}/status (admin). Always false for datasets and samples.
+             */
             can_change_status: boolean;
             /**
              * Can Delete
+             * @description DELETE /resources/{mfid}?force=true would be accepted: owner, and for a project or instrument no datasets or samples still assigned.
              * @default false
              */
             can_delete: boolean;
@@ -6496,9 +6580,15 @@ export interface components {
              * @default false
              */
             can_delete_files: boolean;
-            /** Can Edit */
+            /**
+             * Can Edit
+             * @description PATCH on the record would be accepted: editor or above.
+             */
             can_edit: boolean;
-            /** Can Manage Access */
+            /**
+             * Can Manage Access
+             * @description The caller may change who has access: grants on a dataset or sample (admin), members of a project (editor) or an instrument (admin).
+             */
             can_manage_access: boolean;
             /**
              * Can Request Deletion
@@ -6506,7 +6596,10 @@ export interface components {
              * @default false
              */
             can_request_deletion: boolean;
-            /** Can Transfer */
+            /**
+             * Can Transfer
+             * @description POST /resources/{mfid}/transfer_ownership would be accepted: owner.
+             */
             can_transfer: boolean;
             /**
              * Can View Access
@@ -6514,7 +6607,10 @@ export interface components {
              * @default false
              */
             can_view_access: boolean;
-            /** Max Grant Role */
+            /**
+             * Max Grant Role
+             * @description The highest role the caller may grant here, or null when they may grant none. Instruments never offer contributor.
+             */
             max_grant_role?: ("viewer" | "contributor" | "editor" | "admin") | null;
         };
         /** ResourceEmbeddingRead */
@@ -6589,15 +6685,21 @@ export interface components {
             description?: string | null;
             /**
              * Owner
-             * @description Owner reference: ORCID, service-account MFID, username, or email. Defaults to the authenticated identity.
+             * @deprecated
+             * @description Deprecated: use owner_ref.
              */
             owner?: string | null;
             /**
              * Owner Orcid
              * @deprecated
-             * @description Deprecated canonical owner identity (human ORCID or service-account MFID). Use owner.
+             * @description Deprecated canonical owner identity (human ORCID or service-account MFID). Use owner_ref.
              */
             owner_orcid?: string | null;
+            /**
+             * Owner Ref
+             * @description Owner: unique_id, linked ORCID, username or email. Defaults to the authenticated identity.
+             */
+            owner_ref?: string | null;
             /**
              * Project Id
              * @description Project slug. May be combined with a matching project_mfid.
@@ -6657,32 +6759,6 @@ export interface components {
             relationship_type?: string | null;
         };
         /**
-         * SampleRead
-         * @description Response model for Sample. Includes server-generated fields.
-         */
-        SampleRead: {
-            /** Description */
-            description?: string | null;
-            /** Owner Orcid */
-            owner_orcid?: string | null;
-            project?: components["schemas"]["ProjectReferenceRead"] | null;
-            /** Project Id */
-            project_id?: string | null;
-            /**
-             * Public
-             * @default false
-             */
-            public: boolean;
-            /** Sample Name */
-            sample_name: string;
-            /** Sample Type */
-            sample_type?: string | null;
-            /** Timestamp */
-            timestamp?: string | null;
-            /** Unique Id */
-            unique_id: string;
-        };
-        /**
          * SampleResponse
          * @description SampleRead extended with Resource timestamps, associated datasets, and deletion status.
          */
@@ -6695,11 +6771,8 @@ export interface components {
              * @deprecated
              * @description Deprecated embedded dataset expansion. Use include_links or GET /datasets?sample_mfid={sample_mfid}.
              */
-            datasets?: components["schemas"]["DatasetRead"][] | null;
-            /** Deletion Request */
-            deletion_request?: {
-                [key: string]: unknown;
-            } | null;
+            datasets?: components["schemas"]["DatasetResponse"][] | null;
+            deletion_request?: components["schemas"]["ActiveDeletionRequestRead"] | null;
             /** Description */
             description?: string | null;
             /** Links */
@@ -6707,10 +6780,18 @@ export interface components {
             /** Modification Time */
             modification_time?: string | null;
             owner?: components["schemas"]["UserPublicRead"] | null;
-            /** Owner Orcid */
+            /**
+             * Owner Orcid
+             * @deprecated
+             * @description Deprecated: use owner.unique_id.
+             */
             owner_orcid?: string | null;
             project?: components["schemas"]["ProjectReferenceRead"] | null;
-            /** Project Id */
+            /**
+             * Project Id
+             * @deprecated
+             * @description Deprecated: use project.project_id.
+             */
             project_id?: string | null;
             /** Project Relation */
             project_relation?: ("assigned" | "shared") | null;
@@ -6724,6 +6805,8 @@ export interface components {
              * @default sample
              */
             resource_type: string | null;
+            /** @description The caller's effective role on the record, ignoring access that every user has because the record is public. Null when the caller holds none. */
+            role?: components["schemas"]["AccessPermission"] | null;
             /** Sample Name */
             sample_name: string;
             /** Sample Type */
@@ -7001,15 +7084,20 @@ export interface components {
         };
         /**
          * TransferOwnershipRequest
-         * @description Body for POST /resources/{mfid}/transfer_ownership.
-         *
-         *     new_owner may be an ORCID, username, email, or (for a service account) an
-         *     MFID — resolved by format via resolve_user_by_identifier. One field, not
-         *     three, so there's nothing for a caller to leave conflicting.
+         * @description Body for POST /resources/{mfid}/transfer_ownership: the new owner as one reference in any form.
          */
         TransferOwnershipRequest: {
-            /** New Owner */
-            new_owner: string;
+            /**
+             * New Owner
+             * @deprecated
+             * @description Deprecated: use new_owner_ref.
+             */
+            new_owner?: string | null;
+            /**
+             * New Owner Ref
+             * @description The new owner: unique_id, linked ORCID, username or email.
+             */
+            new_owner_ref?: string | null;
         };
         /** UploadedPart */
         UploadedPart: {
@@ -9072,8 +9160,8 @@ export interface operations {
                 accessible_to_user?: string[] | null;
                 /** @description Project MFIDs or slugs whose direct access must all include each result. Ordinary callers must hold standing in each selected project; platform contributors and administrators may select any project. */
                 accessible_to_project?: string[] | null;
-                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, instrument, or group), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access. */
-                affiliation?: components["schemas"]["ResourceAffiliation"][] | null;
+                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, explicit share or group, and the operator group of an instrument a service account is bound to), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access. instrument matches datasets the caller reads as a member of the instrument they are assigned to; member does not include them. */
+                affiliation?: components["schemas"]["DatasetAffiliation"][] | null;
                 /** @description Repeatable exact MFID filter, at most 100 values, OR semantics. MFIDs the caller cannot read, that do not exist, or that are pending deletion are omitted. */
                 mfid?: string[] | null;
                 /**
@@ -9122,18 +9210,18 @@ export interface operations {
                 keyword?: string | null;
                 public?: boolean | null;
                 dataset_name?: string | null;
-                /** @description Exact owner: unique_id, linked ORCID, username or email. */
+                /** @description Owner, repeatable, at most 10 values, OR semantics. Each value is a unique_id, linked ORCID, username or email, resolved by its form; an unknown person matches nothing. */
+                owner_ref?: string[] | null;
+                /**
+                 * @deprecated
+                 * @description Deprecated: use owner_ref, which is repeatable and accepts the same forms.
+                 */
                 owner_id?: string | null;
                 /**
                  * @deprecated
-                 * @description Deprecated exact owner filter. Use owner_id, or affiliation=owner for the authenticated caller.
+                 * @description Deprecated exact owner filter. Use owner_ref, or affiliation=owner for the authenticated caller.
                  */
                 owner_orcid?: string | null;
-                /**
-                 * @deprecated
-                 * @description Deprecated display-name filter. Matches the registered instrument's current name. Use instrument_mfid.
-                 */
-                instrument_name?: string | null;
                 timestamp?: string | null;
                 size?: number | null;
                 data_format?: string | null;
@@ -9147,6 +9235,11 @@ export interface operations {
                 /** @description Filter by whether data_format is null. */
                 data_format_is_null?: boolean | null;
                 /** @description Filter by whether the record has an owner. */
+                owner_is_null?: boolean | null;
+                /**
+                 * @deprecated
+                 * @description Deprecated: use owner_is_null.
+                 */
                 owner_id_is_null?: boolean | null;
                 /** @description Filter by whether a canonical registered instrument is assigned. */
                 instrument_mfid_is_null?: boolean | null;
@@ -9233,8 +9326,8 @@ export interface operations {
                 accessible_to_user?: string[] | null;
                 /** @description Project MFIDs or slugs whose direct access must all include each result. Ordinary callers must hold standing in each selected project; platform contributors and administrators may select any project. */
                 accessible_to_project?: string[] | null;
-                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, instrument, or group), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access. */
-                affiliation?: components["schemas"]["ResourceAffiliation"][] | null;
+                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, explicit share or group, and the operator group of an instrument a service account is bound to), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access. instrument matches datasets the caller reads as a member of the instrument they are assigned to; member does not include them. */
+                affiliation?: components["schemas"]["DatasetAffiliation"][] | null;
                 /** @description Restrict the resources contributing to bucket counts by public visibility. */
                 visibility?: "all" | "public" | "private";
                 /** @description Project slug. May be combined with a matching project_mfid. */
@@ -9269,7 +9362,12 @@ export interface operations {
                 session_name?: string | null;
                 measurement?: string | null;
                 data_format?: string | null;
-                /** @description Exact owner: unique_id, linked ORCID, username or email. */
+                /** @description Owner, repeatable, at most 10 values, OR semantics. Each value is a unique_id, linked ORCID, username or email, resolved by its form; an unknown person matches nothing. */
+                owner_ref?: string[] | null;
+                /**
+                 * @deprecated
+                 * @description Deprecated: use owner_ref, which is repeatable and accepts the same forms.
+                 */
                 owner_id?: string | null;
                 /** @description Restrict contributing datasets by whether session_name is null. */
                 session_name_is_null?: boolean | null;
@@ -9278,6 +9376,11 @@ export interface operations {
                 /** @description Restrict contributing datasets by whether data_format is null. */
                 data_format_is_null?: boolean | null;
                 /** @description Restrict contributing datasets by whether they have an owner. */
+                owner_is_null?: boolean | null;
+                /**
+                 * @deprecated
+                 * @description Deprecated: use owner_is_null.
+                 */
                 owner_id_is_null?: boolean | null;
                 /** @description Restrict contributing datasets by canonical instrument assignment. */
                 instrument_mfid_is_null?: boolean | null;
@@ -9364,10 +9467,16 @@ export interface operations {
             query: {
                 /** @description Search text. Whitespace is normalized and at most 10 terms are accepted. */
                 q: string;
-                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, instrument, or group), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access. */
-                affiliation?: components["schemas"]["ResourceAffiliation"][] | null;
+                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, explicit share or group, and the operator group of an instrument a service account is bound to), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access. instrument matches datasets the caller reads as a member of the instrument they are assigned to; member does not include them. */
+                affiliation?: components["schemas"]["DatasetAffiliation"][] | null;
                 limit?: number;
-                /** @description Exact owner: unique_id, linked ORCID, username or email. */
+                include_owner?: boolean;
+                /** @description Owner, repeatable, at most 10 values, OR semantics. Each value is a unique_id, linked ORCID, username or email, resolved by its form; an unknown person matches nothing. */
+                owner_ref?: string[] | null;
+                /**
+                 * @deprecated
+                 * @description Deprecated: use owner_ref, which is repeatable and accepts the same forms.
+                 */
                 owner_id?: string | null;
                 /** @description Restrict results related to this project slug. May be combined with a matching project_mfid. */
                 project_id?: string | null;
@@ -9415,6 +9524,7 @@ export interface operations {
                 limit?: number;
                 offset?: number;
                 relationship_type?: ("is_derived_from" | "is_part_of") | null;
+                include_owner?: boolean;
             };
             header?: {
                 /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
@@ -9438,7 +9548,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PaginatedResponse_DatasetRead_"];
+                    "application/json": components["schemas"]["PaginatedResponse_DatasetResponse_"];
                 };
             };
             /** @description Validation Error */
@@ -10700,6 +10810,7 @@ export interface operations {
                 limit?: number;
                 offset?: number;
                 relationship_type?: ("is_derived_from" | "is_part_of") | null;
+                include_owner?: boolean;
             };
             header?: {
                 /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
@@ -10723,7 +10834,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PaginatedResponse_DatasetRead_"];
+                    "application/json": components["schemas"]["PaginatedResponse_DatasetResponse_"];
                 };
             };
             /** @description Validation Error */
@@ -11806,7 +11917,7 @@ export interface operations {
                 instrument_id?: string | null;
                 /** @description Repeatable exact MFID filter, at most 100 values, OR semantics. MFIDs the caller cannot read, that do not exist, or that are pending deletion are omitted. Searches every status unless status is also provided. */
                 mfid?: string[] | null;
-                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. maintainer matches instruments where the caller holds editor or admin on the instrument record. */
+                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches instruments the caller owns, maintainer those where the caller is an editor or admin member, and member those where the caller is a member at any role. */
                 affiliation?: components["schemas"]["InstrumentAffiliation"][] | null;
                 include_metadata?: boolean;
                 include_owner?: boolean;
@@ -11827,11 +11938,16 @@ export interface operations {
                 instrument_name?: string | null;
                 manufacturer?: string | null;
                 model?: string | null;
-                /** @description Exact owner: unique_id, linked ORCID, username or email. */
+                /** @description Owner, repeatable, at most 10 values, OR semantics. Each value is a unique_id, linked ORCID, username or email, resolved by its form; an unknown person matches nothing. */
+                owner_ref?: string[] | null;
+                /**
+                 * @deprecated
+                 * @description Deprecated: use owner_ref, which is repeatable and accepts the same forms.
+                 */
                 owner_id?: string | null;
                 /**
                  * @deprecated
-                 * @description Deprecated exact owner filter. Use owner_id, or affiliation=owner for the authenticated caller.
+                 * @description Deprecated exact owner filter. Use owner_ref, or affiliation=owner for the authenticated caller.
                  */
                 owner?: string | null;
                 location?: string | null;
@@ -11920,10 +12036,15 @@ export interface operations {
             query: {
                 /** @description Search text. Whitespace is normalized and at most 10 terms are accepted. */
                 q: string;
-                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. maintainer matches instruments where the caller holds editor or admin on the instrument record. */
+                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches instruments the caller owns, maintainer those where the caller is an editor or admin member, and member those where the caller is a member at any role. */
                 affiliation?: components["schemas"]["InstrumentAffiliation"][] | null;
                 limit?: number;
-                /** @description Exact owner: unique_id, linked ORCID, username or email. */
+                /** @description Owner, repeatable, at most 10 values, OR semantics. Each value is a unique_id, linked ORCID, username or email, resolved by its form; an unknown person matches nothing. */
+                owner_ref?: string[] | null;
+                /**
+                 * @deprecated
+                 * @description Deprecated: use owner_ref, which is repeatable and accepts the same forms.
+                 */
                 owner_id?: string | null;
                 /** @description Restrict results to one lifecycle status. */
                 status?: components["schemas"]["InstrumentStatus"] | null;
@@ -12198,6 +12319,175 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InstrumentResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_instrument_users_instruments__instrument_ref__users_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Instrument MFID or instrument_id slug (case-insensitive). */
+                instrument_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_AccessGroupMemberRead_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_instrument_user_instruments__instrument_ref__users__user_ref__post: {
+        parameters: {
+            query?: {
+                role?: components["schemas"]["InstrumentMembershipRole"];
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Instrument MFID or instrument_id slug (case-insensitive). */
+                instrument_ref: string;
+                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
+                user_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessGroupMemberRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_instrument_user_instruments__instrument_ref__users__user_ref__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Instrument MFID or instrument_id slug (case-insensitive). */
+                instrument_ref: string;
+                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
+                user_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessGroupMemberRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_instrument_user_role_instruments__instrument_ref__users__user_ref__patch: {
+        parameters: {
+            query: {
+                role: components["schemas"]["InstrumentMembershipRole"];
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Instrument MFID or instrument_id slug (case-insensitive). */
+                instrument_ref: string;
+                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
+                user_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessGroupMemberRead"][];
                 };
             };
             /** @description Validation Error */
@@ -13089,6 +13379,7 @@ export interface operations {
         parameters: {
             query: {
                 state: string;
+                max_age?: number | null;
             };
             header?: never;
             path?: never;
@@ -13811,6 +14102,8 @@ export interface operations {
             query?: {
                 /** @description Exact project slug. */
                 project_id?: string | null;
+                /** @description Owner, repeatable, at most 10 values, OR semantics. Each value is a unique_id, linked ORCID, username or email, resolved by its form; an unknown person matches nothing. */
+                owner_ref?: string[] | null;
                 /** @description Repeatable exact MFID filter, at most 100 values, OR semantics. MFIDs the caller cannot read, that do not exist, or that are pending deletion are omitted. */
                 mfid?: string[] | null;
                 /** @description User references whose effective access must all include each result. Ordinary callers may select only themselves; platform contributors and administrators may select other users. */
@@ -13940,7 +14233,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PaginatedResponse_ProjectRead_"];
+                    "application/json": components["schemas"]["PaginatedResponse_ProjectWithLead_"];
                 };
             };
             /** @description Validation Error */
@@ -14292,7 +14585,7 @@ export interface operations {
                 /** @description Full-text search against scientific metadata content. */
                 q: string;
                 limit?: number;
-                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, instrument, or group), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access. Applies to dataset and sample results; project and instrument results are not narrowed. */
+                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, explicit share or group, and the operator group of an instrument a service account is bound to), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access. Applies to dataset and sample results; project and instrument results are not narrowed. */
                 affiliation?: components["schemas"]["ResourceAffiliation"][] | null;
             };
             header?: {
@@ -15055,7 +15348,7 @@ export interface operations {
                 accessible_to_user?: string[] | null;
                 /** @description Project MFIDs or slugs whose direct access must all include each result. Ordinary callers must hold standing in each selected project; platform contributors and administrators may select any project. */
                 accessible_to_project?: string[] | null;
-                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, instrument, or group), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access. */
+                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, explicit share or group, and the operator group of an instrument a service account is bound to), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access. */
                 affiliation?: components["schemas"]["ResourceAffiliation"][] | null;
                 /** @description Repeatable exact MFID filter, at most 100 values, OR semantics. MFIDs the caller cannot read, that do not exist, or that are pending deletion are omitted. */
                 mfid?: string[] | null;
@@ -15106,11 +15399,16 @@ export interface operations {
                 public?: boolean | null;
                 sample_name?: string | null;
                 sample_type?: string | null;
-                /** @description Exact owner: unique_id, linked ORCID, username or email. */
+                /** @description Owner, repeatable, at most 10 values, OR semantics. Each value is a unique_id, linked ORCID, username or email, resolved by its form; an unknown person matches nothing. */
+                owner_ref?: string[] | null;
+                /**
+                 * @deprecated
+                 * @description Deprecated: use owner_ref, which is repeatable and accepts the same forms.
+                 */
                 owner_id?: string | null;
                 /**
                  * @deprecated
-                 * @description Deprecated exact owner filter. Use owner_id, or affiliation=owner for the authenticated caller.
+                 * @description Deprecated exact owner filter. Use owner_ref, or affiliation=owner for the authenticated caller.
                  */
                 owner_orcid?: string | null;
                 description?: string | null;
@@ -15118,6 +15416,11 @@ export interface operations {
                 /** @description Filter by whether sample_type is null. */
                 sample_type_is_null?: boolean | null;
                 /** @description Filter by whether the record has an owner. */
+                owner_is_null?: boolean | null;
+                /**
+                 * @deprecated
+                 * @description Deprecated: use owner_is_null.
+                 */
                 owner_id_is_null?: boolean | null;
                 /** @description Filter by whether a canonical primary project is assigned. */
                 project_mfid_is_null?: boolean | null;
@@ -15202,7 +15505,7 @@ export interface operations {
                 accessible_to_user?: string[] | null;
                 /** @description Project MFIDs or slugs whose direct access must all include each result. Ordinary callers must hold standing in each selected project; platform contributors and administrators may select any project. */
                 accessible_to_project?: string[] | null;
-                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, instrument, or group), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access. */
+                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, explicit share or group, and the operator group of an instrument a service account is bound to), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access. */
                 affiliation?: components["schemas"]["ResourceAffiliation"][] | null;
                 /** @description Restrict the resources contributing to bucket counts by public visibility. */
                 visibility?: "all" | "public" | "private";
@@ -15232,11 +15535,21 @@ export interface operations {
                 field: components["schemas"]["SampleFacetField"];
                 dataset_mfid?: string | null;
                 sample_type?: string | null;
-                /** @description Exact owner: unique_id, linked ORCID, username or email. */
+                /** @description Owner, repeatable, at most 10 values, OR semantics. Each value is a unique_id, linked ORCID, username or email, resolved by its form; an unknown person matches nothing. */
+                owner_ref?: string[] | null;
+                /**
+                 * @deprecated
+                 * @description Deprecated: use owner_ref, which is repeatable and accepts the same forms.
+                 */
                 owner_id?: string | null;
                 /** @description Restrict contributing samples by whether sample_type is null. */
                 sample_type_is_null?: boolean | null;
                 /** @description Restrict contributing samples by whether they have an owner. */
+                owner_is_null?: boolean | null;
+                /**
+                 * @deprecated
+                 * @description Deprecated: use owner_is_null.
+                 */
                 owner_id_is_null?: boolean | null;
                 /** @description Restrict contributing samples by canonical primary project assignment. */
                 project_mfid_is_null?: boolean | null;
@@ -15279,10 +15592,16 @@ export interface operations {
             query: {
                 /** @description Search text. Whitespace is normalized and at most 10 terms are accepted. */
                 q: string;
-                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, instrument, or group), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access. */
+                /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, explicit share or group, and the operator group of an instrument a service account is bound to), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access. */
                 affiliation?: components["schemas"]["ResourceAffiliation"][] | null;
                 limit?: number;
-                /** @description Exact owner: unique_id, linked ORCID, username or email. */
+                include_owner?: boolean;
+                /** @description Owner, repeatable, at most 10 values, OR semantics. Each value is a unique_id, linked ORCID, username or email, resolved by its form; an unknown person matches nothing. */
+                owner_ref?: string[] | null;
+                /**
+                 * @deprecated
+                 * @description Deprecated: use owner_ref, which is repeatable and accepts the same forms.
+                 */
                 owner_id?: string | null;
                 /** @description Restrict results related to this project slug. May be combined with a matching project_mfid. */
                 project_id?: string | null;
@@ -15330,6 +15649,7 @@ export interface operations {
                 limit?: number;
                 offset?: number;
                 relationship_type?: ("is_derived_from" | "is_part_of") | null;
+                include_owner?: boolean;
             };
             header?: {
                 /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
@@ -15353,7 +15673,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PaginatedResponse_SampleRead_"];
+                    "application/json": components["schemas"]["PaginatedResponse_SampleResponse_"];
                 };
             };
             /** @description Validation Error */
@@ -15373,6 +15693,7 @@ export interface operations {
                 limit?: number;
                 offset?: number;
                 relationship_type?: ("is_derived_from" | "is_part_of") | null;
+                include_owner?: boolean;
             };
             header?: {
                 /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
@@ -15396,7 +15717,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PaginatedResponse_SampleRead_"];
+                    "application/json": components["schemas"]["PaginatedResponse_SampleResponse_"];
                 };
             };
             /** @description Validation Error */

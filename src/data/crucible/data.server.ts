@@ -383,8 +383,8 @@ function fixtureFacetLabel(
 function sampleFacetQuery(filters: SampleFacetFilters) {
   const normalized = normalizeSampleFacetFilters(filters)
   return {
-    owner_id: normalized.ownerId,
-    owner_id_is_null: normalized.ownerIdIsNull,
+    owner_is_null: normalized.ownerIdIsNull,
+    owner_ref: normalized.ownerId ? [normalized.ownerId] : undefined,
     sample_type: normalized.sampleType,
     sample_type_is_null: normalized.sampleTypeIsNull,
   }
@@ -398,8 +398,8 @@ function datasetFacetQuery(filters: DatasetFacetFilters) {
     instrument_mfid_is_null: normalized.instrumentMfidIsNull,
     measurement: normalized.measurement,
     measurement_is_null: normalized.measurementIsNull,
-    owner_id: normalized.ownerId,
-    owner_id_is_null: normalized.ownerIdIsNull,
+    owner_is_null: normalized.ownerIdIsNull,
+    owner_ref: normalized.ownerId ? [normalized.ownerId] : undefined,
     session_name: normalized.sessionName,
     session_name_is_null: normalized.sessionNameIsNull,
   }

@@ -17,6 +17,7 @@ type ResourceType =
   "dataset" | "file" | "instrument" | "person" | "project" | "sample"
 type PrincipalType =
   | "instrument"
+  | "instrument_members"
   | "project"
   | "public"
   | "service_account"
@@ -44,6 +45,7 @@ const iconClasses = {
 
 const principalIcons = {
   instrument: InstrumentIcon,
+  instrument_members: InstrumentIcon,
   project: ProjectIcon,
   public: PublicAccessIcon,
   service_account: ServiceAccountIcon,
@@ -54,6 +56,7 @@ const principalIcons = {
 
 const principalIconClasses = {
   instrument: iconClasses.instrument,
+  instrument_members: iconClasses.instrument,
   project: iconClasses.project,
   public: "text-muted-foreground",
   service_account: "text-(--resource-service-account)",

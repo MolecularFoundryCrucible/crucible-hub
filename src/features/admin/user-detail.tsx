@@ -674,8 +674,7 @@ function UserProjectsSection({
                   })
                   const effectiveRole =
                     project.role ??
-                    (project.lead?.unique_id === user.unique_id ||
-                    project.project_lead_orcid === user.unique_id
+                    (project.owner?.unique_id === user.unique_id
                       ? "owner"
                       : null)
                   return (
@@ -690,10 +689,10 @@ function UserProjectsSection({
                         className="resource-directory-person"
                         data-label="Lead"
                       >
-                        {complete && "lead" in project && project.lead ? (
+                        {complete && project.owner ? (
                           <PersonLink
                             nameStyle="abbreviated"
-                            person={project.lead}
+                            person={project.owner}
                             presentation="collection"
                           />
                         ) : (

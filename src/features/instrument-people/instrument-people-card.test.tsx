@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { instrumentMembersQueryOptions } from "@/data/crucible/instruments.queries"
 import { identityScope } from "@/data/crucible/query-keys"
-import type { WorkspaceResourceAccessGrant } from "@/data/crucible/workspace-source"
+import type { WorkspaceInstrumentMember } from "@/data/crucible/workspace-source"
 
 import { InstrumentPeopleCard } from "./instrument-people-card"
 
@@ -24,33 +24,28 @@ afterEach(cleanup)
 const scope = identityScope("crucible-fixture:populated", "account")
 const instrumentMfid = "01J6Y8N4Q2R7M9K3T5V0W1X2Z4"
 
-const members: WorkspaceResourceAccessGrant[] = [
+const members: WorkspaceInstrumentMember[] = [
   {
-    display_name: "Jordan Reyes",
-    permission: "editor",
-    principal_id: "0000-0000-0000-0034",
-    principal_type: "user",
-    slug: "jreyes",
+    first_name: "Jordan",
+    is_service_account: false,
+    last_name: "Reyes",
+    role: "editor",
+    unique_id: "0000-0000-0000-0034",
+    username: "jreyes",
   },
   {
-    display_name: "Avery Chen",
-    permission: "owner",
-    principal_id: "0000-0000-0000-0001",
-    principal_type: "user",
-    slug: "avery.chen",
-  },
-  {
-    display_name: "Operando Catalyst Mapping",
-    permission: "viewer",
-    principal_id: "01J6Y8N4Q2R7M9K3T5V0W1X2Z3",
-    principal_type: "project",
-    slug: "operando-catalyst-mapping",
+    first_name: "Avery",
+    is_service_account: false,
+    last_name: "Chen",
+    role: "owner",
+    unique_id: "0000-0000-0000-0001",
+    username: "avery.chen",
   },
 ]
 
 function renderCard(
   canManageAccess: boolean,
-  data: readonly WorkspaceResourceAccessGrant[] | null = members
+  data: WorkspaceInstrumentMember[] | null = members
 ) {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
@@ -71,7 +66,7 @@ function renderCard(
 }
 
 describe("InstrumentPeopleCard", () => {
-  it("lists people and projects with the manager first", () => {
+  it("lists people with the manager first", () => {
     renderCard(false)
     expect(screen.getByText("People")).toBeTruthy()
     const names = screen
@@ -79,10 +74,8 @@ describe("InstrumentPeopleCard", () => {
       .map((item) => item.textContent)
     expect(names[0]).toContain("Avery Chen")
     expect(names[0]).toContain("Manager")
-    expect(names.some((name) => name.includes("Jordan Reyes"))).toBe(true)
-    expect(
-      names.some((name) => name.includes("Operando Catalyst Mapping"))
-    ).toBe(true)
+    expect(names[1]).toContain("Jordan Reyes")
+    expect(names[1]).toContain("Editor")
     expect(screen.queryByText("Manage members")).toBeNull()
   })
 

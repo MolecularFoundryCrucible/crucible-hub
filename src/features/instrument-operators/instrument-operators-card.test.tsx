@@ -12,13 +12,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { identityScope } from "@/data/crucible/query-keys"
 import {
-  revokeWorkspaceResourceAccess,
-  setWorkspaceResourceAccess,
-} from "@/data/crucible/access.functions"
-import { resourceAccessQueryOptions } from "@/data/crucible/access.queries"
-import {
+  addWorkspaceInstrumentMember,
   addWorkspaceInstrumentOperator,
+  removeWorkspaceInstrumentMember,
   removeWorkspaceInstrumentOperator,
+  updateWorkspaceInstrumentMemberRole,
 } from "@/data/crucible/instruments.functions"
 import {
   instrumentMembersQueryOptions,
@@ -27,8 +25,8 @@ import {
 import { getWorkspaceSearch } from "@/data/crucible/search.functions"
 import type { HubResult } from "@/data/crucible/result"
 import type {
+  WorkspaceInstrumentMember,
   WorkspaceInstrumentOperator,
-  WorkspaceResourceAccessGrant,
   WorkspaceSearchResult,
 } from "@/data/crucible/workspace-source"
 import { InstrumentAccessCard } from "./instrument-operators-card"
@@ -40,14 +38,14 @@ vi.mock("@tanstack/react-router", async (importOriginal) => ({
   ),
 }))
 
-vi.mock("@/data/crucible/access.functions", () => ({
-  revokeWorkspaceResourceAccess: vi.fn(),
-  setWorkspaceResourceAccess: vi.fn(),
-}))
-
 vi.mock("@/data/crucible/instruments.functions", () => ({
+  addWorkspaceInstrumentMember: vi.fn(),
   addWorkspaceInstrumentOperator: vi.fn(),
+  getWorkspaceInstrumentMembers: vi.fn(),
+  getWorkspaceInstrumentOperators: vi.fn(),
+  removeWorkspaceInstrumentMember: vi.fn(),
   removeWorkspaceInstrumentOperator: vi.fn(),
+  updateWorkspaceInstrumentMemberRole: vi.fn(),
 }))
 
 vi.mock("@/data/crucible/search.functions", () => ({
@@ -97,33 +95,43 @@ const instrument = {
 }
 
 function withEntryCapabilities(
-  grants: WorkspaceResourceAccessGrant[]
-): WorkspaceResourceAccessGrant[] {
-  return grants.map((grant) => ({
-    ...grant,
+  members: WorkspaceInstrumentMember[]
+): WorkspaceInstrumentMember[] {
+  return members.map((member) => ({
+    ...member,
     capabilities: fixtureEntryCapabilities({
       maxGrantRole: "admin",
-      role: grant.permission,
+      role: member.role,
     }),
   }))
 }
 
-const initialGrants: WorkspaceResourceAccessGrant[] = withEntryCapabilities([
+const initialMembers: WorkspaceInstrumentMember[] = withEntryCapabilities([
+  { ...owner, role: "owner" },
   {
-    display_name: "Morgan Patel",
-    permission: "owner",
-    principal_id: owner.unique_id,
-    principal_type: "user",
-    slug: owner.username,
-  },
-  {
-    display_name: "Jordan Reyes",
-    permission: "editor",
-    principal_id: "0000-0000-0000-0034",
-    principal_type: "user",
-    slug: "jreyes",
+    first_name: "Jordan",
+    is_service_account: false,
+    last_name: "Reyes",
+    role: "editor",
+    unique_id: "0000-0000-0000-0034",
+    username: "jreyes",
   },
 ])
+
+function memberFor(
+  candidate: WorkspaceSearchResult,
+  role: string
+): WorkspaceInstrumentMember {
+  const [first_name, last_name] = candidate.name.split(" ")
+  return {
+    first_name,
+    is_service_account: false,
+    last_name,
+    role,
+    unique_id: candidate.unique_id,
+    username: candidate.context,
+  }
+}
 
 const initialOperators: WorkspaceInstrumentOperator[] = [
   {
@@ -182,15 +190,16 @@ describe("InstrumentAccessCard", () => {
       },
     })
     queryClient.setQueryData(
-      resourceAccessQueryOptions(scope, instrument.unique_id).queryKey,
-      initialGrants
+      instrumentMembersQueryOptions(scope, instrument.unique_id).queryKey,
+      initialMembers
     )
     queryClient.setQueryData(
       instrumentOperatorsQueryOptions(scope, instrument.unique_id).queryKey,
       initialOperators
     )
-    vi.mocked(setWorkspaceResourceAccess).mockReset()
-    vi.mocked(revokeWorkspaceResourceAccess).mockReset()
+    vi.mocked(addWorkspaceInstrumentMember).mockReset()
+    vi.mocked(updateWorkspaceInstrumentMemberRole).mockReset()
+    vi.mocked(removeWorkspaceInstrumentMember).mockReset()
     vi.mocked(addWorkspaceInstrumentOperator).mockReset()
     vi.mocked(removeWorkspaceInstrumentOperator).mockReset()
     vi.mocked(getWorkspaceSearch).mockReset()
@@ -212,7 +221,7 @@ describe("InstrumentAccessCard", () => {
     renderCard()
 
     expect(screen.getByText("Access management")).toBeTruthy()
-    expect(screen.getByText("Direct access")).toBeTruthy()
+    expect(screen.getByText("Members")).toBeTruthy()
     expect(screen.getByText("Operators")).toBeTruthy()
 
     expect(screen.getByText("Morgan Patel")).toBeTruthy()
@@ -249,46 +258,56 @@ describe("InstrumentAccessCard", () => {
     expect(screen.queryByRole("button", { name: "Edit access" })).toBeNull()
   })
 
+  it("says when the API hides membership", () => {
+    queryClient.setQueryData(
+      instrumentMembersQueryOptions(scope, instrument.unique_id).queryKey,
+      null
+    )
+    renderCard()
+
+    expect(
+      screen.getByText("Membership details are not available.")
+    ).toBeTruthy()
+  })
+
   it("toggles managing mode and updates a member's role", async () => {
-    const updatedGrants: WorkspaceResourceAccessGrant[] = [
-      initialGrants[0],
-      {
-        ...initialGrants[1],
-        permission: "contributor",
-      },
-    ]
-    vi.mocked(setWorkspaceResourceAccess).mockResolvedValue(ok(updatedGrants))
+    const updatedMembers = withEntryCapabilities([
+      initialMembers[0],
+      { ...initialMembers[1], role: "admin" },
+    ])
+    vi.mocked(updateWorkspaceInstrumentMemberRole).mockResolvedValue(
+      ok(updatedMembers)
+    )
 
     renderCard()
 
-    const manageToggle = screen.getByRole("button", { name: "Edit access" })
-    fireEvent.click(manageToggle)
+    fireEvent.click(screen.getByRole("button", { name: "Edit access" }))
 
     expect(screen.getByText("Role changes save automatically.")).toBeTruthy()
-
     expect(
-      screen.getByRole("img", { name: "The manager cannot be revoked here" })
+      screen.getByRole("img", { name: "The manager cannot be removed here" })
     ).toBeTruthy()
     expect(
-      screen.getByRole("button", { name: "Revoke access for Jordan Reyes" })
+      screen.getByRole("button", { name: "Remove Jordan Reyes" })
     ).toBeTruthy()
 
     const roleSelect = screen.getByLabelText<HTMLSelectElement>(
       "Role for Jordan Reyes"
     )
-    expect(roleSelect).toBeTruthy()
     expect(roleSelect.value).toBe("editor")
+    expect(
+      Array.from(roleSelect.options).map((option) => option.value)
+    ).toEqual(["viewer", "editor", "admin"])
 
-    fireEvent.change(roleSelect, { target: { value: "contributor" } })
+    fireEvent.change(roleSelect, { target: { value: "admin" } })
 
     await waitFor(() => {
-      expect(setWorkspaceResourceAccess).toHaveBeenCalledWith(
+      expect(updateWorkspaceInstrumentMemberRole).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
-            kind: "users",
-            permission: "contributor",
-            principal: "0000-0000-0000-0034",
-            resourceMfid: instrument.unique_id,
+            instrumentMfid: instrument.unique_id,
+            role: "admin",
+            userId: "0000-0000-0000-0034",
           }),
         })
       )
@@ -298,34 +317,31 @@ describe("InstrumentAccessCard", () => {
         queryClient.getQueryData(
           instrumentMembersQueryOptions(scope, instrument.unique_id).queryKey
         )
-      ).toEqual(updatedGrants)
+      ).toEqual(updatedMembers)
     })
   })
 
-  it("revokes a member via confirmation dialog", async () => {
-    const remainingGrants: WorkspaceResourceAccessGrant[] = [initialGrants[0]]
-    vi.mocked(revokeWorkspaceResourceAccess).mockResolvedValue(
-      ok(remainingGrants)
+  it("removes a member via confirmation dialog", async () => {
+    vi.mocked(removeWorkspaceInstrumentMember).mockResolvedValue(
+      ok([initialMembers[0]])
     )
 
     renderCard()
 
     fireEvent.click(screen.getByRole("button", { name: "Edit access" }))
+    fireEvent.click(screen.getByLabelText("Remove Jordan Reyes"))
 
-    const revokeButton = screen.getByLabelText("Revoke access for Jordan Reyes")
-    fireEvent.click(revokeButton)
-
-    expect(screen.getByText("Revoke access?")).toBeTruthy()
-    const confirmButton = screen.getByRole("button", { name: "Revoke access" })
-    fireEvent.click(confirmButton)
+    const dialog = screen.getByRole("dialog", { name: "Remove member?" })
+    fireEvent.click(
+      within(dialog).getByRole("button", { name: "Remove member" })
+    )
 
     await waitFor(() => {
-      expect(revokeWorkspaceResourceAccess).toHaveBeenCalledWith(
+      expect(removeWorkspaceInstrumentMember).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
-            kind: "users",
-            principal: "0000-0000-0000-0034",
-            resourceMfid: instrument.unique_id,
+            instrumentMfid: instrument.unique_id,
+            userId: "0000-0000-0000-0034",
           }),
         })
       )
@@ -336,27 +352,17 @@ describe("InstrumentAccessCard", () => {
     vi.mocked(getWorkspaceSearch).mockResolvedValue(
       searchResponse([candidatePerson])
     )
-    const nextGrants: WorkspaceResourceAccessGrant[] = [
-      ...initialGrants,
-      {
-        display_name: "Jamie Patel",
-        permission: "editor",
-        principal_id: candidatePerson.unique_id,
-        principal_type: "user",
-        slug: "jamie.patel",
-      },
-    ]
-    vi.mocked(setWorkspaceResourceAccess).mockResolvedValue(ok(nextGrants))
+    vi.mocked(addWorkspaceInstrumentMember).mockResolvedValue(
+      ok([...initialMembers, memberFor(candidatePerson, "editor")])
+    )
 
     renderCard()
 
     ensureManaging("Edit access")
-    const addMemberButton = screen.getByRole("button", { name: "Add member" })
-    fireEvent.click(addMemberButton)
+    fireEvent.click(screen.getByRole("button", { name: "Add member" }))
 
-    const dialog = screen.getByRole("dialog", { name: "Add direct access" })
-    expect(dialog).toBeTruthy()
-
+    const dialog = screen.getByRole("dialog", { name: "Add member" })
+    expect(within(dialog).queryByLabelText("Principal type")).toBeNull()
     const searchInput = within(dialog).getByRole("combobox", {
       name: "Search people",
     })
@@ -367,104 +373,35 @@ describe("InstrumentAccessCard", () => {
     await waitFor(() =>
       expect(getWorkspaceSearch).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({
-            kinds: ["person"],
-            query: "jam",
-          }),
+          data: expect.objectContaining({ kinds: ["person"], query: "jam" }),
         })
       )
     )
 
-    const option = await screen.findByRole("option", { name: /Jamie Patel/i })
-    fireEvent.click(option)
+    fireEvent.click(await screen.findByRole("option", { name: /Jamie Patel/i }))
 
     const stagedRole = within(dialog).getByLabelText<HTMLSelectElement>(
       "Role for Jamie Patel"
     )
     expect(stagedRole.value).toBe("viewer")
-    fireEvent.change(stagedRole, { target: { value: "contributor" } })
+    expect(
+      Array.from(stagedRole.options).map((option) => option.value)
+    ).not.toContain("contributor")
+    fireEvent.change(stagedRole, { target: { value: "editor" } })
 
-    const dialogAddButton = within(dialog).getByRole("button", {
-      name: "Add member",
-    })
-    fireEvent.click(dialogAddButton)
+    fireEvent.click(within(dialog).getByRole("button", { name: "Add member" }))
 
     await waitFor(() => {
-      expect(setWorkspaceResourceAccess).toHaveBeenCalledWith(
+      expect(addWorkspaceInstrumentMember).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
-            kind: "users",
-            permission: "contributor",
-            principal: candidatePerson.unique_id,
-            resourceMfid: instrument.unique_id,
+            instrumentMfid: instrument.unique_id,
+            role: "editor",
+            userId: candidatePerson.unique_id,
           }),
         })
       )
     })
-  })
-
-  it("commits multiple staged members with serial calls", async () => {
-    const secondCandidate: WorkspaceSearchResult = {
-      context: "avery.chen",
-      kind: "person",
-      name: "Avery Chen",
-      unique_id: "0000-0000-0000-0042",
-    }
-    vi.mocked(getWorkspaceSearch).mockResolvedValue(
-      searchResponse([candidatePerson, secondCandidate])
-    )
-    vi.mocked(setWorkspaceResourceAccess).mockResolvedValue(
-      ok([...initialGrants])
-    )
-
-    renderCard()
-
-    ensureManaging("Edit access")
-    fireEvent.click(screen.getByRole("button", { name: "Add member" }))
-
-    const dialog = screen.getByRole("dialog", { name: "Add direct access" })
-    const searchInput = within(dialog).getByRole("combobox", {
-      name: "Search people",
-    })
-    fireEvent.click(searchInput)
-    fireEvent.change(searchInput, { target: { value: "jam" } })
-
-    fireEvent.click(await screen.findByRole("option", { name: /Jamie Patel/i }))
-
-    fireEvent.change(searchInput, { target: { value: "ave" } })
-    fireEvent.click(await screen.findByRole("option", { name: /Avery Chen/i }))
-
-    const stagedList = within(dialog).getByRole("list", {
-      name: "Members to add",
-    })
-    expect(within(stagedList).getAllByRole("listitem")).toHaveLength(2)
-    expect(
-      within(dialog).getByRole("button", { name: "Add 2 members" })
-    ).toBeTruthy()
-
-    fireEvent.click(
-      within(dialog).getByRole("button", { name: "Add 2 members" })
-    )
-
-    await waitFor(() => {
-      expect(setWorkspaceResourceAccess).toHaveBeenCalledTimes(2)
-    })
-    expect(setWorkspaceResourceAccess).toHaveBeenNthCalledWith(
-      1,
-      expect.objectContaining({
-        data: expect.objectContaining({
-          principal: candidatePerson.unique_id,
-        }),
-      })
-    )
-    expect(setWorkspaceResourceAccess).toHaveBeenNthCalledWith(
-      2,
-      expect.objectContaining({
-        data: expect.objectContaining({
-          principal: secondCandidate.unique_id,
-        }),
-      })
-    )
   })
 
   it("keeps successful stages and retries only failures", async () => {
@@ -477,18 +414,12 @@ describe("InstrumentAccessCard", () => {
     vi.mocked(getWorkspaceSearch).mockResolvedValue(
       searchResponse([candidatePerson, secondCandidate])
     )
-    const grantedGrants: WorkspaceResourceAccessGrant[] = [
-      ...initialGrants,
-      {
-        display_name: "Jamie Patel",
-        permission: "viewer",
-        principal_id: candidatePerson.unique_id,
-        principal_type: "user",
-        slug: "jamie.patel",
-      },
+    const addedMembers = [
+      ...initialMembers,
+      memberFor(candidatePerson, "viewer"),
     ]
-    vi.mocked(setWorkspaceResourceAccess)
-      .mockResolvedValueOnce(ok(grantedGrants))
+    vi.mocked(addWorkspaceInstrumentMember)
+      .mockResolvedValueOnce(ok(addedMembers))
       .mockRejectedValueOnce(new Error("network down"))
 
     renderCard()
@@ -496,14 +427,13 @@ describe("InstrumentAccessCard", () => {
     ensureManaging("Edit access")
     fireEvent.click(screen.getByRole("button", { name: "Add member" }))
 
-    const dialog = screen.getByRole("dialog", { name: "Add direct access" })
+    const dialog = screen.getByRole("dialog", { name: "Add member" })
     const searchInput = within(dialog).getByRole("combobox", {
       name: "Search people",
     })
     fireEvent.click(searchInput)
     fireEvent.change(searchInput, { target: { value: "jam" } })
     fireEvent.click(await screen.findByRole("option", { name: /Jamie Patel/i }))
-
     fireEvent.change(searchInput, { target: { value: "ave" } })
     fireEvent.click(await screen.findByRole("option", { name: /Avery Chen/i }))
 
@@ -519,58 +449,20 @@ describe("InstrumentAccessCard", () => {
     expect(screen.getByText("1 member could not be added. Try again."))
     expect(
       queryClient.getQueryData(
-        resourceAccessQueryOptions(scope, instrument.unique_id).queryKey
+        instrumentMembersQueryOptions(scope, instrument.unique_id).queryKey
       )
-    ).toEqual(grantedGrants)
+    ).toEqual(addedMembers)
 
     fireEvent.click(within(dialog).getByRole("button", { name: "Add member" }))
 
     await waitFor(() => {
-      expect(setWorkspaceResourceAccess).toHaveBeenCalledTimes(3)
+      expect(addWorkspaceInstrumentMember).toHaveBeenCalledTimes(3)
     })
-    expect(setWorkspaceResourceAccess).toHaveBeenLastCalledWith(
+    expect(addWorkspaceInstrumentMember).toHaveBeenLastCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({
-          principal: secondCandidate.unique_id,
-        }),
+        data: expect.objectContaining({ userId: secondCandidate.unique_id }),
       })
     )
-  })
-
-  it("removes a staged member and resets the list when the kind changes", async () => {
-    vi.mocked(getWorkspaceSearch).mockResolvedValue(
-      searchResponse([candidatePerson])
-    )
-
-    renderCard()
-
-    ensureManaging("Edit access")
-    fireEvent.click(screen.getByRole("button", { name: "Add member" }))
-
-    const dialog = screen.getByRole("dialog", { name: "Add direct access" })
-    const searchInput = within(dialog).getByRole("combobox", {
-      name: "Search people",
-    })
-    fireEvent.click(searchInput)
-    fireEvent.change(searchInput, { target: { value: "jam" } })
-    fireEvent.click(await screen.findByRole("option", { name: /Jamie Patel/i }))
-
-    expect(
-      within(dialog).getByRole("list", { name: "Members to add" })
-    ).toBeTruthy()
-
-    fireEvent.click(
-      within(dialog).getByRole("button", { name: "Remove Jamie Patel" })
-    )
-    expect(screen.queryByRole("list", { name: "Members to add" })).toBeNull()
-
-    fireEvent.change(searchInput, { target: { value: "jam" } })
-    fireEvent.click(await screen.findByRole("option", { name: /Jamie Patel/i }))
-
-    const principalSelect =
-      within(dialog).getByLabelText<HTMLSelectElement>("Principal type")
-    fireEvent.change(principalSelect, { target: { value: "1" } })
-    expect(screen.queryByRole("list", { name: "Members to add" })).toBeNull()
   })
 
   it("hides service accounts from the member search", async () => {
@@ -583,7 +475,7 @@ describe("InstrumentAccessCard", () => {
     ensureManaging("Edit access")
     fireEvent.click(screen.getByRole("button", { name: "Add member" }))
 
-    const dialog = screen.getByRole("dialog", { name: "Add direct access" })
+    const dialog = screen.getByRole("dialog", { name: "Add member" })
     const searchInput = within(dialog).getByRole("combobox", {
       name: "Search people",
     })
@@ -595,82 +487,71 @@ describe("InstrumentAccessCard", () => {
     expect(screen.queryByRole("option", { name: /Robot Operator/i })).toBeNull()
   })
 
-  it("omits the checkbox from non-revocable rows in managing mode", () => {
+  it("omits the checkbox from the manager row in managing mode", () => {
     renderCard()
 
     fireEvent.click(screen.getByRole("button", { name: "Edit access" }))
 
     expect(
       screen.queryByRole("checkbox", {
-        name: "Select Morgan Patel for revocation",
+        name: "Select Morgan Patel for removal",
       })
     ).toBeNull()
     expect(
-      screen.getByRole("checkbox", {
-        name: "Select Jordan Reyes for revocation",
-      })
+      screen.getByRole("checkbox", { name: "Select Jordan Reyes for removal" })
     ).toBeTruthy()
   })
 
-  it("revokes multiple selected members through the batch dialog", async () => {
-    const [secondGrant] = withEntryCapabilities([
+  it("removes multiple selected members through the batch dialog", async () => {
+    const [secondMember] = withEntryCapabilities([
       {
-        display_name: "Avery Chen",
-        permission: "viewer",
-        principal_id: "0000-0000-0000-000X",
-        principal_type: "user",
-        slug: "avery.chen",
+        first_name: "Avery",
+        is_service_account: false,
+        last_name: "Chen",
+        role: "viewer",
+        unique_id: "0000-0000-0000-000X",
+        username: "avery.chen",
       },
     ])
     queryClient.setQueryData(
-      resourceAccessQueryOptions(scope, instrument.unique_id).queryKey,
-      [...initialGrants, secondGrant]
+      instrumentMembersQueryOptions(scope, instrument.unique_id).queryKey,
+      [...initialMembers, secondMember]
     )
-    vi.mocked(revokeWorkspaceResourceAccess).mockResolvedValue(
-      ok([initialGrants[0]])
+    vi.mocked(removeWorkspaceInstrumentMember).mockResolvedValue(
+      ok([initialMembers[0]])
     )
 
     renderCard()
 
     fireEvent.click(screen.getByRole("button", { name: "Edit access" }))
     fireEvent.click(
-      screen.getByRole("checkbox", {
-        name: "Select Jordan Reyes for revocation",
-      })
+      screen.getByRole("checkbox", { name: "Select Jordan Reyes for removal" })
     )
     fireEvent.click(
-      screen.getByRole("checkbox", { name: "Select Avery Chen for revocation" })
+      screen.getByRole("checkbox", { name: "Select Avery Chen for removal" })
     )
-    fireEvent.click(
-      screen.getByRole("button", { name: "Revoke access for 2 members" })
-    )
+    fireEvent.click(screen.getByRole("button", { name: "Remove 2 members" }))
 
-    const dialog = screen.getByRole("dialog", { name: "Revoke access?" })
+    const dialog = screen.getByRole("dialog", { name: "Remove members?" })
     expect(within(dialog).getByText("Jordan Reyes")).toBeTruthy()
     expect(within(dialog).getByText("Avery Chen")).toBeTruthy()
     fireEvent.click(
-      within(dialog).getByRole("button", {
-        name: "Revoke access for 2 members",
-      })
+      within(dialog).getByRole("button", { name: "Remove 2 members" })
     )
 
     await waitFor(() =>
-      expect(revokeWorkspaceResourceAccess).toHaveBeenCalledTimes(2)
+      expect(removeWorkspaceInstrumentMember).toHaveBeenCalledTimes(2)
     )
-    expect(revokeWorkspaceResourceAccess).toHaveBeenNthCalledWith(
+    expect(removeWorkspaceInstrumentMember).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
-        data: expect.objectContaining({
-          principal: "0000-0000-0000-0034",
-        }),
+        data: expect.objectContaining({ userId: "0000-0000-0000-0034" }),
       })
     )
-    expect(revokeWorkspaceResourceAccess).toHaveBeenNthCalledWith(
+    expect(removeWorkspaceInstrumentMember).toHaveBeenNthCalledWith(
       2,
       expect.objectContaining({
-        data: expect.objectContaining({
-          principal: "0000-0000-0000-000X",
-        }),
+        data: expect.objectContaining({ userId: "0000-0000-0000-000X" }),
       })
     )
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())

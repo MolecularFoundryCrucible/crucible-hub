@@ -77,9 +77,9 @@ function wrap(children: React.ReactNode) {
 }
 
 describe("isProjectMember", () => {
-  it("counts a role, the lead or a member listing", () => {
+  it("counts a role, the owner or a member listing", () => {
     expect(isProjectMember({ role: "viewer" }, "me")).toBe(true)
-    expect(isProjectMember({ lead: { unique_id: "me" } }, "me")).toBe(true)
+    expect(isProjectMember({ owner: { unique_id: "me" } }, "me")).toBe(true)
     expect(isProjectMember({ members: [{ unique_id: "me" }] }, "me")).toBe(true)
     expect(isProjectMember({ role: null, members: [] }, "me")).toBe(false)
   })

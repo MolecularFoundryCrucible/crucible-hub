@@ -70,12 +70,11 @@ export async function createWorkspaceProjectResource(
     return {
       capabilities: demoWorkspace.projects[0].capabilities,
       creation_time: new Date().toISOString(),
-      lead,
       members: [],
       modification_time: null,
       organization: project.organization,
+      owner: lead,
       project_id: project.project_id,
-      project_lead_orcid: lead.unique_id,
       scientific_metadata: null,
       status: "active",
       title: project.title,
@@ -85,7 +84,13 @@ export async function createWorkspaceProjectResource(
 
   const client = createCrucibleClient(configuration)
   const result = await client.POST("/projects", {
-    body: { ...project, status: "active" },
+    body: {
+      organization: project.organization,
+      owner_ref: project.project_lead,
+      project_id: project.project_id,
+      status: "active",
+      title: project.title,
+    },
     signal: crucibleRequestSignal(requestSignal),
   })
   if (!result.data) {

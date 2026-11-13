@@ -14,7 +14,7 @@ import {
 import { isWorkspaceInstrumentStatus } from "./instrument-status"
 import type { InstrumentAffiliation } from "./collection-query"
 import { fixtureCursorPage } from "./pagination"
-import { readWorkspaceResourceAccess } from "./access.server"
+import { fixtureEntryCapabilities } from "./entry-capabilities"
 import { toWorkspaceResourceDetail } from "./resources.server"
 import type { FixtureScenario } from "./fixture-scenarios"
 import type {
@@ -22,12 +22,13 @@ import type {
   WorkspaceInstrument,
   WorkspaceInstrumentLifecycleUpdate,
   WorkspaceInstrumentCreate,
+  WorkspaceInstrumentMember,
+  WorkspaceInstrumentMembershipRole,
   WorkspaceInstrumentOperator,
   WorkspaceInstrumentPage,
   WorkspaceInstrumentSort,
   WorkspaceInstrumentStatus,
   WorkspacePerson,
-  WorkspaceResourceAccessGrant,
   WorkspaceResourceDetail,
   WorkspaceSortDirection,
 } from "./workspace-source"
@@ -109,23 +110,79 @@ function fixtureInstrumentOperators(
   ]
 }
 
-/** People and projects with a role on the instrument, or null when hidden. */
+const fixtureInstrumentMemberStates = new Map<
+  string,
+  WorkspaceInstrumentMember[]
+>()
+
+function fixtureInstrumentMemberState(
+  instrumentMfid: string,
+  scenario: FixtureScenario | undefined
+) {
+  const key = `${scenario ?? "default"}:${instrumentMfid}`
+  const existing = fixtureInstrumentMemberStates.get(key)
+  if (existing) return existing
+  const workspace = fixtureWorkspace(scenario)
+  const instrument = workspace.instruments.find(
+    (candidate) => candidate.unique_id === instrumentMfid
+  )
+  if (!instrument) throw new CrucibleResponseError(404)
+  const owner = safeOwner(instrument.owner)
+  const collaborator = workspace.people.find(
+    (person) => person.unique_id === "0000-0000-0000-0018"
+  )
+  const members: WorkspaceInstrumentMember[] = [
+    ...(owner ? [{ ...owner, role: "owner" }] : []),
+    ...(collaborator &&
+    instrumentMfid === demoWorkspace.instruments[0].unique_id
+      ? [{ ...collaborator, role: "editor" }]
+      : []),
+  ]
+  fixtureInstrumentMemberStates.set(key, members)
+  return members
+}
+
+function fixtureInstrumentMembers(
+  instrumentMfid: string,
+  scenario: FixtureScenario | undefined,
+  members: readonly WorkspaceInstrumentMember[]
+): WorkspaceInstrumentMember[] {
+  const workspace = fixtureWorkspace(scenario)
+  const instrument = workspace.instruments.find(
+    (candidate) => candidate.unique_id === instrumentMfid
+  )
+  const maxGrantRole = instrument?.capabilities?.max_grant_role
+  fixtureInstrumentMemberStates.set(
+    `${scenario ?? "default"}:${instrumentMfid}`,
+    [...members]
+  )
+  return members.map((member) => ({
+    ...member,
+    capabilities: fixtureEntryCapabilities({
+      maxGrantRole,
+      role: member.role,
+      self: member.unique_id === workspace.account.unique_id,
+    }),
+  }))
+}
+
+/** People with a role on the instrument, or null when hidden. */
 export async function readWorkspaceInstrumentMembers(
   instrumentMfid: string,
   scenario?: FixtureScenario,
   requestSignal?: AbortSignal
-): Promise<readonly WorkspaceResourceAccessGrant[] | null> {
+): Promise<WorkspaceInstrumentMember[] | null> {
   const configuration = readWorkspaceConfiguration()
   if (configuration.mode === "unavailable") {
     throw new Error(configuration.reason)
   }
   if (configuration.mode === "fixture") {
-    const grants = await readWorkspaceResourceAccess(
+    if (requestSignal?.aborted) throw requestSignal.reason
+    return fixtureInstrumentMembers(
       instrumentMfid,
       scenario,
-      requestSignal
+      fixtureInstrumentMemberState(instrumentMfid, scenario)
     )
-    return grants.filter((grant) => grant.principal_type !== "public")
   }
 
   const client = createCrucibleClient(configuration)
@@ -143,6 +200,134 @@ export async function readWorkspaceInstrumentMembers(
   if (!result.data)
     throw new CrucibleResponseError(result.response, result.error)
   return result.data.members ?? null
+}
+
+export async function addWorkspaceInstrumentMember(
+  instrumentMfid: string,
+  userId: string,
+  role: WorkspaceInstrumentMembershipRole,
+  scenario?: FixtureScenario,
+  requestSignal?: AbortSignal
+): Promise<WorkspaceInstrumentMember[]> {
+  const configuration = readWorkspaceConfiguration()
+  if (configuration.mode === "unavailable") {
+    throw new Error(configuration.reason)
+  }
+  if (configuration.mode === "fixture") {
+    const members = fixtureInstrumentMemberState(instrumentMfid, scenario)
+    const existing = members.find((member) => member.unique_id === userId)
+    if (existing) {
+      if (existing.role !== role) throw new CrucibleResponseError(409)
+      return fixtureInstrumentMembers(instrumentMfid, scenario, members)
+    }
+    const person = fixtureWorkspace(scenario).people.find(
+      (candidate) => candidate.unique_id === userId
+    )
+    if (!person) throw new CrucibleResponseError(404)
+    if (person.is_service_account) throw new CrucibleResponseError(422)
+    return fixtureInstrumentMembers(instrumentMfid, scenario, [
+      ...members,
+      {
+        first_name: person.first_name,
+        is_service_account: false,
+        last_name: person.last_name,
+        role,
+        unique_id: person.unique_id,
+        username: person.username,
+      },
+    ])
+  }
+
+  const client = createCrucibleClient(configuration)
+  const result = await client.POST(
+    "/instruments/{instrument_ref}/users/{user_ref}",
+    {
+      params: {
+        path: { instrument_ref: instrumentMfid, user_ref: userId },
+        query: { role },
+      },
+      signal: crucibleRequestSignal(requestSignal),
+    }
+  )
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
+  return result.data
+}
+
+export async function updateWorkspaceInstrumentMemberRole(
+  instrumentMfid: string,
+  userId: string,
+  role: WorkspaceInstrumentMembershipRole,
+  scenario?: FixtureScenario,
+  requestSignal?: AbortSignal
+): Promise<WorkspaceInstrumentMember[]> {
+  const configuration = readWorkspaceConfiguration()
+  if (configuration.mode === "unavailable") {
+    throw new Error(configuration.reason)
+  }
+  if (configuration.mode === "fixture") {
+    const members = fixtureInstrumentMemberState(instrumentMfid, scenario)
+    const member = members.find((candidate) => candidate.unique_id === userId)
+    if (!member) throw new CrucibleResponseError(404)
+    if (member.role === "owner") throw new CrucibleResponseError(409)
+    return fixtureInstrumentMembers(
+      instrumentMfid,
+      scenario,
+      members.map((candidate) =>
+        candidate === member ? { ...candidate, role } : candidate
+      )
+    )
+  }
+
+  const client = createCrucibleClient(configuration)
+  const result = await client.PATCH(
+    "/instruments/{instrument_ref}/users/{user_ref}",
+    {
+      params: {
+        path: { instrument_ref: instrumentMfid, user_ref: userId },
+        query: { role },
+      },
+      signal: crucibleRequestSignal(requestSignal),
+    }
+  )
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
+  return result.data
+}
+
+export async function removeWorkspaceInstrumentMember(
+  instrumentMfid: string,
+  userId: string,
+  scenario?: FixtureScenario,
+  requestSignal?: AbortSignal
+): Promise<WorkspaceInstrumentMember[]> {
+  const configuration = readWorkspaceConfiguration()
+  if (configuration.mode === "unavailable") {
+    throw new Error(configuration.reason)
+  }
+  if (configuration.mode === "fixture") {
+    const members = fixtureInstrumentMemberState(instrumentMfid, scenario)
+    const member = members.find((candidate) => candidate.unique_id === userId)
+    if (!member) throw new CrucibleResponseError(404)
+    if (member.role === "owner") throw new CrucibleResponseError(409)
+    return fixtureInstrumentMembers(
+      instrumentMfid,
+      scenario,
+      members.filter((candidate) => candidate !== member)
+    )
+  }
+
+  const client = createCrucibleClient(configuration)
+  const result = await client.DELETE(
+    "/instruments/{instrument_ref}/users/{user_ref}",
+    {
+      params: { path: { instrument_ref: instrumentMfid, user_ref: userId } },
+      signal: crucibleRequestSignal(requestSignal),
+    }
+  )
+  if (!result.data)
+    throw new CrucibleResponseError(result.response, result.error)
+  return result.data
 }
 
 export async function readWorkspaceInstrumentOperators(
@@ -560,7 +745,7 @@ export async function readWorkspaceInstruments(
         limit,
         location,
         manufacturer,
-        owner_id: ownerId,
+        owner_ref: ownerId ? [ownerId] : undefined,
         sort: sort ?? undefined,
         status,
       },
