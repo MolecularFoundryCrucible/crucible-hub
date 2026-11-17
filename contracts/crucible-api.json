@@ -757,7 +757,8 @@
           },
           "older_routes": {
             "default": false,
-            "description": "The key the deprecated single-key routes show and regenerate replaces.",
+            "deprecated": true,
+            "description": "Deprecated: always false, since the single-key routes are gone. Removed in a later release.",
             "title": "Older Routes",
             "type": "boolean"
           },
@@ -846,7 +847,8 @@
           },
           "older_routes": {
             "default": false,
-            "description": "The key the deprecated single-key routes show and regenerate replaces.",
+            "deprecated": true,
+            "description": "Deprecated: always false, since the single-key routes are gone. Removed in a later release.",
             "title": "Older Routes",
             "type": "boolean"
           },
@@ -9317,7 +9319,7 @@
   },
   "info": {
     "title": "FastAPI",
-    "version": "4.0.0a1"
+    "version": "4.0.0"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -10644,7 +10646,7 @@
     },
     "/account/password": {
       "post": {
-        "description": "Set a first password, or change yours, from a browser session with a recent sign-in. Changing\nneeds the current password and ends your other sessions, keeping this one. Passwords sign in with\nthe username, so an account without one sets it first with PATCH /account/profile. API keys are\nnever touched.",
+        "description": "Set a first password, or change yours, from a browser session with a recent sign-in. Changing\nneeds the current password and ends your other sessions, keeping this one. API keys are never touched.",
         "operationId": "set_account_password_account_password_post",
         "parameters": [
           {
@@ -10701,7 +10703,7 @@
             "description": "`hub_session_required` for an API key, `browser_sign_in_required` for a session approved with a device code"
           },
           "409": {
-            "description": "`service_account`, `username_required` (set one with PATCH /account/profile first), or `password_changed` when another request changed it first"
+            "description": "`service_account`, or `password_changed` when another request changed it first"
           },
           "422": {
             "description": "Field errors in FastAPI's shape: `current_password_required` or `current_password_invalid` (counted against the account's attempt limit) on `current_password`, `password_rejected` with `ctx.reason` on `new_password`"
@@ -13031,7 +13033,7 @@
     },
     "/datasets": {
       "get": {
-        "description": "Returns a paginated list of datasets the requesting user is authorized to view.\nDefault limit is 100, max is 1000.\n\nBy default, results are ordered by unique_id descending. To fetch a keyset page,\npass cursor=<next_cursor from the previous response>. The first page omits cursor.\nnext_cursor is null when there are no further pages. total is included only when\ncursor is omitted and offset is zero. Pass include_total=true to request it on\nany page or include_total=false to suppress it.\n\nOffset pagination is supported for backward compatibility: pass offset=<n> instead\nof cursor. When both are supplied, cursor takes precedence. Prefer cursor for large\nresult sets, since deep offsets are slower.\nPass affiliation=owner to return only resources authoritatively owned by the caller.\nUse owner_id for an exact owner match; owner_orcid remains as a deprecated alias.\nPass sort=created, updated, or name with direction=asc or desc for explicit ordering.\nPass anchor_mfid without cursor or offset to start an inclusive page at a resource\nwithin the authorized, filtered, and ordered collection.\nPass include_links=true to include parent, child, and associated resources for each dataset.\nPass visibility=public or visibility=private to narrow by the resource's public ACL entry.\nPass instrument_mfid to filter by the instrument's canonical stable identity.\nPass project_id or project_mfid with project_scope=assigned, shared, or all to filter by project relationship.\nPass sample_mfid to filter by a readable sample's canonical stable identity.\nFaceted nullable fields also accept field-specific is_null=true or false filters.\nAccess selectors use AND semantics and only narrow resources readable by the caller.",
+        "description": "Returns a paginated list of datasets the requesting user is authorized to view.\nDefault limit is 100, max is 1000.\n\nBy default, results are ordered by unique_id descending. To fetch a keyset page,\npass cursor=<next_cursor from the previous response>. The first page omits cursor.\nnext_cursor is null when there are no further pages. total is included only when\ncursor is omitted and offset is zero. Pass include_total=true to request it on\nany page or include_total=false to suppress it.\n\nOffset pagination is supported for backward compatibility: pass offset=<n> instead\nof cursor. When both are supplied, cursor takes precedence. Prefer cursor for large\nresult sets, since deep offsets are slower.\nPass affiliation=owner to return only resources authoritatively owned by the caller.\nUse owner_ref, repeatable, for an exact owner match; owner_id and owner_orcid are deprecated.\nPass sort=created, updated, or name with direction=asc or desc for explicit ordering.\nPass anchor_mfid without cursor or offset to start an inclusive page at a resource\nwithin the authorized, filtered, and ordered collection.\nPass include_links=true to include parent, child, and associated resources for each dataset.\nPass visibility=public or visibility=private to narrow by the resource's public ACL entry.\nPass instrument_mfid to filter by the instrument's canonical stable identity.\nPass project_id or project_mfid with project_scope=assigned, shared, or all to filter by project relationship.\nPass sample_mfid to filter by a readable sample's canonical stable identity.\nFaceted nullable fields also accept field-specific is_null=true or false filters.\nAccess selectors use AND semantics and only narrow resources readable by the caller.",
         "operationId": "list_datasets_datasets_get",
         "parameters": [
           {
@@ -14699,7 +14701,7 @@
     },
     "/datasets/search": {
       "get": {
-        "description": "Search readable datasets by name and return results ordered by match quality.\nUse owner_id for an exact owner match.\nPass project_id or project_mfid with project_scope=assigned, shared, or all to filter by project relationship. Maximum 50 results.",
+        "description": "Search readable datasets by name and return results ordered by match quality.\nUse owner_ref, repeatable, for an exact owner match.\nPass project_id or project_mfid with project_scope=assigned, shared, or all to filter by project relationship. Maximum 50 results.",
         "operationId": "search_datasets_datasets_search_get",
         "parameters": [
           {
@@ -20234,7 +20236,7 @@
     },
     "/instruments": {
       "get": {
-        "description": "Returns a paginated list of instruments filtered by any provided query parameters that\nmatch Instrument attributes. Matching is case-insensitive exact match.\nUse instrument_id for exact slug lookup. Other filterable fields include\nother_id, other_id_source, instrument_name, manufacturer,\nmodel, owner, location, description, instrument_type, status.\nUse owner_id for an exact owner match; owner remains as a deprecated alias.\nPass affiliation=owner to return only instruments authoritatively owned by the caller.\nPass sort=instrument_id|name|created|updated with direction=asc|desc to change the order.\nEach item carries the caller's effective role on the instrument record in role.\nPass include_total=false to omit the exact authorization-filtered count.\nDefaults to status=active; pass ?status=maintenance or ?status=decommissioned to see others.\nExact instrument_id and mfid lookups search every status unless status is also provided.",
+        "description": "Returns a paginated list of instruments filtered by any provided query parameters that\nmatch Instrument attributes. Matching is case-insensitive exact match.\nUse instrument_id for exact slug lookup. Other filterable fields include\nother_id, other_id_source, instrument_name, manufacturer,\nmodel, owner, location, description, instrument_type, status.\nUse owner_ref, repeatable, for an exact owner match; owner_id and owner are deprecated.\nPass affiliation=owner to return only instruments authoritatively owned by the caller.\nPass sort=instrument_id|name|created|updated with direction=asc|desc to change the order.\nEach item carries the caller's effective role on the instrument record in role.\nPass include_total=false to omit the exact authorization-filtered count.\nDefaults to status=active; pass ?status=maintenance or ?status=decommissioned to see others.\nExact instrument_id and mfid lookups search every status unless status is also provided.",
         "operationId": "list_instruments_instruments_get",
         "parameters": [
           {
@@ -20322,13 +20324,13 @@
             }
           },
           {
-            "description": "Include people and projects holding a role on the instrument record. Returned only to callers who hold a role on the instrument and to platform administrators. Requires an exact instrument_id filter.",
+            "description": "Include the instrument's members, highest role first. Returned only to members and to platform administrators. Requires an exact instrument_id filter.",
             "in": "query",
             "name": "include_members",
             "required": false,
             "schema": {
               "default": false,
-              "description": "Include people and projects holding a role on the instrument record. Returned only to callers who hold a role on the instrument and to platform administrators. Requires an exact instrument_id filter.",
+              "description": "Include the instrument's members, highest role first. Returned only to members and to platform administrators. Requires an exact instrument_id filter.",
               "title": "Include Members",
               "type": "boolean"
             }
@@ -20806,7 +20808,7 @@
     },
     "/instruments/search": {
       "get": {
-        "description": "Search instruments by name, type, or manufacturer using fuzzy matching.\nReturns results ordered by match quality. Maximum 50 results.\nUse owner_id for an exact owner match.",
+        "description": "Search instruments by name, type, or manufacturer using fuzzy matching.\nReturns results ordered by match quality. Maximum 50 results.\nUse owner_ref, repeatable, for an exact owner match.",
         "operationId": "search_instruments_instruments_search_get",
         "parameters": [
           {
@@ -21032,13 +21034,13 @@
             }
           },
           {
-            "description": "Include people and projects holding a role on the instrument record. Returned only to callers who hold a role on the instrument and to platform administrators.",
+            "description": "Include the instrument's members, highest role first. Returned only to members and to platform administrators.",
             "in": "query",
             "name": "include_members",
             "required": false,
             "schema": {
               "default": false,
-              "description": "Include people and projects holding a role on the instrument record. Returned only to callers who hold a role on the instrument and to platform administrators.",
+              "description": "Include the instrument's members, highest role first. Returned only to members and to platform administrators.",
               "title": "Include Members",
               "type": "boolean"
             }
@@ -25591,6 +25593,29 @@
             }
           },
           {
+            "description": "Owner, repeatable, at most 10 values, OR semantics. Each value is a unique_id, linked ORCID, username or email, resolved by its form; an unknown person matches nothing.",
+            "in": "query",
+            "name": "owner_ref",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "maxItems": 10,
+                  "minItems": 1,
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Owner, repeatable, at most 10 values, OR semantics. Each value is a unique_id, linked ORCID, username or email, resolved by its form; an unknown person matches nothing.",
+              "title": "Owner Ref"
+            }
+          },
+          {
             "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
             "in": "header",
             "name": "Crucible-Privilege-Mode",
@@ -26488,6 +26513,29 @@
             }
           },
           {
+            "description": "Owner, repeatable, at most 10 values, OR semantics. Each value is a unique_id, linked ORCID, username or email, resolved by its form; an unknown person matches nothing.",
+            "in": "query",
+            "name": "owner_ref",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "maxItems": 10,
+                  "minItems": 1,
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Owner, repeatable, at most 10 values, OR semantics. Each value is a unique_id, linked ORCID, username or email, resolved by its form; an unknown person matches nothing.",
+              "title": "Owner Ref"
+            }
+          },
+          {
             "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
             "in": "header",
             "name": "Crucible-Privilege-Mode",
@@ -26666,7 +26714,7 @@
         ]
       },
       "get": {
-        "description": "Fetch a dataset, sample, instrument, or project by ID without knowing its type in advance.\nResolves the type from idtype, then returns the full resource record.\nPass include_metadata=true to include scientific metadata.\nPass include_links=true to include parent/child/associated resources (datasets and samples only).\nSample dataset objects remain embedded by default for compatibility. Pass include_datasets=false to omit them.\nThe owner identity is resolved by default for datasets, samples, and instruments. Pass include_owner=false to omit it.",
+        "description": "Fetch a dataset, sample, instrument, or project by ID without knowing its type in advance.\nResolves the type from idtype, then returns the full resource record.\nPass include_metadata=true to include scientific metadata.\nPass include_links=true to include parent/child/associated resources (datasets and samples only).\nPass include_datasets=true to embed a sample's datasets.\nThe owner identity is resolved by default for datasets, samples, and instruments. Pass include_owner=false to omit it.",
         "operationId": "get_resource_resources__mfid__get",
         "parameters": [
           {
@@ -28241,7 +28289,7 @@
     },
     "/samples": {
       "get": {
-        "description": "Returns a paginated list of samples the requesting user is authorized to view.\nDefault limit is 100, max is 1000.\n\nBy default, results are ordered by unique_id descending. To fetch a keyset page,\npass cursor=<next_cursor from the previous response>. The first page omits cursor.\nnext_cursor is null when there are no further pages. total is included only when\ncursor is omitted and offset is zero. Pass include_total=true to request it on\nany page or include_total=false to suppress it.\n\nOffset pagination is supported for backward compatibility: pass offset=<n> instead\nof cursor. When both are supplied, cursor takes precedence. Prefer cursor for large\nresult sets, since deep offsets are slower.\nPass affiliation=owner to return only resources authoritatively owned by the caller.\nUse owner_id for an exact owner match; owner_orcid remains as a deprecated alias.\nPass sort=created, updated, or name with direction=asc or desc for explicit ordering.\nPass anchor_mfid without cursor or offset to start an inclusive page at a resource\nwithin the authorized, filtered, and ordered collection.\nPass include_links=true to include parent, child, and associated resources for each sample.\ninclude_datasets is deprecated; use include_links instead.\nPass visibility=public or visibility=private to narrow by the resource's public ACL entry.\nPass project_id or project_mfid with project_scope=assigned, shared, or all to filter by project relationship.\nPass dataset_mfid to filter by a readable dataset's canonical stable identity.\nFaceted nullable fields also accept field-specific is_null=true or false filters.\nAccess selectors use AND semantics and only narrow resources readable by the caller.",
+        "description": "Returns a paginated list of samples the requesting user is authorized to view.\nDefault limit is 100, max is 1000.\n\nBy default, results are ordered by unique_id descending. To fetch a keyset page,\npass cursor=<next_cursor from the previous response>. The first page omits cursor.\nnext_cursor is null when there are no further pages. total is included only when\ncursor is omitted and offset is zero. Pass include_total=true to request it on\nany page or include_total=false to suppress it.\n\nOffset pagination is supported for backward compatibility: pass offset=<n> instead\nof cursor. When both are supplied, cursor takes precedence. Prefer cursor for large\nresult sets, since deep offsets are slower.\nPass affiliation=owner to return only resources authoritatively owned by the caller.\nUse owner_ref, repeatable, for an exact owner match; owner_id and owner_orcid are deprecated.\nPass sort=created, updated, or name with direction=asc or desc for explicit ordering.\nPass anchor_mfid without cursor or offset to start an inclusive page at a resource\nwithin the authorized, filtered, and ordered collection.\nPass include_links=true to include parent, child, and associated resources for each sample.\ninclude_datasets is deprecated; use include_links instead.\nPass visibility=public or visibility=private to narrow by the resource's public ACL entry.\nPass project_id or project_mfid with project_scope=assigned, shared, or all to filter by project relationship.\nPass dataset_mfid to filter by a readable dataset's canonical stable identity.\nFaceted nullable fields also accept field-specific is_null=true or false filters.\nAccess selectors use AND semantics and only narrow resources readable by the caller.",
         "operationId": "list_samples_samples_get",
         "parameters": [
           {
@@ -29558,7 +29606,7 @@
     },
     "/samples/search": {
       "get": {
-        "description": "Search readable samples by name and return results ordered by match quality.\nUse owner_id for an exact owner match.\nPass project_id or project_mfid with project_scope=assigned, shared, or all to filter by project relationship. Maximum 50 results.",
+        "description": "Search readable samples by name and return results ordered by match quality.\nUse owner_ref, repeatable, for an exact owner match.\nPass project_id or project_mfid with project_scope=assigned, shared, or all to filter by project relationship. Maximum 50 results.",
         "operationId": "search_samples_samples_search_get",
         "parameters": [
           {
@@ -30263,7 +30311,7 @@
     },
     "/samples/{sample_mfid}": {
       "get": {
-        "description": "Returns the sample for the provided MFID.\nPass include_links=true to include parent, child, and associated resources.\nEmbedded dataset objects are retained by default for compatibility. New clients should pass include_datasets=false and use include_links or GET /datasets?sample_mfid=... instead.\nThe owner identity is resolved by default. Pass include_owner=false to omit it.",
+        "description": "Returns the sample for the provided MFID.\nPass include_links=true to include parent, child, and associated resources.\nPass include_datasets=true to embed the sample's datasets; GET /datasets?sample_mfid=... lists them with filters and pages.\nThe owner identity is resolved by default. Pass include_owner=false to omit it.",
         "operationId": "read_sample_samples__sample_mfid__get",
         "parameters": [
           {

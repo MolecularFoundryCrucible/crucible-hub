@@ -329,9 +329,7 @@ export interface paths {
         /**
          * Set Account Password
          * @description Set a first password, or change yours, from a browser session with a recent sign-in. Changing
-         *     needs the current password and ends your other sessions, keeping this one. Passwords sign in with
-         *     the username, so an account without one sets it first with PATCH /account/profile. API keys are
-         *     never touched.
+         *     needs the current password and ends your other sessions, keeping this one. API keys are never touched.
          */
         post: operations["set_account_password_account_password_post"];
         delete?: never;
@@ -778,7 +776,7 @@ export interface paths {
          *     of cursor. When both are supplied, cursor takes precedence. Prefer cursor for large
          *     result sets, since deep offsets are slower.
          *     Pass affiliation=owner to return only resources authoritatively owned by the caller.
-         *     Use owner_id for an exact owner match; owner_orcid remains as a deprecated alias.
+         *     Use owner_ref, repeatable, for an exact owner match; owner_id and owner_orcid are deprecated.
          *     Pass sort=created, updated, or name with direction=asc or desc for explicit ordering.
          *     Pass anchor_mfid without cursor or offset to start an inclusive page at a resource
          *     within the authorized, filtered, and ordered collection.
@@ -851,7 +849,7 @@ export interface paths {
         /**
          * Search Datasets
          * @description Search readable datasets by name and return results ordered by match quality.
-         *     Use owner_id for an exact owner match.
+         *     Use owner_ref, repeatable, for an exact owner match.
          *     Pass project_id or project_mfid with project_scope=assigned, shared, or all to filter by project relationship. Maximum 50 results.
          */
         get: operations["search_datasets_datasets_search_get"];
@@ -1853,7 +1851,7 @@ export interface paths {
          *     Use instrument_id for exact slug lookup. Other filterable fields include
          *     other_id, other_id_source, instrument_name, manufacturer,
          *     model, owner, location, description, instrument_type, status.
-         *     Use owner_id for an exact owner match; owner remains as a deprecated alias.
+         *     Use owner_ref, repeatable, for an exact owner match; owner_id and owner are deprecated.
          *     Pass affiliation=owner to return only instruments authoritatively owned by the caller.
          *     Pass sort=instrument_id|name|created|updated with direction=asc|desc to change the order.
          *     Each item carries the caller's effective role on the instrument record in role.
@@ -1885,7 +1883,7 @@ export interface paths {
          * Search Instruments
          * @description Search instruments by name, type, or manufacturer using fuzzy matching.
          *     Returns results ordered by match quality. Maximum 50 results.
-         *     Use owner_id for an exact owner match.
+         *     Use owner_ref, repeatable, for an exact owner match.
          */
         get: operations["search_instruments_instruments_search_get"];
         put?: never;
@@ -2872,7 +2870,7 @@ export interface paths {
          *     Resolves the type from idtype, then returns the full resource record.
          *     Pass include_metadata=true to include scientific metadata.
          *     Pass include_links=true to include parent/child/associated resources (datasets and samples only).
-         *     Sample dataset objects remain embedded by default for compatibility. Pass include_datasets=false to omit them.
+         *     Pass include_datasets=true to embed a sample's datasets.
          *     The owner identity is resolved by default for datasets, samples, and instruments. Pass include_owner=false to omit it.
          */
         get: operations["get_resource_resources__mfid__get"];
@@ -3160,7 +3158,7 @@ export interface paths {
          *     of cursor. When both are supplied, cursor takes precedence. Prefer cursor for large
          *     result sets, since deep offsets are slower.
          *     Pass affiliation=owner to return only resources authoritatively owned by the caller.
-         *     Use owner_id for an exact owner match; owner_orcid remains as a deprecated alias.
+         *     Use owner_ref, repeatable, for an exact owner match; owner_id and owner_orcid are deprecated.
          *     Pass sort=created, updated, or name with direction=asc or desc for explicit ordering.
          *     Pass anchor_mfid without cursor or offset to start an inclusive page at a resource
          *     within the authorized, filtered, and ordered collection.
@@ -3213,7 +3211,7 @@ export interface paths {
         /**
          * Search Samples
          * @description Search readable samples by name and return results ordered by match quality.
-         *     Use owner_id for an exact owner match.
+         *     Use owner_ref, repeatable, for an exact owner match.
          *     Pass project_id or project_mfid with project_scope=assigned, shared, or all to filter by project relationship. Maximum 50 results.
          */
         get: operations["search_samples_samples_search_get"];
@@ -3311,7 +3309,7 @@ export interface paths {
          * Read Sample
          * @description Returns the sample for the provided MFID.
          *     Pass include_links=true to include parent, child, and associated resources.
-         *     Embedded dataset objects are retained by default for compatibility. New clients should pass include_datasets=false and use include_links or GET /datasets?sample_mfid=... instead.
+         *     Pass include_datasets=true to embed the sample's datasets; GET /datasets?sample_mfid=... lists them with filters and pages.
          *     The owner identity is resolved by default. Pass include_owner=false to omit it.
          */
         get: operations["read_sample_samples__sample_mfid__get"];
@@ -4301,7 +4299,8 @@ export interface components {
             name?: string | null;
             /**
              * Older Routes
-             * @description The key the deprecated single-key routes show and regenerate replaces.
+             * @deprecated
+             * @description Deprecated: always false, since the single-key routes are gone. Removed in a later release.
              * @default false
              */
             older_routes: boolean;
@@ -4335,7 +4334,8 @@ export interface components {
             name?: string | null;
             /**
              * Older Routes
-             * @description The key the deprecated single-key routes show and regenerate replaces.
+             * @deprecated
+             * @description Deprecated: always false, since the single-key routes are gone. Removed in a later release.
              * @default false
              */
             older_routes: boolean;
@@ -8044,7 +8044,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description `service_account`, `username_required` (set one with PATCH /account/profile first), or `password_changed` when another request changed it first */
+            /** @description `service_account`, or `password_changed` when another request changed it first */
             409: {
                 headers: {
                     [name: string]: unknown;
@@ -11921,7 +11921,7 @@ export interface operations {
                 affiliation?: components["schemas"]["InstrumentAffiliation"][] | null;
                 include_metadata?: boolean;
                 include_owner?: boolean;
-                /** @description Include people and projects holding a role on the instrument record. Returned only to callers who hold a role on the instrument and to platform administrators. Requires an exact instrument_id filter. */
+                /** @description Include the instrument's members, highest role first. Returned only to members and to platform administrators. Requires an exact instrument_id filter. */
                 include_members?: boolean;
                 /** @description Exact authorization-filtered total. Omit to preserve legacy endpoint behavior; true always computes it and false always omits it. */
                 include_total?: boolean | null;
@@ -12088,7 +12088,7 @@ export interface operations {
             query?: {
                 include_metadata?: boolean;
                 include_owner?: boolean;
-                /** @description Include people and projects holding a role on the instrument record. Returned only to callers who hold a role on the instrument and to platform administrators. */
+                /** @description Include the instrument's members, highest role first. Returned only to members and to platform administrators. */
                 include_members?: boolean;
             };
             header?: {
@@ -14213,6 +14213,8 @@ export interface operations {
                 /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. */
                 affiliation?: components["schemas"]["Affiliation"][] | null;
                 limit?: number;
+                /** @description Owner, repeatable, at most 10 values, OR semantics. Each value is a unique_id, linked ORCID, username or email, resolved by its form; an unknown person matches nothing. */
+                owner_ref?: string[] | null;
             };
             header?: {
                 /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
@@ -14587,6 +14589,8 @@ export interface operations {
                 limit?: number;
                 /** @description Relationship between the authenticated caller and each result. Repeated values use OR semantics. owner matches records the caller owns. member matches records the caller reaches through one of their own grants (personal, project, explicit share or group, and the operator group of an instrument a service account is bound to), so records visible only because they are public are excluded; combine with visibility to narrow further. For platform administrators, member counts only their own grants, not their global access. Applies to dataset and sample results; project and instrument results are not narrowed. */
                 affiliation?: components["schemas"]["ResourceAffiliation"][] | null;
+                /** @description Owner, repeatable, at most 10 values, OR semantics. Each value is a unique_id, linked ORCID, username or email, resolved by its form; an unknown person matches nothing. */
+                owner_ref?: string[] | null;
             };
             header?: {
                 /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
