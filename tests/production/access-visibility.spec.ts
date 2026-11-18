@@ -28,7 +28,7 @@ test("shows instrument people on the Overview", async ({ page }) => {
   await expect(page.getByText("Manager", { exact: true })).toBeVisible()
 })
 
-test("lets an instrument manager include instrument access in its datasets", async ({
+test("shows an instrument member all of its datasets or only their personal ones", async ({
   page,
 }) => {
   await page.goto(
@@ -37,22 +37,22 @@ test("lets an instrument manager include instrument access in its datasets", asy
   await page.waitForLoadState("networkidle")
 
   await page.getByRole("button", { name: /^Filters/ }).click()
-  await page
-    .getByRole("checkbox", { name: "Include instrument access" })
-    .click()
+  await expect(page.getByRole("button", { name: "All" })).toHaveAttribute(
+    "aria-pressed",
+    "true"
+  )
+  await expect(
+    page.getByRole("checkbox", { name: "Include public data" })
+  ).toHaveCount(0)
+  await page.getByRole("button", { name: "Personal" }).click()
+  await expect(
+    page.getByRole("checkbox", { name: "Include public data" })
+  ).toBeVisible()
   await page
     .getByRole("button", { name: /^(Apply filters|Show \d+ \w+)$/ })
     .click()
 
-  await expect(page).toHaveURL(/instrumentAccess=true/)
-  await page
-    .getByRole("button", { name: "Remove filter: Instrument access" })
-    .click()
-  await expect(page).not.toHaveURL(/instrumentAccess/)
-
-  await page.getByRole("button", { name: /^Filters/ }).click()
-  await page.getByRole("checkbox", { name: "Include public data" }).click()
-  await expect(
-    page.getByRole("checkbox", { name: "Include instrument access" })
-  ).toHaveCount(0)
+  await expect(page).toHaveURL(/access=personal/)
+  await page.getByRole("button", { name: "Remove filter: Personal" }).click()
+  await expect(page).not.toHaveURL(/access=/)
 })
