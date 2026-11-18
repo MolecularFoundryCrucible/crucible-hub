@@ -276,6 +276,70 @@ describe.skipIf(!databaseUrl)("Hub sessions shared through Postgres", () => {
     ])
   })
 
+  it("keeps Administrator view and its expiry when the same account re-confirms", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] })
+    vi.setSystemTime(new Date("2026-10-06T12:00:00.000Z"))
+    stubSharedEnv()
+    const signedIn = await signedInSession(() => Response.json([]))
+    const elevate = startRequestScope("http://127.0.0.1:3000/hub/data", {
+      headers: { cookie: signedIn.sessionCookie },
+    })
+    await elevate.run(() =>
+      withHubAuthRequest(() => updateSharedPrivilegeMode("elevated"))
+    )
+    const sessionCookie = elevate
+      .setCookies()
+      .find((value) => value.startsWith("crucible_hub_session="))!
+      .split(";")[0]
+
+    vi.setSystemTime(new Date("2026-10-06T20:00:00.000Z"))
+    const stepUp = startRequestScope(
+      "http://127.0.0.1:3000/hub/auth/login?max_age=0",
+      { headers: { cookie: sessionCookie } }
+    )
+    const location = await stepUp.run(() =>
+      beginHubLogin("/hub/reauthenticated", 0)
+    )
+    const state = new URL(location).searchParams.get("state")!
+    const loginCookie = stepUp
+      .setCookies()
+      .find((value) => value.startsWith("crucible_hub_login="))!
+      .split(";")[0]
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL | Request, init?: RequestInit) =>
+        oauthRoute(input, init) === "/oauth/token:authorization_code"
+          ? Response.json(
+              oauthTokenAnswer({
+                ...tokenResponse,
+                auth_time: new Date().toISOString(),
+                refresh_token: "refresh-2",
+              })
+            )
+          : new Response(null)
+      )
+    )
+    const callback = startRequestScope(
+      "http://127.0.0.1:3000/hub/auth/callback",
+      { headers: { cookie: `${sessionCookie}; ${loginCookie}` } }
+    )
+    await callback.run(() =>
+      finishHubLogin("code", state, null, "https://api.example.test")
+    )
+    const replaced = callback
+      .setCookies()
+      .find((value) => /^crucible_hub_session=./.test(value))!
+      .split(";")[0]
+    const modeAt = (time: string) => {
+      vi.setSystemTime(new Date(time))
+      return startRequestScope("http://127.0.0.1:3000/hub/data", {
+        headers: { cookie: replaced },
+      }).run(() => withHubAuthRequest(async () => sharedRequestPrivilegeMode()))
+    }
+    await expect(modeAt("2026-10-06T20:00:01.000Z")).resolves.toBe("elevated")
+    await expect(modeAt("2026-10-07T00:00:01.000Z")).resolves.toBe("normal")
+  })
+
   it("keeps a pending sign-in link in the database for its own session only", async () => {
     vi.useFakeTimers({ toFake: ["Date"] })
     vi.setSystemTime(new Date("2026-10-06T22:00:00.000Z"))

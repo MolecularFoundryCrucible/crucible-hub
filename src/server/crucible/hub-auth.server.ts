@@ -743,13 +743,21 @@ export async function finishHubLogin(
     const sessionId = randomValue()
     const previousId = getCookie(sessionCookie) ?? null
     const previous = previousId ? await readSession(previousId) : null
+    const session = newSharedSession(tokens)
+    if (
+      transaction.expectedAccount &&
+      previous?.session.tokens.user_unique_id === tokens.user_unique_id
+    ) {
+      session.privilegeMode = previous.session.privilegeMode
+      session.elevatedAt = previous.session.elevatedAt
+    }
     let accepted: boolean
     try {
       accepted = await createSessionAfterCallback(
         transactionId,
         sessionId,
         previousId,
-        newSharedSession(tokens)
+        session
       )
     } catch (error) {
       await revokeRefreshToken(tokens.refresh_token)
@@ -818,7 +826,12 @@ export async function finishHubLogin(
       idleExpiresAt: now + sessionIdleLifetime,
     })
     if (previous) await revokeRefreshToken(previous.tokens.refresh_token)
-    await writeGlobalPrivilegeMode("normal")
+    if (
+      !transaction.expectedAccount ||
+      previous?.tokens.user_unique_id !== tokens.user_unique_id
+    ) {
+      await writeGlobalPrivilegeMode("normal")
+    }
     setCookie(sessionCookie, sessionId, sessionCookieOptions())
     return transaction.returnTo
   } finally {

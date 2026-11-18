@@ -677,6 +677,48 @@ describe("hub login exchange", () => {
       ).toBe(true)
     })
 
+    it("keeps Administrator view on when the same account returns", async () => {
+      stubHubAuthEnv()
+      const session = await signIn("0000-0000-0000-000X")
+      const { callback, finished } = await stepUp(
+        `${session}; crucible_hub_administrator_view=elevated`,
+        "0000-0000-0000-000X"
+      )
+      await expect(finished).resolves.toBe("/hub/reauthenticated")
+      expect(
+        callback
+          .setCookies()
+          .some((value) => value.startsWith("crucible_hub_administrator_view="))
+      ).toBe(false)
+    })
+
+    it("turns Administrator view off on an ordinary sign-in", async () => {
+      stubHubAuthEnv()
+      const session = await signIn("0000-0000-0000-000X")
+      const { scope, location } = await beginLogin("/hub/data")
+      const state = new URL(location).searchParams.get("state")!
+      const callback = startRequestScope(
+        "http://127.0.0.1:3000/hub/auth/callback",
+        {
+          headers: {
+            cookie: `${session}; crucible_hub_administrator_view=elevated; ${
+              loginCookie(scope).split(";")[0]
+            }`,
+          },
+        }
+      )
+      await callback.run(() =>
+        finishHubLogin("code", state, null, "https://api.example.test")
+      )
+      expect(
+        callback
+          .setCookies()
+          .some((value) =>
+            value.startsWith("crucible_hub_administrator_view=;")
+          )
+      ).toBe(true)
+    })
+
     it("keeps the session and revokes the tokens when another account returns", async () => {
       stubHubAuthEnv()
       const session = await signIn("0000-0000-0000-000X")
