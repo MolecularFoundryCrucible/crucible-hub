@@ -6,6 +6,8 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+## 1.8.1 - 2026-11-17
+
 - Signing in again to confirm an action keeps Administrator view on, with its original twelve-hour expiry, so an administrator asked to re-authenticate while creating a service account or editing a person is no longer refused with a permission error afterwards. An ordinary sign-in still starts with Administrator view off.
 
 ## 1.8.0 - 2026-11-17
