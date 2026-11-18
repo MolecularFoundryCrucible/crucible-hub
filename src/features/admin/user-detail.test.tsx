@@ -514,7 +514,6 @@ describe("UserDetailView API keys", () => {
             last4: "7f3a",
             last_used_at: null,
             name: "Beamline laptop",
-            older_routes: false,
             revoked_at: null,
             status: "active",
           },

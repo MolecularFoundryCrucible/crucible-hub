@@ -40,7 +40,6 @@ const workstation: WorkspaceApiKey = {
   last4: "7f3a",
   last_used_at: null,
   name: "Analysis workstation",
-  older_routes: false,
   revoked_at: null,
   status: "active",
 }
