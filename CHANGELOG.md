@@ -6,6 +6,8 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+## 1.8.2 - 2026-11-18
+
 - Every member of an instrument, viewers included, now sees all of the instrument's datasets on its page by default. A new All or Personal choice in Dataset filters replaces Include instrument access: Personal lists only the datasets reached through the person's own access, not through the instrument, and is kept in the address as `access=personal`. Include public data is offered with Personal. Links with the old `instrumentAccess=true` open as All.
 
 ## 1.8.1 - 2026-11-17
