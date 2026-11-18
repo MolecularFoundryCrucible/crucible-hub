@@ -743,13 +743,13 @@ export async function finishHubLogin(
     const sessionId = randomValue()
     const previousId = getCookie(sessionCookie) ?? null
     const previous = previousId ? await readSession(previousId) : null
-    const session = newSharedSession(tokens)
+    const created = newSharedSession(tokens)
     if (
       transaction.expectedAccount &&
       previous?.session.tokens.user_unique_id === tokens.user_unique_id
     ) {
-      session.privilegeMode = previous.session.privilegeMode
-      session.elevatedAt = previous.session.elevatedAt
+      created.privilegeMode = previous.session.privilegeMode
+      created.elevatedAt = previous.session.elevatedAt
     }
     let accepted: boolean
     try {
@@ -757,7 +757,7 @@ export async function finishHubLogin(
         transactionId,
         sessionId,
         previousId,
-        session
+        created
       )
     } catch (error) {
       await revokeRefreshToken(tokens.refresh_token)
