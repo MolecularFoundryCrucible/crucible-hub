@@ -2,7 +2,7 @@
 
 This Compose project runs Crucible Hub next to a self-hosted Crucible API. It has three services: `hub` (the web app on port 3000), `hub-db` (PostgreSQL 17 holding only Hub sign-in sessions), and `hub-setup` (a one-shot job that creates the session roles and schema and applies migrations before the Hub starts). The Hub never touches the API's database.
 
-The API bundle's front door (Caddy) serves both at one address: `/api/v3/` goes to the API and `/hub/` goes to the Hub, without stripping the prefix. The Hub only runs under `/hub/`. It can sit on the same machine as the API bundle or on a separate one; only the settings differ.
+The API bundle is the Compose installation in [crucible-selfhost](https://github.com/MolecularFoundryCrucible/crucible-selfhost/tree/main/compose); its [Hub guide](https://github.com/MolecularFoundryCrucible/crucible-selfhost/blob/main/compose/docs/hub.md) covers the API side of these steps. Its front door (Caddy) serves both at one address: `/api/v4/` goes to the API and `/hub/` goes to the Hub, without stripping the prefix. The Hub only runs under `/hub/`. It can sit on the same machine as the API bundle or on a separate one; only the settings differ.
 
 ## Requirements
 
@@ -46,7 +46,7 @@ cp example.env .env
 docker compose up -d --build
 ```
 
-For a trial on one machine with the API bundle's defaults, set `HUB_PUBLIC_ORIGIN=http://localhost:8080` and `HUB_AUTH_PUBLIC_API_URL=http://localhost:8080/api/v3`, then open `http://localhost:8080/hub/`.
+For a trial on one machine with the API bundle's defaults, set `HUB_PUBLIC_ORIGIN=http://localhost:8080` and `HUB_AUTH_PUBLIC_API_URL=http://localhost:8080/api/v4`, then open `http://localhost:8080/hub/`.
 
 `example.env` selects `compose.yaml` and `compose.api-network.yaml` and sets `HUB_API_ALLOW_HTTP=true`, because `http://api:8000` never leaves the Docker network. Even with that setting, the Hub accepts plain HTTP only for a container name or a private address. The Hub and setup containers drop every Linux capability and the database drops `NET_RAW`, so none of them can intercept traffic on the shared network; do the same for the API bundle's containers, and keep the API's database off the shared network. Set `CRUCIBLE_HUB_UPSTREAM=hub:3000` in the API bundle so its front door forwards `/hub/`.
 
