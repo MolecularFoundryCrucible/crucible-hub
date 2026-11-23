@@ -1,149 +1,44 @@
-# Crucible Hub Roadmap
+# Roadmap
 
-Status: Active
-
-Date: 2026-09-23
-
-## Purpose
-
-This document owns delivery order, entry and completion gates, current status, and the next action. [Product brief](product-brief.md) owns product intent, [information architecture](information-architecture.md) owns route behavior, [architecture](architecture.md) owns technical boundaries, and [foundation evidence](phase-0-evidence.md) owns current verification detail.
-
-## Delivery rules
-
-- Build API-authorized, capability-aware workflows without recreating authorization in Hub.
-- Complete one recoverable workflow at a time and keep mutation states local.
-- Do not expose a production mutation until the selected pilot session mode, authentication, same-origin, and CSRF gates are complete. Require shared sessions before multi-instance deployment.
-- Record API-owned blockers in [Crucible API handoff](crucible-api-handoff.md), not as Hub workarounds.
-- Treat a package as complete only when its scoped validation and documentation are current.
-- Keep the blocking browser gate bounded, representative, and screenshot-free. Use fixture and unit coverage for deterministic workflow logic and targeted local browser review for specialized flows when they change.
+This document owns the order of remaining Hub work and the external dependencies it waits on. Product intent is in the [product brief](product-brief.md), routes in [information architecture](information-architecture.md), open API requests in the [Crucible API handoff](crucible-api-handoff.md), and shipped changes in the [CHANGELOG](../CHANGELOG.md).
 
 ## Current position
 
-The local workspace has the runtime and server boundary, generated contract consumption, identity-scoped Query foundation, responsive shell and design system, global and contextual discovery, cursor-paginated and grouped collections, resource previews and sibling navigation, canonical resource workspaces, creation and controlled management workflows, graph and dataset processing views, the first capability-gated service-account administration slice, and API-owned ORCID sign-in with an opt-in shared session path. Production authentication and mutation exposure remain blocked by deployment and browser security evidence.
+Hub 1.8.2 consumes the Crucible API 4.0.0 contract recorded in `contracts/crucible-api.lock.json`. It is released as a container image, signs people in through the API's standard OAuth routes, and keeps sessions in Postgres. Discovery, resource workspaces, management, account security, people and service-account administration, deletion and join-request review, uploads, ingestion, and post-processing are in place.
 
-| Area                                        | Status                                                                                                                                                                                                             |
-| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Runtime and server-only boundary            | The single-instance production pilot runs on the shared Postgres session store. Scaling past one instance is a separate decision.                                                                                  |
-| Read and discovery workspace                | Home continuation, global and project search, QR lookup, directory ownership scopes, cursor pagination, facets, grouped browsing, previews, and sibling navigation are implemented locally.                        |
-| Resource workspaces                         | Project, instrument, sample, and dataset routes with Overview, Data or Processing, Graph where applicable, and capability-gated Manage surfaces are implemented locally.                                           |
-| Controlled mutations                        | Descriptive and metadata edits, creation, relationships, access, membership, assignment, ownership, lifecycle, thumbnails, ingestion requests, and deletion request submission and review are implemented locally. |
-| Account profile                             | Read-first identity editing, non-secret API credential status, and advertised account capabilities are implemented locally. Self-service key rotation waits for the production session contract.                   |
-| Service-account administration              | Capability-gated directory, creation, profile and platform-role editing, credential status, one-time key display, and key rotation are implemented locally. Staging role mutation needs recheck.                   |
-| Broader administration and account activity | Deletion-request history and review are implemented locally. Join review, people administration, audit, pins, and account activity await API contracts.                                                            |
-| Uploads                                     | Browser upload works against staging behind `HUB_UPLOADS_ENABLED`; ingestion at upload time waits for ingestion consumers that read the multipart bucket.                                                          |
-| Production exposure                         | The pilot, open to every Crucible account holder since October 26, 2026, is deployed on one instance with the Cloud SQL shared session store. Multi-replica evidence is needed before scaling.                     |
+## Delivery rules
 
-## Ordered work packages
+- The API authorizes every operation; Hub follows capabilities and never recreates authorization.
+- Finish one recoverable workflow at a time and keep mutation state local.
+- Record API-owned blockers in the [Crucible API handoff](crucible-api-handoff.md) instead of working around them in Hub.
+- Work is complete when its tests and the documents that own its behavior are current.
+- Keep the blocking browser suite bounded, representative, and screenshot-free; cover deterministic logic with fixture and unit tests.
 
-### P0: production foundation
+## Ordered work
 
-1. Verify explicit process-local production sessions with Cloud Run minimum and maximum instances both set to one and best-effort session affinity. Verify that restart or deployment signs users out and does not expose credentials.
-2. Verify authenticated middleware, session rotation, revocation, account replacement, same-origin mutation protection, and CSRF enforcement in the target browser and deployment topology.
-3. Complete upload feasibility evidence for the direct object-storage boundary.
-4. Run the production go or no-go review with container, path-prefix, authentication, and operational evidence.
-5. Deferred: compress dynamic HTML and server-function responses at the reverse proxy, as described in [response compression](cloud-run-pilot.md#response-compression).
-
-Entry: accepted API login and session contract. Completion: pilot-shaped authentication, session, security, deployment, and recovery evidence is recorded in [foundation evidence](phase-0-evidence.md). Before raising the instance cap or requiring session continuity, implement and validate the Hub-owned Cloud SQL session store across replicas under [decision 0033](../decisions/0033-use-existing-cloud-sql-for-shared-hub-sessions.md).
-
-### P1: useful read workspace
-
-The local workspace is complete enough for continued feature work: Home continuation with session-only recently viewed resources and bounded ownership sections, global and project Data collections with filters and API-backed grouped browsing, ownership-scoped project and instrument directories, grouped scoped datasets, resource and contextual inspection, bounded name and scientific metadata search, file-scoped dataset ingestion requests and history, explicit entity refresh, public-safe people, and on-demand single-file downloads are implemented. Production release remains subject to P0.
-
-#### Grouped collection browsing
-
-Implemented for local development. Type-specific global Data, Project Data, and Instrument Datasets can switch between the existing list and an API-backed group directory. Facet counts, canonical labels, configurable label or count ordering, null buckets, and bucket pagination remain server-owned; selecting one group lazily starts the normal filtered resource cursor chain. Browse state is URL-backed and uses one shared presentation and mapping model across scopes. Canonical detail pages expose a compact sibling control and can rebuild a two-sided sequence around the current resource by supported scope and sort through anchored API reads. Cross-device saved views remain deferred to the contracts in [Crucible API handoff](crucible-api-handoff.md).
-
-#### Resource inspector slice
-
-Implemented and locally verified. It provides bounded in-place relationship inspection, native history, local failure recovery, and canonical promotion. The bounded browser gate covers compact preview entry, while the production runtime suite covers project preview deep links, full-page promotion, and browser Back restoration. Inspector-specific layout and focus changes require the targeted review in decision 0009. See [information architecture](information-architecture.md#resource-inspector-navigation) and decisions 0008 and 0009.
-
-#### Project collection inspection
-
-Implemented and locally verified. It reuses the inspector without altering project collection filters, cursors, geometry, or scroll. The production runtime gate covers filtered project preview restoration and canonical promotion. See decision 0010.
-
-#### Global Data collection inspection
-
-Implemented and locally verified. It preserves applied global Data filters and cursor state while preview navigation remains independent of collection reads. The bounded browser gate covers compact preview entry and canonical full-page availability. See decision 0012.
-
-#### Single-file downloads
-
-Implemented and browser verified. Links are generated only after activation and remain outside client caches, route state, and logs. The focused browser gate covers compact access, one-shot handoff, local failure, and retry, while the production runtime gate checks the built handoff. The typed response and attachment behavior remain API follow-ups.
-
-#### Resource graph traversal
-
-Implemented for local development. Canonical sample and dataset Graph tabs load an identity-scoped graph only on entry from the typed `GET /resources/{resource_mfid}/graph` operation and use separate lineage depth-three upstream and downstream requests so traversal follows direct ancestor and descendant paths without changing direction into sibling branches. Those paths merge with the current resource's direct associations. React Flow with ELK Layered provides collision-free directional lineage placement that adapts to compact screens, draggable nodes, reset and native fullscreen controls, neighborhood emphasis, semantic node and edge styling, loading and arrangement feedback, reduced-motion-aware animated updates, and direct node expansion while retaining the existing inspector and canonical rerooting. Nodes with confirmed additional readable topology support independently cached ancestor, descendant, and association expansion from React node controls. Completed directions are removed from the available actions. The Hub merges responses by node MFID and stable edge ID, preserves API-provided relationship semantics, and reports truncation without requesting neighbour detail. See decision 0026 and [resource graph API handoff](resource-graph-api-handoff.md).
-
-#### Dataset thumbnails
-
-Implemented for local development. Dataset Overview loads an independent, browser-initiated thumbnail gallery after hydration. Exact `can_edit` guidance exposes an explicit edit state for add, rename, and confirmed delete operations. Graph nodes request first dataset previews in a separate bounded batch. Image payloads remain outside detail, collection, loader, URL, and persistent state. Production mutation exposure remains gated on P0, while the OpenAPI documentation gaps are recorded in [Crucible API handoff](crucible-api-handoff.md).
-
-### P2: controlled self-service management
-
-Completed local slices are descriptive project and instrument Overview editing, sample and dataset summary editing, scientific metadata editing, reviewed resource deletion submission and review, a consolidated Project Overview, direct project membership, and resource relationship management. Project navigation uses Data and Overview plus capability-gated Manage for route-backed Members, project-filtered deletion review, and Ownership operations.
-
-Direct membership uses the accepted contract: add an existing user, change an allowed non-owner role, remove a member, or let a non-owner leave. It is separate from resource ACLs, ownership transfer, and future join requests. No invitation workflow is planned. See decisions 0020 and 0021.
-
-#### Resource relationship management
-
-Implemented with fixture and unit coverage for local development. Canonical sample and dataset pages provide capability-guided parent, child, and cross-type link management with bounded target search, confirmed unlink, retained failure state, exact source and target rereads, and no resource deletion. Relationship interaction and compact dialog changes require targeted local browser review. Production exposure remains gated on the API relationship contract described in [Crucible API handoff](crucible-api-handoff.md) and the Hub session boundary.
-
-#### Resource management
-
-Implemented with fixture and unit coverage for local development. Route-backed sample and dataset Manage pages reuse the canonical parent shell, load ACLs only on Manage entry with preload disabled, gate access controls on exact `can_manage_access`, cap user and project grants with `max_grant_role`, keep non-manageable principals read-only, contain ownership and reviewed deletion actions, confirm consequential mutations, and apply server-confirmed non-optimistic state. Access and ownership interaction changes require targeted local browser review. The API shape and production session gate remain the authoritative deployment constraints.
-
-#### Deletion-request review
-
-Implemented locally against pinned API revision `f9fb3c723308e56a33804d5cf4306e4f3e3db7ce`. One shared route presents newest-first request-time ordering in submitted history and pending review with URL-backed project scope and opaque cursor continuation. Approved history uses the permanent audit's submitted or administrator-wide scope, embedded actors, canonical project links when retained, and opaque cursor continuation. Project Manage reuses a bounded project-filtered queue. Normal and global Administrator authority remain distinct, approval and rejection are confirmed and server-owned, and submission or review refreshes every affected discovery representation. Production mutation exposure remains gated on the Hub session boundary.
-
-#### Join requests
-
-Built on the API's join request workflow. A signed-in person who is not a member sees Request to join on the project page, with an optional reason (`POST /projects/{project_ref}/join_requests`), and then Request pending with Withdraw. Project Manage lists the project's pending requests for those who may review them, and Join requests (`/join-requests`, with a sidebar count of requests awaiting your review) lists everything you may review across projects plus your own requests. Approving picks a role (contributor by default, at most your own) and an optional note. The API's refusal codes each get their own message. The Hub reads only `GET /join_requests` with `scope`, `status` and `project_mfid`, never an account-wide history.
-
-#### Instrument lifecycle
-
-Implemented for local development. Instrument Manage places capability-gated lifecycle controls in its unified Resource management card using the dedicated status operation and authoritative instrument response. Hub offers active, maintenance, and decommissioned, confirms decommissioning, preserves local failure state, keeps lifecycle separate from descriptive Overview editing, and provides API-filtered directory views for every state. The API's untyped status parameter and response, transition rules, and error outcomes remain documented in [Crucible API handoff](crucible-api-handoff.md).
-
-#### Instrument operators, registration, ownership, and resource assignment
-
-Implemented for local development. Instrument Manage places operators in Access management and ownership in Resource management on one page. Operators resolve an exact service-account username or MFID, replace the API's complete returned list, and confirm removal. Project Manage similarly separates member and role controls from ownership transfer and leaving. Ownership for projects, instruments, samples, and datasets uses server preview before explicit confirmation. Sample and dataset Manage offers the equivalent preview-confirm project move without implying any project-to-instrument relationship. Dataset Manage also offers locally confirmed acquisition-instrument reassignment through the dedicated atomic API operation, updates the canonical instrument identity from the response, and refreshes derived access and dependent collections. Instrument registration is a dedicated route for human accounts, validates the API's instrument ID rule, omits owner, and opens the returned canonical MFID.
-
-Dataset uploads are wired to the inline multipart API (staging `a831c2e`) behind the default-off `HUB_UPLOADS_ENABLED` flag and were verified with a real staging upload. Add files is available from the dataset Overview Files card, the Processing tab, and dataset creation, with drag and drop of files and folders, per-file and batch ingestor selection, duplicate-name checks, and per-file recovery. Ingestion at upload time is gated separately by `HUB_UPLOAD_INGESTION_ENABLED` until ingestion consumers can read the multipart bucket; downloaded multipart files keep their name once the API signs download URLs with the file name ([Crucible API handoff](crucible-api-handoff.md)).
-
-#### Project, sample, and dataset creation
-
-Implemented with fixture and unit coverage for local development without file upload. Dedicated routes validate contract fields, use bounded project, instrument, sample, and lead selectors, omit caller-assigned MFIDs, and navigate from API-assigned canonical identities. Confirmed rejections retain correctable drafts. Uncertain sample and dataset creates do not retry without API idempotency and direct the user to check Data before resubmitting. Dataset sample associations begin only after confirmed creation and retry only incomplete links. Creation-form interaction and recovery changes require targeted local browser review. File attachment remains a later stage until the upload contract is safe for browsers.
-
-#### Next action: production boundary and administration verification
-
-Keep the implemented local workspace stable while end-to-end login and [Cloud Run pilot](cloud-run-pilot.md) evidence remain the release-critical path. Recheck service-account platform-role mutation against the deployed API revision, then implement broader Administration routes only as their capability, queue, mutation, and audit contracts become available. Browser upload, production mutations, and deployment remain blocked by P0. The Hub-owned Cloud SQL session store and multi-replica validation remain prerequisites for later multi-instance operation.
-
-### P3: Explorer convergence
-
-The bounded graph workspace now owns typed topology, ELK layout, direct expansion, inspection, keyboard-accessible node navigation, and URL-backed canvas display preferences. Migrate specialized viewers individually behind the build-time registry and typed representation boundary in decision 0030. Establish the shared viewer route and shell with one browser-suitable viewer before moving server-heavy formats. Do not add new runtime handoffs to Explorer.
-
-### P4: high-scale management and administration
-
-The first service-account administration slice is implemented locally. Add broader review queues, people administration, audit, pins, activity, API-backed bulk operations, saved views, and exports only with the corresponding API, privacy, and operational contracts. The proposed route and capability model is in [administration workspace](administration-workspace.md).
-
-#### Sign-in history
-
-The Security card shows sign-in history from Crucible API 4.0.0: your own on My profile (`GET /account/auth-events`) and a person's on their page for administrators (`GET /users/{user_ref}/auth-events`, elevated). Both list events newest first with the provider, the app, and a link to whoever else made a change, and never an address. Unknown events show as readable text, since the API's list can grow.
+1. **Filters and counts.** Adopt facet value search, instrument facets, the creation-date histogram, relationship-aware project facets, repeatable facet values, and project and instrument counts as the API delivers them ([requests](crucible-api-handoff.md#collections-facets-and-counts)), replacing the current client-side limits.
+2. **Administration.** Add a pending-work summary, an administrative audit view, and a processing-operations queue with ingestion retry and cancel once their contracts exist ([requests](crucible-api-handoff.md#administration)). Keep actions next to their subject (project, instrument, dataset) and use the broad view only to aggregate work the caller may already do.
+3. **Pins and activity.** Add durable pins and an account activity feed on top of the [pins](crucible-api-handoff.md#account-pins) and [activity](crucible-api-handoff.md#account-activity) contracts.
+4. **Safer concurrent editing.** Send preconditions on resource, metadata, access, membership, and deletion-review writes once the API accepts them, and offer field clearing only where its meaning is defined.
+5. **Scientific viewers.** Load dataset viewers through the typed build-time registry in [decision 0030](../decisions/0030-load-scientific-viewers-from-a-typed-registry.md), starting with one browser-suitable viewer before server-heavy formats. Add no new runtime handoffs to Graph Explorer.
+6. **Saved views, bulk operations, and exports**, each only with an API-backed contract and a privacy and operational review.
+7. **Session security evidence.** Close the open validation items of [decision 0002](../decisions/0002-server-side-session-boundary.md#required-validation): a short threat model in [authentication](authentication.md) mapping each threat to its defense and code, and a browser test proving account and cache isolation between two concurrent users.
 
 ## External dependencies
 
-| Dependency                      | Required outcome                                                                                                                                                                                                                                                                                                                                 |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Web login exchange              | One-time, server-to-server credential exchange suitable for opaque Hub sessions.                                                                                                                                                                                                                                                                 |
-| Session infrastructure          | Shared storage, encryption and rotation approach, revocation behavior, and multi-replica verification.                                                                                                                                                                                                                                           |
-| Upload contract                 | Authorized direct upload lifecycle, CORS, retry, resume, expiry, cleanup, and non-production feasibility evidence.                                                                                                                                                                                                                               |
-| Collection and search contracts | Owned-resource filtering, stable sorting and grouping, scalable facets, and bounded summaries where requested.                                                                                                                                                                                                                                   |
-| Resource graph contract         | Typed nodes and edges, relationship semantics, bounded depth, truncation, permission behavior, and stable error outcomes.                                                                                                                                                                                                                        |
-| Mutation contracts              | Operation-specific capability guidance, conditional-write safety, complete authoritative responses, and clear-field semantics. The proposed pins, activity, join-review, administration, collection-summary, and processing contracts are prioritized in the [dynamic Hub capability plan](crucible-api-handoff.md#dynamic-hub-capability-plan). |
+| Dependency                | Needed outcome                                                                                                              | Blocks                                     |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| Collection contracts      | Facet search, instrument facets, date histogram, relationship project facets, repeatable values, counts, unified collection | Item 1 and a Global Data "All" mode        |
+| Administration contracts  | Navigation capabilities, pending-work summary, audit log, typed processing operations                                       | Item 2                                     |
+| Account pins and activity | Durable pins and a permission-filtered event feed                                                                           | Item 3                                     |
+| Mutation safety           | Preconditions, clear-field semantics, creation idempotency, documented error outcomes                                       | Item 4 and safe retry of uncertain creates |
+| Correlation               | API logs a caller-supplied request identifier                                                                               | End-to-end request tracing                 |
+
+Details for each are in the [Crucible API handoff](crucible-api-handoff.md).
 
 ## Completion gates
 
-- Every included route or mutation has usable loading, empty, failure, authorization, and narrow-layout behavior.
-- Tests prove request scope, cache isolation, cancellation, keyboard behavior, and recovery appropriate to the package.
-- Browser-visible data and telemetry never receive credentials, signed links, or secrets.
-- Production work additionally proves the accepted session and mutation boundary. Fixture success alone does not clear this gate.
-- API-dependent gaps are omitted or labeled, never simulated with unbounded client work.
+- Every new route or mutation has usable loading, empty, failure, authorization, and narrow-layout states.
+- Tests cover request scope, cache isolation, cancellation, keyboard behavior, and recovery for the work.
+- Credentials, signed links, and secrets never reach browser-visible data or telemetry.
+- Gaps that depend on the API are hidden or labelled, never simulated with unbounded client work.

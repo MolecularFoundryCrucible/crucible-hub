@@ -2,6 +2,8 @@
 
 Status: Accepted
 
+Release 1.8.0 filled Dataset processes with the dataset's post-processing runs and a Run pipeline action, using the API's post-processing contract.
+
 Date: 2026-09-10
 
 Updated: 2026-09-21

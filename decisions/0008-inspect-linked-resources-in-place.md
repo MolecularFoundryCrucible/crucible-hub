@@ -1,12 +1,10 @@
 # 0008: Inspect Linked Resources in Place
 
-Status: Accepted
+Status: Accepted; amended by [0026](0026-explore-bounded-resource-graphs.md) and [0037](0037-adapt-resource-inspector-to-viewport.md)
 
 Partially superseded by [decision 0037](0037-adapt-resource-inspector-to-viewport.md) (previously [decision 0009](0009-overlay-resource-inspection.md)) for modality and desktop layout and by [decision 0026](0026-explore-bounded-resource-graphs.md) for graph loading and rerooting.
 
 Date: 2026-09-04
-
-Implementation: Local read-only workflow implemented. Shared resource-detail reads now omit unused embedded datasets. [Decision 0010](0010-inspect-project-data-in-place.md) extends inspection to project Data; validation evidence is recorded in the roadmap.
 
 ## Context
 
@@ -18,13 +16,13 @@ Lens demonstrates grouped relationship navigation from one enriched resource rea
 
 Provide one right-side resource inspector alongside the existing canonical resource page. The first slice supports sample and dataset relationships only. Inspecting another relationship changes the same panel, not the underlying resource or a stack of overlays. Opening the full resource is a separate canonical navigation action. Graph endpoints, recentering, pedigree visualization, and relationship mutations remain deferred.
 
-Use the owned shadcn Sheet with Base UI's native non-modal behavior on wide screens and modal behavior on compact screens. Follow the [design-system contract](../docs/design-system.md#resource-inspector) for interaction and focus. This extends decisions 0006 and 0007 without replacing them.
+Use the owned shadcn Sheet with Base UI's native non-modal behavior on wide screens and modal behavior on compact screens. Follow the [design-system contract](../docs/design-system-reference.md#resource-inspector) for interaction and focus. This extends decisions 0006 and 0007 without replacing them.
 
 ### Route state and history
 
 The resource route owns an optional, validated `preview` MFID search parameter. The pathname identifies the main resource; the parameter identifies the inspected resource. Preview selection is not a new critical route dependency and must not refetch or suspend the unchanged main page.
 
-Use TanStack Router's native search, `state`, `replace`, and `resetScroll` options, not raw History API calls, a second router, or route masking. Opening a preview from a closed panel pushes one entry. Subsequent inspection replaces that entry. A bounded trail in typed router history state supports the separate Back in preview control. Detailed transitions belong in [information architecture](../docs/information-architecture.md#resource-inspector-navigation).
+Use TanStack Router's native search, `state`, `replace`, and `resetScroll` options, not raw History API calls, a second router, or route masking. Opening a preview from a closed panel pushes one entry. Subsequent inspection replaces that entry. A bounded trail in typed router history state supports the separate Back in preview control. Detailed transitions belong in [information architecture](../docs/information-architecture.md#resource-inspector).
 
 History metadata contains only up to 20 previous preview MFIDs, the origin resource MFID, and opaque navigation ownership markers tied to the current runtime identity scope. It contains no resource snapshots or display names. Selecting the current target is a no-op; exceeding the trail limit drops the oldest step. The trail records exploration, not scientific provenance. Its absence or rejection must not prevent a valid preview URL from working.
 
@@ -51,7 +49,7 @@ No new third-party hosts, tracking, cookies, credentials, or personal-data field
 
 ## Validation and implementation gate
 
-The [roadmap](../docs/roadmap.md#resource-inspector-slice) owns the ordered implementation and acceptance checks. A native navigation/focus proof must cover direct entry, refresh, Back/Forward, close, full-page promotion, and responsive mode changes before the feature is considered complete. Accepted here means selected for implementation, not implemented or browser-verified.
+Implemented; release history is in the [changelog](../CHANGELOG.md). A native navigation/focus proof must cover direct entry, refresh, Back/Forward, close, full-page promotion, and responsive mode changes before the feature is considered complete.
 
 ## References
 

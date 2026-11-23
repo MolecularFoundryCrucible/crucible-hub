@@ -1,8 +1,4 @@
-# Crucible Hub Design System
-
-Status: Active quick reference
-
-Date: 2026-10-20
+# Crucible Hub design system
 
 Read this before building or changing any screen. The detailed rules live in [`design-system-reference.md`](design-system-reference.md); the live visual version is `/hub/fixtures/design-system` ([`design-fixtures.md`](design-fixtures.md)). `npm run design:check` enforces most of what follows.
 
@@ -84,7 +80,7 @@ A missing role is a design-system change in `src/styles.css`, never a local colo
 
 ## Motion
 
-- Motion explains change; it never decorates. Use a role from [the motion roles](design-system-reference.md), never a raw duration, curve, or `z-*` value.
+- Motion explains change; it never decorates. Use a role from [the motion roles](design-system-reference.md#motion), never a raw duration, curve, or `z-*` value.
 - Overlays get their motion and layer from `src/components/ui`; do not add timing classes to them in feature code.
 - Wrap reloading content in `PendingRegion` and time other indicators with `useDelayedFlag`, so nothing flashes on fast responses.
 - New list items fade in through `useEnteringKeys` with `enterMotionClassName`; conditional sections open through `Reveal`.

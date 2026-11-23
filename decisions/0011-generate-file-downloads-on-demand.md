@@ -46,4 +46,4 @@ The capability may remain visible in browser-managed network and download histor
 - Verify native browser handoff, keyboard activation, referrer isolation, compact table behavior, theme parity, and automated accessibility.
 - Retain production boundary checks proving that the server-only API adapter and credentials cannot enter browser bundles.
 
-The [roadmap](../docs/roadmap.md#single-file-downloads) owns implementation status and completion evidence.
+Implemented; release history is in the [changelog](../CHANGELOG.md).

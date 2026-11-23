@@ -1,94 +1,65 @@
-# Crucible Hub Product Brief
+# Crucible Hub product brief
 
-Status: Active product contract
+Crucible Hub is the authenticated browser workspace where scientists find, organize, understand, share, and manage the Crucible resources they can access. It brings the approachable, capability-aware experience of Crucible Lens to dense desktop research work.
 
-Date: 2026-09-16
+## Boundaries
 
-## Product statement
+| System                    | Relationship                                                                                                       |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `crucible-api`            | Hub consumes its contract. The API owns authorization, persistence, lifecycle, uploads, and scientific processing. |
+| `crucible-lens`           | Hub follows compatible interaction principles, designed for the browser.                                           |
+| `crucible_graph_explorer` | Hub replaces proven generic workflows with native ones; specialized scientific viewers stay in Explorer.           |
+| `nano-crucible`           | Hub mirrors user workflows that suit a browser, without adopting Python or CLI architecture.                       |
 
-Crucible Hub is the authenticated browser workspace for scientists to find, organize, understand, share, and manage the Crucible resources they can access. It extends the approachable, capability-aware experience of Crucible Lens to dense desktop research workflows.
+Hub uses MFIDs for routes, links, cache identity, and relationships; editable slugs are labels and lookup input. Capability guidance from the API only shapes presentation: the API authorizes every operation. Accessible and owned resources are distinct sets, and Hub never emulates missing server-side filtering with partial client-side scans.
 
-## Product boundaries
+## Principles
 
-| Authority                 | Hub responsibility                                                                                                                                                      |
-| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `crucible-api`            | Hub consumes its contract and presents API-authorized resources and operations. The API owns authorization, persistence, lifecycle, uploads, and scientific processing. |
-| `crucible-lens`           | Hub follows compatible interaction principles while designing for the browser.                                                                                          |
-| `crucible_graph_explorer` | Hub incrementally replaces proven generic workflows with native experiences. Specialized viewers move only when individually ready.                                     |
-| `nano-crucible`           | Hub mirrors supported user workflows where they suit a browser, without adopting Python or CLI architecture.                                                            |
-
-Hub uses stable MFIDs for routes, links, cache identity, and relationships. Editable slugs are labels and lookup input, not canonical identity. Hub capability guidance affects presentation only: the API always authorizes the operation.
-
-## Product principles
-
-1. Make scientific context clear: resource, project, instrument, provenance, owner, access, and next action belong in one understandable story.
-2. Make mutations trustworthy: validate intent, preserve failed drafts, show partial progress, retry only incomplete work, and preview consequential operations.
-3. Keep large workspaces responsive: load collections before detail, paginate, retain readable data during refresh, and never cache credentials or signed download URLs.
-4. Keep view state shareable: filters, tabs, selections, and graph focus belong in useful, validated URLs.
-5. Design for accessible keyboard and screen-reader use, visible focus, contrast, reduced motion, and narrow layouts from the start.
+1. Make scientific context clear: resource, project, instrument, provenance, owner, access, and next action read as one story.
+2. Make mutations trustworthy: validate intent, keep failed drafts, show partial progress, retry only incomplete work, and preview consequential operations.
+3. Keep large workspaces responsive: load collections before detail, paginate, keep readable data during refresh, and never cache credentials or signed URLs.
+4. Keep view state shareable: filters, tabs, selections, and graph options live in validated URLs.
+5. Design for keyboard and screen-reader use, visible focus, contrast, reduced motion, and narrow layouts from the start.
 
 ## Users and jobs
 
-| User                   | Primary jobs                                                                                                                             |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Researcher             | Find resources, inspect data and provenance, create records, upload files, edit allowed metadata, and recover from incomplete work.      |
-| Project manager        | Understand project data, manage direct members and roles, review future join requests, organize resources, and manage authorized access. |
-| Instrument manager     | Maintain instrument identity and lifecycle, manage operators, and inspect produced datasets.                                             |
-| Platform administrator | Manage service-account identity and credentials in a separate capability-gated administrative area.                                      |
+| User                   | Primary jobs                                                                                                       |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Researcher             | Find resources, inspect data and provenance, create records, upload files, edit metadata, recover incomplete work. |
+| Project manager        | Understand project data, manage members and roles, review join requests, organize resources and access.            |
+| Instrument manager     | Maintain instrument identity and lifecycle, manage members and operators, inspect produced datasets.               |
+| Platform administrator | Manage people, service accounts, and credentials in Administrator view.                                            |
 
-## Product destinations
+## Product surfaces
 
-Hub currently provides Home, Projects, Data, Instruments, Search, Account, and an Administration area with deletion-request tracking and review plus capability-gated service-account management. Activity, join-request review, people administration, and audit are proposed destinations that require the contracts in [administration workspace](administration-workspace.md) and [Crucible API handoff](crucible-api-handoff.md). The detailed route hierarchy, shell, entity sections, and responsive behavior are authoritative in [information architecture](information-architecture.md).
+Routes, shell, and section structure are owned by [information architecture](information-architecture.md); planned work is in the [roadmap](roadmap.md).
 
-The core product surfaces are:
+- Home: recently added data, recently viewed resources, your projects, and your instruments.
+- Data, project Data, and instrument Data: cursor-paginated sample and dataset collections with filters, API-backed grouping, server-side sorting, and the resource inspector.
+- Search: grouped cross-resource search, scientific metadata search, MFID lookup, QR scanning, and project-scoped search.
+- Resource pages: identity, descriptive and scientific metadata, files, thumbnails, relationships, processing, graph, access, and lifecycle actions, with Previous and Next through sibling resources.
+- Project and instrument pages: data, overview, members, and capability-gated management.
+- Requests: deletion requests and join requests, each with your submissions and the requests you can review.
+- Account: profile, sign-in methods, sessions, API keys, sign-in history, and preferences.
+- Administration: users, accounts awaiting approval, and service accounts, available only in Administrator view.
 
-- Home for immediate research continuation through recently added data, projects the current person leads, active instruments they manage, and account-isolated resources viewed during the current browser session.
-- Data for cross-project sample and dataset discovery, ownership and type-specific facet filtering, API-backed grouped browsing, server-owned sorting, collection preview, and canonical detail navigation.
-- Project and instrument workspaces for scoped list and grouped data browsing, context, and capability-gated management.
-- Resource detail for identity, descriptive and scientific metadata, dataset thumbnails, files, relationships, processing, access, and lifecycle-aware actions.
-- Search, scientific metadata search, direct MFID lookup, and local QR scanning for bounded cross-resource discovery, with project-scoped sample and dataset search available from an active project.
-- Account for reviewing and updating the authenticated person's own name, email, and username, inspecting non-secret API credential status, and understanding currently advertised account capabilities from the application-bar profile menu.
-- Administration for deletion-request tracking and review, plus capability-gated service-account discovery, creation, profile maintenance, platform-role management, credential status, and credential rotation.
-
-Accessible and owned resources are distinct sets. Hub must not invent a personal-project model or emulate unavailable server-side filtering with incomplete client-side scans.
-
-## High-value workflows
+## Workflows
 
 ### Find and understand
 
-Scientists navigate from Home, Projects, Data, Instruments, Search, an MFID link, or an MFID QR code to canonical resource detail. QR scanning starts only after an explicit application-bar action, decodes camera frames locally, and passes every extracted MFID through API-backed canonical resource resolution. Home keeps an account-isolated, memory-only list of resources viewed during the current application session and clears it on reload or account replacement. Global search groups readable resource types and offers a separate full-text scientific metadata scope, while project-scoped search limits results to related samples and datasets, names the active project in the application bar, and preserves a direct return to Project Data. Sample and dataset collections request bounded 100-row cursor pages and append the next page as the person approaches the collection boundary while retaining explicit load and retry controls. Opening a canonical sample or dataset from a collection retains a session-only sibling sequence on its detail page; opening one any other way uses the person's saved default sequence, which starts as same project and measurement or sample type, oldest first. Resource Overview can rebuild the sequence around the current resource by primary project, measurement or sample type, both, owner, or dataset instrument, order it by name, creation time, or update time, and save the choice as the default. An active sequence exposes Previous and Next actions plus Left and Right Arrow navigation only on Overview. Other resource sections preserve the sequence without presenting collection navigation. Sample and dataset Graph tabs provide bounded visual traversal from one resource to its readable neighbours, offer explicit depth-one expansion only for API-confirmed additional readable topology, report server truncation, and provide the same resources through an accessible relationship table. Graphs are an alternate representation, never the only way to understand provenance.
-
-Dataset Overview loads thumbnail previews and a compact downloadable file list independently after the browser hydrates. Dataset Processing combines file identity, latest ingestion state, ingestion request history, and authorized file-scoped ingestion requests without obscuring quick downloads on Overview. A separate Dataset processes section reserves a stable location for API-advertised post-processing requests when their durable request and capability contracts exist. Readable graph datasets may include a bounded first-thumbnail preview in the equivalent relationship list. People with edit capability can explicitly enter thumbnail editing to add, rename, or delete images; Overview remains read-first.
+People reach canonical resource pages from Home, collections, search, an MFID link, or a QR code. QR scanning starts only after an explicit action, decodes locally, and resolves every MFID through the API. The graph is an alternate view of provenance; the Relationships card and the inspector carry the same information without it.
 
 ### Create and upload
 
-Creation uses dedicated project, sample, and dataset routes. Sample and dataset creation may select a project, dataset creation may select a registered instrument, and both resource forms may queue supported parent-child or cross-type relationships. All selectors retain canonical MFIDs while the server resolves mutable API slugs. Hub omits canonical identity from creation input and navigates by the API-assigned MFID. Structural creation is confirmed before relationship, scientific metadata, or file operations become later stages. Each completed stage remains visible after a later failure so retry never duplicates successful work. People with upload availability can stage files on the dataset form as a later creation stage or add files to an existing dataset from its Overview; transfers go directly to object storage with per-file progress, rename recovery for reserved names, and confirmed cancellation.
+Projects, samples, datasets, and instruments have dedicated creation routes. The API assigns MFIDs ([decision 0025](../decisions/0025-let-api-assign-creation-mfids.md)). Structural creation completes first; relationships, metadata, and files follow as later stages, and each completed stage stays visible so a retry never repeats successful work. File bytes go directly to object storage with per-file progress and confirmed cancellation ([decision 0005](../decisions/0005-direct-object-storage-uploads.md)).
 
 ### Manage resources and access
 
-Descriptive edits, scientific metadata, relationship changes, file workflows, direct resource access, project assignment, ownership transfer, instrument lifecycle, and deletion review are distinct operations. Consequential changes use API previews and explicit confirmation where supported.
-
-Project membership is separate from resource ACLs. Directly adding an existing person, changing a non-owner role, removing a member, and leaving a project do not create invitation state. No invitation workflow is planned. Join requests remain a separate future workflow.
-
-Relationship management is a separate resource workflow. Canonical sample and dataset pages may manage supported parent-child and cross-type associations with explicit direction, bounded type search, confirmed unlink, and no deletion of either resource. The API authorizes both resources; Hub capability guidance controls presentation only. Relationship controls do not appear in the inspector, and production exposure waits for the API relationship contract and Hub session gate.
-
-Resource management is a separate canonical workflow at `/samples/:sampleMfid/manage` and `/datasets/:datasetMfid/manage`. It provides a persistent resource header with Overview, Graph, and Manage navigation, loads ACL data only on Manage entry, and presents access controls when the exact `can_manage_access` capability allows them. Public controls, bounded user or project grants, atomic primary-project assignment, dataset acquisition-instrument assignment, ownership transfer, and reviewed deletion requests remain distinct actions within Manage and are explicitly confirmed where consequential. Owner, service-account, instrument, system, and unknown grants remain read-only. Management mutations are server-confirmed and never optimistic.
-
-Project and instrument Manage pages use the same unified card structure without nested navigation. Access management contains project members or instrument operators. Resource management contains project ownership and leaving, or instrument lifecycle and ownership. Each section and action remains gated by its exact API capability.
-
-Deletion requests use one shared workspace with Submitted by you and Needs review views. The Administration sidebar provides its stable entry after a pending resource leaves normal discovery. Reviewable requests use the API's exact `can_review` capability, normal ACL authority by default, optional explicit Administrator view, cursor pagination, and destructive approval or restorative rejection. Reviewable and approved views omit the redundant Status column because every listed request shares one status. Both views default to newest-first ordering, and the Requested column can reverse either view without client-side sorting. The shared workspace shows each canonical project ID as a linked column, while project-scoped views omit that redundant context. Project Manage shows a bounded project-filtered preview in the same compact table presentation and links to the shared queue. Submission and review refresh affected collections, facets, search, graphs, summaries, request queues, and exact resource detail without optimistic domain state.
-
-Authorized human administrators manage service accounts in a separate Administration destination. The directory is searched and paginated by the API. Creation and credential rotation show each new key once in mutation-local memory and never store it in Query state, URLs, or browser persistence. Profile editing is read-first, platform-role changes require explicit confirmation and disclose delayed authorization propagation, credential rotation requires explicit confirmation, and unavailable lifecycle actions such as suspension and deletion are not invented by the Hub. Instrument operator and project member assignment remain contextual workflows on those resources and use the shared service-account-aware identity search.
-
-## Delivery direction
-
-The runtime, design-system, read-workspace, and controlled-management foundations are implemented for local development. Native collection browsing, graph traversal, dataset processing, account profile management, deletion-request review, explicit privilege modes, and the first service-account administration slice now extend that foundation. Production authentication, secure browser upload, API-backed activity and join-request queues, saved views, broader audit history, and remaining Explorer convergence are still open.
-
-The ordered packages, gates, current implementation status, and next action are authoritative in [roadmap](roadmap.md). Current verification is authoritative in [foundation evidence](phase-0-evidence.md). API-owned needs are maintained only in [Crucible API handoff](crucible-api-handoff.md).
+Descriptive edits, scientific metadata, relationships, files, access, project assignment, ownership transfer, instrument lifecycle, and deletion are separate operations, confirmed where consequential and never optimistic. Project membership is separate from resource access: members are added directly, and people outside a project can ask to join. Deletion of samples and datasets goes through review ([decision 0019](../decisions/0019-request-resource-deletion-through-review.md)). Administrator authority is explicit and temporary ([decision 0031](../decisions/0031-scope-administrator-authority.md)). One-time credentials are shown once and never stored in Query state, URLs, or browser storage.
 
 ## Release requirements
 
-- Production authentication keeps user credentials server-side behind opaque browser sessions.
-- Every release uses a pinned API contract and verifies the browser, server boundary, accessibility, and error-recovery behavior in scope.
+- User credentials stay server-side behind opaque browser sessions ([authentication](authentication.md)).
+- Every release pins an API contract and verifies the browser, server boundary, accessibility, and error recovery in scope ([releases](releases.md)).
 - Hub never uses a platform-administrator credential for normal user work.
-- Explorer routes retire only after measured feature, performance, accessibility, and usage parity.
+- Explorer workflows move to Hub only after feature, performance, accessibility, and usage parity.

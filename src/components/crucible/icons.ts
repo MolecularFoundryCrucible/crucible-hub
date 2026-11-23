@@ -46,7 +46,6 @@ export {
   ArrowRight as ForwardNavigationIcon,
   UserRound as PersonIcon,
   Bot as ServiceAccountIcon,
-  KeyRound as CredentialIcon,
   RotateCw as RotateCredentialIcon,
   ServerCog as SystemPrincipalIcon,
   CircleHelp as UnknownPrincipalIcon,

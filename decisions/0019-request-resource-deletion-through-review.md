@@ -8,7 +8,7 @@ Updated: 2026-10-22
 
 ## Context
 
-The Crucible API supports reviewed sample and dataset deletion through `POST /resources/{resource_id}/delete` with an optional reason. Contributor access is required, an active request causes a conflict, and the successful response is a deletion-request record. A separate force-delete operation permanently removes a resource without review and is not appropriate for ordinary Hub workflows.
+The Crucible API supports reviewed sample and dataset deletion through `POST /resources/{mfid}/delete` with an optional reason. Contributor access is required, an active request causes a conflict, and the successful response is a deletion-request record. A separate force-delete operation permanently removes a resource without review and is not appropriate for ordinary Hub workflows.
 
 The current resource capability model does not identify whether the caller may request deletion, and sample and dataset detail expose active deletion state through an open object rather than the typed deletion-request response. Inferring eligibility from `can_edit` would incorrectly exclude contributors.
 

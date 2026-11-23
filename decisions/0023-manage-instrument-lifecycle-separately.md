@@ -8,7 +8,7 @@ Updated: 2026-10-22
 
 ## Context
 
-Instrument status affects whether an instrument is available for future acquisition work. The API exposes a dedicated `POST /instruments/{instrument_mfid}/status` operation and a `can_change_status` capability, while descriptive fields use the ordinary instrument PATCH operation. Decommissioning retires an instrument without deleting its existing identity or datasets.
+Instrument status affects whether an instrument is available for future acquisition work. The API exposes a dedicated `POST /instruments/{instrument_ref}/status` operation and a `can_change_status` capability, while descriptive fields use the ordinary instrument PATCH operation. Decommissioning retires an instrument without deleting its existing identity or datasets.
 
 ## Decision
 

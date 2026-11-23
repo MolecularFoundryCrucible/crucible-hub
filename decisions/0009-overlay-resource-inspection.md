@@ -1,6 +1,6 @@
 # 0009: Overlay Resource Inspection
 
-Status: Superseded
+Status: Superseded by [0037](0037-adapt-resource-inspector-to-viewport.md)
 
 Date: 2026-09-04
 
@@ -24,4 +24,4 @@ Use Base UI's native backdrop, outside dismissal, focus containment, scroll lock
 
 The main page stays mounted and visible behind the overlay but cannot be operated until the inspector closes. Native preview links inside the inspector still support relationship exploration and full-page navigation. Existing URL, bounded history, cache, and privacy behavior is unchanged.
 
-Router and component coverage must protect preview URL transitions, dismissal, and persistent main-page identity. When inspector behavior or layout changes, targeted browser review must check unchanged main-content geometry, outside-click dismissal, focus restoration, Escape, compact reflow, and representative wide-light and compact-dark presentation. Screenshots are local review artifacts rather than committed CI baselines. The [roadmap](../docs/roadmap.md#resource-inspector-slice) owns completion evidence.
+Router and component coverage must protect preview URL transitions, dismissal, and persistent main-page identity. When inspector behavior or layout changes, targeted browser review must check unchanged main-content geometry, outside-click dismissal, focus restoration, Escape, compact reflow, and representative wide-light and compact-dark presentation. Screenshots are local review artifacts rather than committed CI baselines. Release history is in the [changelog](../CHANGELOG.md).

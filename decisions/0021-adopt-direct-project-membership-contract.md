@@ -14,9 +14,9 @@ The project Overview and Settings boundary in [decision 0020](0020-consolidate-p
 
 Hub provides direct project membership controls in project Settings, separate from the descriptive project form, resource ACL presentation, join-request review, ownership transfer, and project assignment. The operations are:
 
-- `POST /projects/{project_ref}/users/{orcid}` adds an existing user immediately.
-- `PATCH /projects/{project_ref}/users/{orcid}?role=...` changes an existing member's role.
-- `DELETE /projects/{project_ref}/users/{orcid}` removes a member or lets the current member leave.
+- `POST /projects/{project_ref}/users/{user_ref}` adds an existing user immediately.
+- `PATCH /projects/{project_ref}/users/{user_ref}?role=...` changes an existing member's role.
+- `DELETE /projects/{project_ref}/users/{user_ref}` removes a member or lets the current member leave.
 
 `can_manage_access` gates adding members. Each member entry carries its own API capabilities (`can_change_role`, `can_remove`, and `assignable_roles`), which control that entry's role-change and removal actions and the roles offered; Hub no longer derives them from `max_grant_role` ceilings. Ownership is exclusive and is changed through the ownership-transfer operation, not a membership role edit. `can_transfer` guides presentation for ownership transfer. A current non-owner member may leave through the direct delete operation; this state comes from the current membership and is not inferred from an unconfirmed capability field. The API independently authorizes every operation and remains authoritative when capability guidance is absent or stale.
 

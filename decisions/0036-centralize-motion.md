@@ -98,37 +98,7 @@ The checker names the motion role or layer token to use instead. `docs/design-sy
 
 ### 6. Fixes delivered through the system
 
-These are the review findings that were checked against the code. Each is fixed with the pieces above, not locally.
-
-1. **Foundations:**
-   - the tokens, roles, motion module, `PendingRegion` and `useDelayedFlag`
-   - the overlay presets and named layers
-   - the consolidated reduced-motion block
-   - the checker rules
-2. **Overlays:**
-   - toasts on tokens
-   - tooltips fade on close
-   - every overlay uses the enter and exit easing
-   - dialog exits run to completion: the print dialog, Add members, Platform role and the one-time credential dialog
-   - the QR scanner tooltip reaches keyboard users
-3. **Correctness:**
-   - "Show all" expansion timing uses `motionDuration`
-   - collapsing a list inside the inspector scrolls the inspector rather than the page
-   - `useIsMobile` uses rem through `useMediaQuery`, so the compact breakpoint matches CSS under text zoom; the inspector stays non-modal between the compact and docked widths, as the design system reference intends
-4. **Loading:**
-   - `PendingRegion` on Data, project data, search, the directories and the inspector
-   - `RouteProgress` delayed and finishing forward
-   - the resource page skeleton includes the Manage tab
-   - Home and search skeletons match their loaded rows
-   - Load more and infinite scroll fade new rows in
-5. **Interaction feedback:**
-   - whitespace-only summary edits do not enable Save
-   - the upload drop zone stays in place during an upload
-   - copy feedback resets after a short time through one shared copy hook
-   - the Administrator view badge and switch show pending through the shared styles instead of `disabled`
-6. **Layout:**
-   - the graph relayout uses the deliberate duration and the motion module instead of a 440 ms local timer
-   - sidebar collapse avoids swapping whole subtrees mid-animation where CSS can express the collapsed state
+The review findings listed in the Context (overlay timing and layers, toast and graph timing, the Show all expansion, and flashing indicators) were all fixed through the pieces above; the commit history has the full list.
 
 ## Scope
 

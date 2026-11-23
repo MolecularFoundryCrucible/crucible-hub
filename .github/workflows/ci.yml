@@ -44,7 +44,6 @@ jobs:
           HUB_TEST_SESSION_ADMIN_DATABASE_URL: postgres://postgres:test@127.0.0.1:5432/crucible_hub
       - run: npm run validate:static
       - run: npm run audit
-      - run: npm run skills:list
       - run: npm run skills:stale
 
   browser:

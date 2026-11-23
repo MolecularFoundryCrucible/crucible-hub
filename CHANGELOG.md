@@ -6,6 +6,7 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- Agent instructions live only in `AGENTS.md`, which replaces `CLAUDE.md`, `skills/README.md` and the vendored shadcn agent skill, and `npm run docs:check` also verifies heading anchors.
 - The Compose guide points to the API bundle's new home in crucible-selfhost and uses its `/api/v4` address; `example.env` names Hub 1.8.2.
 
 ## 1.8.2 - 2026-11-18

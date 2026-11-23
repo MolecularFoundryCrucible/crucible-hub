@@ -52,7 +52,7 @@ Fast initially but allows generated components and page-local Tailwind values to
 
 ## Required follow-up
 
-Create `docs/design-system.md` before the first product screen. It must define token names and ownership, supported component variants and states, responsive behavior, accessibility checks, icon policy, data-visualization tokens, and automated enforcement.
+Completed: [design-system.md](../docs/design-system.md) and its [reference](../docs/design-system-reference.md) define the system, and `npm run design:check` enforces it.
 
 ## References
 

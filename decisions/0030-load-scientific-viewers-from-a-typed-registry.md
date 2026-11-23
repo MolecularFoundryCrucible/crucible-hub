@@ -1,6 +1,6 @@
 # 0030: Load scientific viewers from a typed registry
 
-Status: Accepted
+Status: Accepted; not implemented. Hub has no viewer registry or viewer route. A later proposal to open datasets in a separate viewer service (decision 0035) was never merged and is kept under the Git tag `archive/dataset-viewers`.
 
 Date: 2026-09-21
 

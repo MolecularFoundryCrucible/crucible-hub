@@ -46,11 +46,7 @@ Reuses Python client behavior but requires a second runtime or bridge and makes 
 
 ## Required validation
 
-- Generate types from the current committed API artifact.
-- Verify cursor and offset pagination types.
-- Verify request and response unions for public-safe and privileged representations.
-- Verify binary or raw response handling needed by files and uploads.
-- Define artifact update and compatibility review workflow.
+Completed; the contract refresh workflow is in [API integration](../docs/api-integration.md).
 
 ## References
 
