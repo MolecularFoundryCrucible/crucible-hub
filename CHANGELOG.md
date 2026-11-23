@@ -6,6 +6,7 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- Development scenarios read credentials only from their own `.env.<scenario>.local` file; the shared `.env.api-key.local` and `.env.hub-auth.local` fallbacks and the shell fallback are removed.
 - `HUB_AUTH_SESSION_MODE=single-instance` is removed; production sign-in requires `postgres`.
 - Every merge to `main` publishes `ghcr.io/molecularfoundrycrucible/crucible-hub:main` and `:sha-<commit>`, and every published image carries a signed GitHub build provenance attestation.
 - Agent instructions live only in `AGENTS.md`, which replaces `CLAUDE.md`, `skills/README.md` and the vendored shadcn agent skill, and `npm run docs:check` also verifies heading anchors.

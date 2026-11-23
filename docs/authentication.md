@@ -26,7 +26,7 @@ Without the Postgres store (API-key mode, fixtures, and development sign-in with
 
 ### Sign-in scenarios
 
-`dev:orcid-local` and `dev:orcid-staging` exercise the real sign-in flow. The API must list the exact Hub callback among its allowed redirects, and each provider's own callback must be registered with that provider. For a local HTTPS API, set `NODE_EXTRA_CA_CERTS` to its certificate before Node starts; never disable certificate verification.
+`dev:orcid-local` and `dev:orcid-staging` exercise the real sign-in flow. The API must list the exact Hub callback among its allowed redirects, and each provider's own callback must be registered with that provider. For a local HTTPS API, put its certificate in `NODE_EXTRA_CA_CERTS` in the scenario's credential file; never disable certificate verification.
 
 The callback origin must match the address in the browser exactly. `dev:orcid-staging` defaults to `http://localhost:3000/hub/auth/callback`; from another machine, forward the port with `ssh -L 3000:127.0.0.1:3000 <workstation>` and browse `http://localhost:3000/hub/`. To reach a workstation through a private HTTPS name such as Tailscale Serve, set `HUB_AUTH_PUBLIC_API_URL` and `HUB_AUTH_CALLBACK_URI` to that name in the scenario's gitignored `.env.orcid-*.local` file, register the same callback with the API, and, for uploads, allow the origin in the bucket CORS policy. A browser redirect to `127.0.0.1` reaches the browser's own device, not the Hub host, so a remote browser always needs one of these two approaches.
 
