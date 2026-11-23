@@ -28,9 +28,7 @@ export function EntityRefreshAction({
 }) {
   const queryClient = useQueryClient()
   const [refreshRequested, setRefreshRequested] = useState(false)
-  const refreshing =
-    useIsFetching({ exact, queryKey, fetchStatus: "fetching" }) > 0 ||
-    refreshRequested
+  const refreshing = useIsFetching({ exact, queryKey }) > 0 || refreshRequested
   const [failed, setFailed] = useState(false)
   const timestamp = refreshedAt ? new Date(refreshedAt).toISOString() : null
 
