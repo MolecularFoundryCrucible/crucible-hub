@@ -4,7 +4,7 @@ Read [`AGENTS.md`](AGENTS.md) for the architecture invariants and the documents 
 
 ## Setup
 
-Use Node.js 22.22 and npm 10.9; `package-lock.json` is authoritative, so do not add another package manager's lockfile.
+Use Node.js 26.13 and npm 11.20; `package-lock.json` is authoritative, so do not add another package manager's lockfile.
 
 ```bash
 npm ci
@@ -35,7 +35,7 @@ Never give a credential a `VITE_` prefix, enter it in the browser, expose it to 
 - Add tests for deterministic logic and changed failure or recovery paths.
 - Update the document that owns the changed behavior, and add a decision record in [`decisions/`](decisions/README.md) for a durable architectural choice.
 - Run `npm run validate` before asking for review.
-- Dependabot opens one grouped pull request a month for npm minor and patch updates, separate ones for major updates, and one for GitHub Actions, each a week after the release. Review them like any other change.
+- Dependabot opens one grouped pull request a month for npm minor and patch updates, separate ones for major updates, one for GitHub Actions, and one for the Docker base image, each a week after the release. Node.js majors, for the runtime and `@types/node`, move together by hand. Review them like any other change.
 
 ## Changelog
 

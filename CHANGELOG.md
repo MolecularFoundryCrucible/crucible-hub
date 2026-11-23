@@ -6,6 +6,7 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- The Hub runs on Node.js 26 LTS (image base `node:26.13.1-bookworm-slim`); building from source needs Node.js 26.13 and npm 11.20.
 - Removed the Cloud Build configurations; every deployment runs the images published to GHCR.
 - Development scenarios read credentials only from their own `.env.<scenario>.local` file; the shared `.env.api-key.local` and `.env.hub-auth.local` fallbacks and the shell fallback are removed.
 - `HUB_AUTH_SESSION_MODE=single-instance` is removed; production sign-in requires `postgres`.

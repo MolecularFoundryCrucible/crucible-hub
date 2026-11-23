@@ -1,4 +1,4 @@
-FROM node:22.22.2-bookworm-slim AS deps
+FROM node:26.13.1-bookworm-slim AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
@@ -9,7 +9,7 @@ ARG VITE_APP_VERSION
 ARG VITE_GIT_COMMIT
 RUN npm run build
 
-FROM node:22.22.2-bookworm-slim AS runtime
+FROM node:26.13.1-bookworm-slim AS runtime
 ENV HOST=0.0.0.0
 ENV NODE_ENV=production
 ENV PORT=3000
