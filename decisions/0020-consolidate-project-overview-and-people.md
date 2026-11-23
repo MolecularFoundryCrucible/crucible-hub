@@ -1,6 +1,6 @@
 # 0020: Consolidate Project Overview and People
 
-Status: Accepted
+Status: Accepted; superseded in part by [0027](0027-edit-projects-and-instruments-from-overview.md)
 
 Date: 2026-09-06
 

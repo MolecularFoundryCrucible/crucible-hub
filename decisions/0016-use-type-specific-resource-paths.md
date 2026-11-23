@@ -14,7 +14,7 @@ The canonical Hub paths are `/samples/$sampleMfid` and `/datasets/$datasetMfid`.
 
 `/resources/$resourceMfid` remains a compatibility resolver. It performs the existing bounded detail read and redirects samples, datasets, projects, and instruments to their canonical Hub paths while preserving applicable resource preview state. A missing or unsupported resource remains not found. This compatibility path does not become a second detail presentation or cache.
 
-This is a Hub navigation decision only. It does not change the API's generic `GET /resources/{resource_id}` endpoint, generated types, or stable MFID identity.
+This is a Hub navigation decision only. It does not change the API's generic `GET /resources/{mfid}` endpoint, generated types, or stable MFID identity.
 
 ## Consequences
 

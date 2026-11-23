@@ -71,7 +71,7 @@ export async function issueWorkspaceUserPasswordLink(
         Date.parse(source.workspace.referenceTime) + 24 * 60 * 60 * 1000
       ).toISOString(),
       purpose: "setup",
-      url: "https://crucible.example.test/api/v3/oauth/password-link#fixture",
+      url: "https://crucible.example.test/api/oauth/password-link#fixture",
     }
   }
   const result = await ownerClient(configuration, {

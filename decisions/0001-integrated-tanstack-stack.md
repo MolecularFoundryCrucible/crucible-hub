@@ -2,6 +2,8 @@
 
 Status: Accepted
 
+The production gates named under Validation were later met: the hosted Hub has run in production since 1.0.0, with shared Postgres sessions since 1.1.0.
+
 Date: 2026-09-02
 
 ## Context

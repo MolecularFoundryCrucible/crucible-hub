@@ -1,45 +1,36 @@
-# Crucible Hub Design Fixtures
+# Crucible Hub design fixtures
 
-Status: Active fixture contract
+Fixtures are deterministic, contract-shaped data for components, routes, and browser tests without an authenticated API. They are not a second domain model, an authorization engine, or a production fallback. [api-integration.md](api-integration.md#pinned-contract) owns the contract and how it is refreshed; [design-system.md](design-system.md) owns visual rules.
 
-Date: 2026-09-16
+## Rules
 
-## Scope and rules
+- Type fixtures with the generated OpenAPI types (`satisfies` or explicit schema types), so a contract change fails type checking. Repair fixtures without casts or invented fields.
+- Use synthetic identities, organizations, stable identifiers, and ISO timestamps, with coherent cross-resource relationships and deliberate null, omitted, minimal, and full representations. Scientific metadata only needs to be plausible for layout.
+- Never use random values, the current time, network calls, environment-dependent content, real records, real storage paths, API keys, cookies, authorization codes, signed URLs, or upload capabilities.
+- Capability values drive presentation as real responses do; they never change production authorization.
+- Failures are scenario state around typed data with deterministic browser-safe messages, never invented API fields.
 
-Fixtures provide deterministic, contract-shaped design and test data while authenticated API access is unavailable. They support components, routes, browser tests, screenshots, and controlled failures. They are not a second domain model, authorization engine, or production fallback. [`api-integration.md`](api-integration.md) owns generated-contract and server-boundary rules; [`design-system.md`](design-system.md) owns visual requirements.
+## Scenarios
 
-Fixture types use generated OpenAPI types from the reviewed pinned artifact with `satisfies` or explicit schema types. Contract changes must fail type checking. Use deterministic synthetic identities, organizations, stable identifiers, ISO timestamps, coherent cross-resource relationships, and intentional null, omitted, minimal, and full representations. Scientific metadata must be plausible for layout, not claimed scientific truth.
+`src/data/crucible/fixtures/demo-workspace.ts` holds the `operando-catalyst-study` workspace: synthetic people and a service account, a member project and a minimal discoverable project, an instrument, samples with varied visibility and metadata, related datasets, and files. The server adapter (`src/data/crucible/workspace-fixture.server.ts`) serves these scenarios:
 
-Never use random values, current time, network calls, environment-dependent content, staging or production records, real storage paths, API keys, cookies, authorization codes, signed URLs, or upload capabilities. Fixtures fail closed when unavailable. Capability values drive presentation as real API responses do and never change production authorization behavior.
+| Scenario     | Coverage                                                               |
+| ------------ | ---------------------------------------------------------------------- |
+| `populated`  | Typical member workspace and permitted actions (default)               |
+| `empty`      | Authenticated workspace without accessible content                     |
+| `restricted` | Public-safe and minimal representations                                |
+| `dense`      | Long values, full MFIDs, dense metadata, pagination, and relationships |
+| `partial`    | Local failures beside independently usable content                     |
+| `degraded`   | Failures, and every optional API feature switched off                  |
 
-## Scenarios and delivery
+Dense fixtures apply instrument and project scope before cursor slicing and model assigned, shared, and unassigned resources explicitly, so collection, inspector, and permission-limited behavior is exercised without recreating API permission logic. Loading and refreshing are component state, not scenarios.
 
-`operando-catalyst-study` is the populated demonstration workspace in `src/data/crucible/fixtures/demo-workspace.ts`. It contains synthetic people and a service account, a full member project, a minimal discoverable project, an active hard X-ray instrument, samples with varied visibility and metadata completeness, related spectroscopy, diffraction, and microscopy datasets, and deterministic files. It is intentionally small while covering dashboard, collections, project, resource, instrument, metadata, access, and file layouts.
+## Running fixtures
 
-The server adapter provides `populated`, `empty`, `restricted`, `dense`, `partial`, and `degraded` scenarios. The unlinked `/hub/fixtures/scenarios` route validates and retains `scenario` in application navigation, incorporating it into identity scope so scenarios cannot share Query entries. Only the populated scenario may be explicitly enabled for controlled production-mode preview; non-default scenarios are rejected in production. `/hub/fixtures/design-system` is an isolated deterministic surface for theme roles, focusable controls, semantic statuses, resource and principal identities, access roles, visibility, loading, empty, restricted, partial, terminal-error, and dense component specimens. Loading and refreshing are component state, not route timing.
-
-| Scenario                | Required coverage                                                      |
-| ----------------------- | ---------------------------------------------------------------------- |
-| `populated`             | Typical member workspace and permitted actions                         |
-| `empty`                 | Authenticated workspace without accessible content                     |
-| `restricted`            | Public-safe and minimal representations                                |
-| `loading`, `refreshing` | Deterministic skeleton and readable refresh states                     |
-| `partial`, `degraded`   | Local failure with independently usable content                        |
-| `dense`                 | Long values, full MFIDs, dense metadata, pagination, and relationships |
-
-Failures are scenario state around typed data, never invented API fields. They return deterministic browser-safe messages only. Dense fixtures apply instrument and project scope filtering before cursor slicing; model assigned, shared, and unassigned resources explicitly; retain actual assignment separately from contextual relation; and use reciprocal, unavailable, and explicit-empty resource links. This exercises collection, inspector, history, and permission-limited behavior without recreating API permission logic.
-
-| Layer             | Mechanism                                                | Purpose                                                    |
-| ----------------- | -------------------------------------------------------- | ---------------------------------------------------------- |
-| Domain fixture    | Typed immutable modules in `src/data/crucible/fixtures/` | Coherent records and scenarios                             |
-| Component fixture | Explicit component props                                 | Stable visual and accessibility states                     |
-| Server adapter    | Development-only Hub boundary adapter                    | Routes, Query, aborts, timeouts, and errors                |
-| Browser fixture   | Controlled startup plus adapter                          | Navigation, URL state, screenshots, and identity isolation |
-
-Do not rely only on browser interception because API calls are server-only. Substitute the narrow server adapter or its fetch implementation instead. Fixtures are enabled outside production and fail closed in production. `HUB_ENABLE_FIXTURES=true` permits only populated controlled previews and is never a real deployment setting.
-
-Fixture routes are unlinked and `noindex`. The bounded Playwright gate checks representative account, deletion, download, shell, theme, accessibility, responsive collection, scenario-retention, and text-spacing behavior without storing screenshots. Targeted local screenshots, native zoom, additional route combinations, and manual assistive-technology checks remain separate review evidence.
-
-## Contract refresh
-
-Obtain a deterministic artifact from an identified API revision, compare it with `contracts/crucible-api.json` including security, required fields, nullability, unions, pagination, and deprecations, update the lock record, regenerate with `npm run api:generate`, review the semantic diff, repair fixtures without casts or invented compatibility fields, update adapters and tests, then run `npm run validate`. CI and production startup never fetch staging OpenAPI. A deployed environment is observational input, not a reproducible build dependency.
+- `npm run dev:fixtures` starts the dev server on fixture data.
+- `/hub/fixtures/scenarios` selects a scenario and keeps `scenario` in navigation; the scenario is part of the Query identity scope, so scenarios never share cache entries.
+- `/hub/fixtures/design-system` shows theme roles, controls, statuses, identities, access roles, visibility, and loading, empty, restricted, partial, error, and dense specimens.
+- Fixture routes are unlinked and `noindex`.
+- Fixtures are on outside production. In production they fail closed unless `HUB_ENABLE_FIXTURES=true`, which allows only `populated` and is never a real deployment setting.
+- API calls are server-only, so browser tests substitute the server adapter rather than intercepting browser requests.
+- `npm run test:browser` and `npm run test:production` run the Playwright suites against fixtures without storing screenshots.

@@ -1,6 +1,8 @@
 # 0002: Use a Server-Side Hub Session Boundary
 
-Status: Accepted
+Status: Accepted; the shared session store is [decision 0033](0033-use-existing-cloud-sql-for-shared-hub-sessions.md)
+
+Implemented with the API's standard OAuth routes and the Postgres session store. Sessions last 7 days idle and 30 days absolute; [authentication](../docs/authentication.md) describes the current behavior.
 
 Date: 2026-09-02
 
@@ -12,7 +14,7 @@ The current Crucible API browser authentication flow exchanges a short-lived ORC
 
 Hub needs an authenticated browser experience without exposing a general Crucible API key to browser JavaScript, browser storage, logs, or telemetry. Normal Hub operation must not depend on a platform-administrator credential.
 
-When this decision was made, the login exchange still needed an API-owned contract. That contract, a one-time authorization-code exchange, is now pinned in OpenAPI and implemented; [`docs/authentication-transition.md`](../docs/authentication-transition.md) records the transition from the local API-key bridge and the remaining production activation requirements.
+When this decision was made, the login exchange still needed an API-owned contract. That contract, a one-time authorization-code exchange, is now pinned in OpenAPI and implemented; [`docs/authentication.md`](../docs/authentication.md) describes the current behavior.
 
 ## Decision
 
@@ -57,11 +59,11 @@ Does not solve user authentication or preserve user-scoped authorization.
 
 ## Required validation
 
-- Agree on the API-owned one-time login exchange.
-- Select the production session store and key-management mechanism.
-- Define session duration, idle timeout, absolute timeout, rotation, revocation, and concurrent-session policy.
-- Threat-model login CSRF, session fixation, XSS, replay, token theft, proxy headers, and logout.
-- Verify account and cache isolation across two concurrent users.
+- Agree on the API-owned one-time login exchange. Completed: the API's standard OAuth routes, since 1.8.0.
+- Select the production session store and key-management mechanism. Completed: [decision 0033](0033-use-existing-cloud-sql-for-shared-hub-sessions.md) and `HUB_SESSION_KEYS` rotation.
+- Define session duration, idle timeout, absolute timeout, rotation, revocation, and concurrent-session policy. Completed: see [sessions](../docs/authentication.md).
+- Threat-model login CSRF, session fixation, XSS, replay, token theft, proxy headers, and logout. Open.
+- Verify account and cache isolation across two concurrent users. Open.
 
 ## Ownership impact
 

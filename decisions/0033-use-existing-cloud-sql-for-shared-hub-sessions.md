@@ -1,12 +1,14 @@
 # 0033: Use Existing Cloud SQL for Shared Hub Sessions
 
-Status: Accepted
+Status: Accepted; implemented in 1.1.0
+
+The Postgres store has served the hosted Hub since 1.1.0. Since 1.4.0, sessions last 7 days idle and 30 days absolute instead of the eight- and twelve-hour limits below, and `HUB_AUTH_SESSION_MODE=single-instance` is deprecated since 1.7.0.
 
 Date: 2026-09-28
 
 Updated: 2026-10-22
 
-Supersedes [decision 0032](0032-use-shared-redis-sessions.md) for the shared session store. The process-local pilot in that decision remains unchanged.
+Supersedes [decision 0032](0032-use-shared-redis-sessions.md).
 
 ## Context
 

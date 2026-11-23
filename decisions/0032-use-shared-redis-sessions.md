@@ -1,10 +1,10 @@
 # 0032: Use Shared Redis Sessions When Scaling Hub Authentication
 
-Status: Superseded
+Status: Superseded by [decision 0033](0033-use-existing-cloud-sql-for-shared-hub-sessions.md)
 
 Date: 2026-09-28
 
-[Decision 0033](0033-use-existing-cloud-sql-for-shared-hub-sessions.md) replaces the shared-store choice. The Redis store described below was implemented and checked against a temporary container, but never deployed, and was removed on 2026-10-22. The process-local pilot below is unchanged.
+[Decision 0033](0033-use-existing-cloud-sql-for-shared-hub-sessions.md) replaces the shared-store choice. The Redis store described below was implemented and checked against a temporary container, but never deployed, and was removed on 2026-10-22. The process-local pilot below was replaced by Postgres sessions in 1.1.0, `HUB_AUTH_SESSION_MODE=single-instance` is deprecated since 1.7.0, and sessions now last 7 days idle and 30 days absolute (since 1.4.0) instead of the limits below.
 
 ## Context
 
@@ -16,7 +16,7 @@ Defer Redis for the limited pilot. Configure Cloud Run with one minimum and one 
 
 Before raising the maximum instance count or requiring sessions to survive restarts, use a single-shard managed Redis service for Hub session state. The browser still receives only a random opaque cookie; Redis keys contain hashes of random identifiers, and records containing API tokens or PKCE verifiers use AES-256-GCM authenticated encryption. A managed key ring allows new writes with the first key and reads with retained older keys. Short-lived transactions are consumed once. Atomic Redis operations claim refresh, rotate session IDs when global administrator mode changes, and close sessions on logout. A claimed refresh is never retried with the same token after an uncertain result; the affected session ends and requires sign-in. Shared-store failure fails closed.
 
-Sessions have an eight-hour idle limit and a twelve-hour absolute limit in either mode. Pilot activation requires HTTPS, explicit process-local mode, the Cloud Run instance cap and affinity, managed client credentials, and the browser and security evidence in [authentication transition](../docs/authentication-transition.md). The production activation setting remains off until that evidence is complete. Redis activation additionally requires a trusted TLS connection, managed session keys, and multi-replica evidence.
+Sessions have an eight-hour idle limit and a twelve-hour absolute limit in either mode. Pilot activation requires HTTPS, explicit process-local mode, the Cloud Run instance cap and affinity, managed client credentials, and the browser and security evidence in [authentication](../docs/authentication.md). The production activation setting remains off until that evidence is complete. Redis activation additionally requires a trusted TLS connection, managed session keys, and multi-replica evidence.
 
 ## Future Redis deployment
 

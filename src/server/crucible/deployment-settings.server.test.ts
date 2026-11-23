@@ -88,7 +88,7 @@ describe("secret settings", () => {
 
 describe("server API URL", () => {
   it("accepts HTTPS and loopback HTTP", () => {
-    expect(serverApiUrlAllowed("https://crucible.example/api/v3")).toBe(true)
+    expect(serverApiUrlAllowed("https://crucible.example/api")).toBe(true)
     expect(serverApiUrlAllowed("http://127.0.0.1:8000")).toBe(true)
     expect(serverApiUrlAllowed("http://api:8000")).toBe(false)
   })
@@ -105,9 +105,7 @@ describe("server API URL", () => {
 
   it("refuses HTTP to a public name or address even when opted in", () => {
     vi.stubEnv("HUB_API_ALLOW_HTTP", "true")
-    expect(serverApiUrlAllowed("http://crucible.example.org/api/v3")).toBe(
-      false
-    )
+    expect(serverApiUrlAllowed("http://crucible.example.org/api")).toBe(false)
     expect(serverApiUrlAllowed("http://35.188.216.232:7777")).toBe(false)
     expect(serverApiUrlAllowed("http://172.32.0.1:8000")).toBe(false)
     expect(serverApiUrlAllowed("http://[2001:db8::1]:8000")).toBe(false)

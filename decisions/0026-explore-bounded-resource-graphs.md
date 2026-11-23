@@ -6,13 +6,15 @@ Date: 2026-09-06
 
 Updated: 2026-10-22
 
+Release 1.8.0 added a graph Filters menu and replaced Reset layout with Reset graph; the current controls are in [information architecture](../docs/information-architecture.md#sample-and-dataset).
+
 Extends [decision 0008](0008-inspect-linked-resources-in-place.md) and supersedes only its deferral of graph loading and graph rerooting.
 
 ## Context
 
 Scientists need to understand and traverse the provenance around a sample or dataset without repeatedly abandoning the resource context. The existing relationship list is useful for direct neighbours but becomes harder to scan when several parent, child, and associated resources meet. TellingTree separates node inspection from rerooting, Lens groups immediate relationships, and established data catalogs give lineage a dedicated entity tab. Hub needs those interaction concepts in a desktop browser layout without copying another product or claiming that the current API supplies a complete pedigree.
 
-At the time of the initial decision, the API exposed `GET /entity_graph_cte/{entity_id}`, but its OpenAPI response was untyped, its public path exposed an implementation detail, and its edges did not state relationship semantics. Unbounded recursive loading would give Hub no dependable depth, size, truncation, ordering, or performance contract.
+At the time of the initial decision, the API exposed `GET /entity_graph_cte/{entity_mfid}`, but its OpenAPI response was untyped, its public path exposed an implementation detail, and its edges did not state relationship semantics. Unbounded recursive loading would give Hub no dependable depth, size, truncation, ordering, or performance contract.
 
 ## Decision
 
@@ -37,7 +39,7 @@ Graph routes expose only the root MFID in the canonical path and an optional ins
 - Focusable canvas nodes, the overlay inspector, and the Overview Relationships card cover keyboard and non-visual provenance exploration without a redundant table below the graph canvas.
 - Automatic multi-hop traversal follows lineage, while associations beyond the current resource require explicit bounded expansion.
 - Canvas association visibility and layout orientation are presentation preferences; API direction and relationship filters remain represented in Query identity and the server boundary.
-- The detailed graph contract and ELK integration boundary are recorded in [resource graph API handoff](../docs/resource-graph-api-handoff.md).
+- The graph contract is the pinned OpenAPI contract in `contracts/`, and the Hub integration is in `src/features/resource-graph/`.
 
 ## Validation
 

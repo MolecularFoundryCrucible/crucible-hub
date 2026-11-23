@@ -36,4 +36,4 @@ No new storage mechanism, retention period, telemetry field, third-party host, o
 - Assert bounded detail reads, no preview-driven collection reads, file and thumbnail reads only for an opened dataset preview, and cache reuse without row-to-detail seeding.
 - Review wide-light and compact-dark presentation, accessibility, focus restoration, and horizontal overflow.
 
-The [roadmap](../docs/roadmap.md#project-collection-inspection) owns implementation status and completion evidence.
+Implemented; release history is in the [changelog](../CHANGELOG.md).

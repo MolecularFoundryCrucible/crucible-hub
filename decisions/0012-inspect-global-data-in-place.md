@@ -38,4 +38,4 @@ No new persistence, telemetry, third-party host, browser storage, cookie, creden
 - Verify global, project, and resource hosts reject each other's trusted trails.
 - Verify compact and laptop layouts with automated accessibility and overflow checks without requiring a new visual baseline for implementation acceptance.
 
-The [roadmap](../docs/roadmap.md#global-data-collection-inspection) owns implementation status and evidence.
+Implemented; release history is in the [changelog](../CHANGELOG.md).

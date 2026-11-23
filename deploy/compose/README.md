@@ -9,7 +9,7 @@ The API bundle is the Compose installation in [crucible-selfhost](https://github
 - Docker with Compose v2.20 or later.
 - The API bundle running with its Hub sign-in settings (`compose.hub.yaml` in its `COMPOSE_FILE`): the Hub callbacks `<your address>/hub/auth/callback` and `<your address>/hub/auth/link/callback` among its allowed redirects, and the same client secret as `secrets/hub_auth_client_secret` here.
 - HTTPS at the front door, unless everything runs on one machine at `http://localhost`. The Hub accepts an HTTP callback and public API address only on `localhost`, `127.0.0.1` or `[::1]`, and drops `Secure` from its cookies only then. Open the Hub at exactly the address in `HUB_PUBLIC_ORIGIN`: the Hub refuses changes sent from another origin, so `127.0.0.1` and `localhost` are not interchangeable.
-- A way to sign in through the API. Passwords are on by default in the API bundle. ORCID needs the bundle's `compose.orcid.yaml`, HTTPS, and an ORCID application whose redirect is the API's own callback (`<public API address>/oauth/callback/orcid`), not the Hub's. An ORCID application registered before API 4.0.0 with `<public API address>/auth/hub/callback` works only with the bundle's `ORCID_LEGACY_CALLBACK=true`.
+- A way to sign in through the API. Passwords are on by default in the API bundle. ORCID needs the bundle's `compose.orcid.yaml`, HTTPS, and an ORCID application whose redirect is the API's own callback (`<public API address>/oauth/callback/orcid`), not the Hub's.
 
 ## Secrets
 
@@ -34,7 +34,7 @@ chmod 444 secrets/hub_*
 
 To rotate session keys without signing everyone out, put the new key first and keep the old one after a comma until the old sessions expire: `k2:<new>,k1:<old>`.
 
-Every Hub secret can also come from an environment variable or a `NAME_FILE` path. Give each secret exactly one way, as the API requires: the Hub refuses to start when a secret is set in more than one of `NAME_FILE`, `/run/secrets/NAME`, and `NAME`, and a blank value counts as not set.
+Every Hub secret can also come from an environment variable or a `NAME_FILE` path, but only one way each; see [settings](../../docs/authentication.md#settings).
 
 ## Same machine as the API
 
@@ -42,13 +42,16 @@ The Hub joins the API bundle's Docker network (named `crucible` unless you chang
 
 ```sh
 cp example.env .env
-# Edit HUB_PUBLIC_ORIGIN, HUB_AUTH_PUBLIC_API_URL, and CRUCIBLE_API_BASE_URL.
-docker compose up -d --build
+# Edit HUB_PUBLIC_ORIGIN and HUB_AUTH_PUBLIC_API_URL, and set HUB_IMAGE to a released image.
+docker compose pull hub hub-setup
+docker compose up -d --wait
 ```
+
+Keep `CRUCIBLE_API_BASE_URL` at its default `http://api:8000`: the Hub calls the API inside the Docker network.
 
 For a trial on one machine with the API bundle's defaults, set `HUB_PUBLIC_ORIGIN=http://localhost:8080` and `HUB_AUTH_PUBLIC_API_URL=http://localhost:8080/api/v4`, then open `http://localhost:8080/hub/`.
 
-`example.env` selects `compose.yaml` and `compose.api-network.yaml` and sets `HUB_API_ALLOW_HTTP=true`, because `http://api:8000` never leaves the Docker network. Even with that setting, the Hub accepts plain HTTP only for a container name or a private address. The Hub and setup containers drop every Linux capability and the database drops `NET_RAW`, so none of them can intercept traffic on the shared network; do the same for the API bundle's containers, and keep the API's database off the shared network. Set `CRUCIBLE_HUB_UPSTREAM=hub:3000` in the API bundle so its front door forwards `/hub/`.
+`example.env` selects `compose.yaml` and `compose.api-network.yaml` and sets `HUB_API_ALLOW_HTTP=true`, because `http://api:8000` never leaves the Docker network. Even with that setting, the Hub accepts plain HTTP only for a container name or a private address. The Hub and setup containers drop every Linux capability and the database drops `NET_RAW`, so none of them can intercept traffic on the shared network; do the same for the API bundle's containers, and keep the API's database off the shared network. The API bundle's `compose.hub.yaml` sets `CRUCIBLE_HUB_UPSTREAM=hub:3000`, so its front door forwards `/hub/` to this project; setting that variable alone forwards traffic without registering the Hub's sign-in client.
 
 ## Separate machine
 
@@ -57,6 +60,8 @@ The Hub runs on its own host and calls the API at its public HTTPS address. The 
 In `.env`, use the separate-machine block: `COMPOSE_FILE=compose.yaml:compose.published.yaml`, `HUB_BIND_ADDRESS` set to the private address the front door reaches, the public `CRUCIBLE_API_BASE_URL`, and `HUB_API_ALLOW_HTTP` unset. Set `CRUCIBLE_HUB_UPSTREAM=<private address>:3000` in the API bundle.
 
 ## Settings
+
+The Compose project sets the remaining Hub settings itself; [authentication](../../docs/authentication.md#settings) describes all of them.
 
 | Setting                    | Meaning                                                                                                                                                            |
 | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -78,6 +83,10 @@ docker compose up -d
 ```
 
 The image's `gov.lbl.crucible.api.min-version` label names the oldest Crucible API release it works with, and `gov.lbl.crucible.api.revision` the exact API revision it was built against (`docker inspect --format '{{ index .Config.Labels "gov.lbl.crucible.api.min-version" }}' <image>`). Hub 1.8.0 and later need Crucible API 4.0.0 or later (1.7.2 and 1.7.3 need 3.3.0, and 1.7.0 and 1.7.1 need 3.2.0). Pre-release images such as 1.8.0-alpha.1 are built against an unreleased API revision and carry no `min-version` label.
+
+## Stable interface
+
+Downstream installations, including the [crucible-selfhost](https://github.com/MolecularFoundryCrucible/crucible-selfhost) bundle and its CI, script against this project, so treat these names as a versioned interface and call out any change in the changelog: `compose.yaml`, `compose.published.yaml`, the `example.env` keys, the secret file names, the `hub` and `hub-setup` services, `/hub/health` with `"sessions": "ok"`, and the `org.opencontainers.image.version` label.
 
 ## Checking and upgrading
 

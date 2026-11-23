@@ -2,6 +2,7 @@ import { execSync } from "node:child_process"
 import { readFileSync } from "node:fs"
 import { resolve, sep } from "node:path"
 import { defineConfig, loadEnv } from "vite"
+import type { UserConfig } from "vite"
 import { tanstackStart } from "@tanstack/react-start/plugin/vite"
 import viteReact from "@vitejs/plugin-react"
 import tailwindcss from "@tailwindcss/vite"
@@ -57,12 +58,22 @@ const allowedHosts = (
   .map((host) => host.trim())
   .filter(Boolean)
 
+// Dependencies mark modules with React Server Components' "use client", which
+// this app does not use, so Rolldown dropping the directive is expected.
+const rolldownOptions = {
+  onLog(level, log, handler) {
+    if (log.code === "MODULE_LEVEL_DIRECTIVE") return
+    handler(level, log)
+  },
+} satisfies NonNullable<UserConfig["build"]>["rolldownOptions"]
+
 const config = defineConfig({
   base: "/hub/",
   define: {
     "import.meta.env.VITE_APP_VERSION": JSON.stringify(appVersion),
     "import.meta.env.VITE_GIT_COMMIT": JSON.stringify(gitCommit),
   },
+  build: { rolldownOptions },
   resolve: { tsconfigPaths: true },
   server: {
     allowedHosts,
@@ -74,6 +85,7 @@ const config = defineConfig({
     client: {
       build: {
         rolldownOptions: {
+          ...rolldownOptions,
           output: {
             codeSplitting: {
               groups: [
