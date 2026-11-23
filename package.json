@@ -100,7 +100,7 @@
     "prettier": "3.9.10",
     "prettier-plugin-tailwindcss": "0.8.1",
     "shadcn": "4.23.0",
-    "typescript": "5.9.3",
+    "typescript": "6.0.3",
     "vite": "8.3.4",
     "vitest": "4.1.12"
   },
@@ -115,6 +115,9 @@
   },
   "overrides": {
     "glob": "^14.0.2",
-    "minimatch@^10": "^11.0.1"
+    "minimatch@^10": "^11.0.1",
+    "openapi-typescript": {
+      "typescript": "$typescript"
+    }
   }
 }
