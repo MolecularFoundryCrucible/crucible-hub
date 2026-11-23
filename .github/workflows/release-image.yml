@@ -2,6 +2,8 @@ name: Release image
 
 on:
   push:
+    branches:
+      - main
     tags:
       - "v*.*.*"
   workflow_dispatch:
@@ -10,12 +12,12 @@ permissions:
   contents: read
 
 concurrency:
-  group: release-image-${{ github.ref }}
+  group: release-image-${{ github.ref_type == 'tag' && github.ref || github.sha }}
   cancel-in-progress: false
 
 env:
   IMAGE: ghcr.io/molecularfoundrycrucible/crucible-hub
-  PUBLISH: ${{ github.ref_type == 'tag' }}
+  PUBLISH: ${{ github.ref_type == 'tag' || (github.event_name == 'push' && github.ref == 'refs/heads/main') }}
 
 jobs:
   build:
@@ -83,12 +85,14 @@ jobs:
           retention-days: 1
 
   publish:
-    if: github.ref_type == 'tag'
+    if: github.ref_type == 'tag' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     needs: build
     runs-on: ubuntu-24.04
     permissions:
       contents: read
       packages: write
+      id-token: write
+      attestations: write
     steps:
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
@@ -96,6 +100,7 @@ jobs:
           pattern: digest-*
           merge-multiple: true
       - name: Publish the multi-architecture tags
+        id: publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REF_NAME: ${{ github.ref_name }}
@@ -105,10 +110,23 @@ jobs:
           version="${REF_NAME#v}"
           sources=()
           for digest in digests/*; do sources+=("$IMAGE@sha256:$(basename "$digest")"); done
-          tags=(--tag "$IMAGE:$version")
-          case "$version" in
-            *-*) ;;
-            *) tags+=(--tag "$IMAGE:${version%.*}") ;;
-          esac
+          if [ "$GITHUB_REF_TYPE" = tag ]; then
+            primary="$version"
+            tags=(--tag "$IMAGE:$version")
+            case "$version" in
+              *-*) ;;
+              *) tags+=(--tag "$IMAGE:${version%.*}") ;;
+            esac
+          else
+            primary="sha-$GITHUB_SHA"
+            tags=(--tag "$IMAGE:$primary" --tag "$IMAGE:main")
+          fi
           docker buildx imagetools create "${tags[@]}" "${sources[@]}"
-          docker buildx imagetools inspect "$IMAGE:$version"
+          docker buildx imagetools inspect "$IMAGE:$primary"
+          digest="$(docker buildx imagetools inspect "$IMAGE:$primary" --format '{{json .Manifest}}' | jq -r .digest)"
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-name: ${{ env.IMAGE }}
+          subject-digest: ${{ steps.publish.outputs.digest }}
+          push-to-registry: true
