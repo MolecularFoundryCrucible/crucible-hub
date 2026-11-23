@@ -45,67 +45,38 @@ for (const key of [
   delete environment[key]
 }
 
-if (scenario.startsWith("api-")) {
-  const specificKeyFile = resolve(root, `.env.${scenario}.local`)
-  const keyFile = existsSync(specificKeyFile)
-    ? specificKeyFile
-    : resolve(root, ".env.api-key.local")
-  const credentials = existsSync(keyFile)
-    ? parseEnv(readFileSync(keyFile, "utf8"))
-    : {}
-  environment.CRUCIBLE_API_KEY =
-    credentials.CRUCIBLE_API_KEY || process.env.CRUCIBLE_API_KEY || ""
-  if (!environment.CRUCIBLE_API_KEY) {
-    throw new Error(
-      "Set CRUCIBLE_API_KEY in the scenario credential file or your shell."
-    )
+function scenarioCredentials() {
+  const file = `.env.${scenario}.local`
+  const path = resolve(root, file)
+  if (!existsSync(path)) {
+    throw new Error(`Create the gitignored ${file} credential file.`)
   }
-  if (scenario === "api-local") {
-    const legacyCertificateFile = resolve(root, ".env.hub-auth.local")
-    const legacyCertificate = existsSync(legacyCertificateFile)
-      ? parseEnv(readFileSync(legacyCertificateFile, "utf8"))
-          .NODE_EXTRA_CA_CERTS
-      : undefined
-    environment.NODE_EXTRA_CA_CERTS =
-      credentials.NODE_EXTRA_CA_CERTS ||
-      legacyCertificate ||
-      process.env.NODE_EXTRA_CA_CERTS ||
-      ""
+  const credentials = parseEnv(readFileSync(path, "utf8"))
+  return (name, { optional = false } = {}) => {
+    if (!credentials[name] && !optional) {
+      throw new Error(`Set ${name} in ${file}.`)
+    }
+    return credentials[name]
   }
 }
 
 let callbackOverride
 let publicApiOverride
 
-if (scenario.startsWith("orcid-")) {
-  const specificCredentialFile = resolve(root, `.env.${scenario}.local`)
-  const credentialFile = existsSync(specificCredentialFile)
-    ? specificCredentialFile
-    : resolve(root, ".env.hub-auth.local")
-  if (!existsSync(credentialFile)) {
-    throw new Error(
-      `Create a gitignored .env.${scenario}.local credential file.`
-    )
+if (scenario !== "fixtures") {
+  const credential = scenarioCredentials()
+  if (scenario.startsWith("api-")) {
+    environment.CRUCIBLE_API_KEY = credential("CRUCIBLE_API_KEY")
+  } else {
+    environment.HUB_AUTH_CLIENT_SECRET = credential("HUB_AUTH_CLIENT_SECRET")
+    callbackOverride = credential("HUB_AUTH_CALLBACK_URI", { optional: true })
+    publicApiOverride = credential("HUB_AUTH_PUBLIC_API_URL", {
+      optional: true,
+    })
   }
-  const credentials = parseEnv(readFileSync(credentialFile, "utf8"))
-  if (credentialFile === specificCredentialFile || scenario === "orcid-local") {
-    callbackOverride = credentials.HUB_AUTH_CALLBACK_URI
-    publicApiOverride = credentials.HUB_AUTH_PUBLIC_API_URL
+  if (scenario.endsWith("-local")) {
+    environment.NODE_EXTRA_CA_CERTS = credential("NODE_EXTRA_CA_CERTS")
   }
-  environment.HUB_AUTH_CLIENT_SECRET = credentials.HUB_AUTH_CLIENT_SECRET || ""
-  if (!environment.HUB_AUTH_CLIENT_SECRET) {
-    throw new Error(
-      "Set HUB_AUTH_CLIENT_SECRET in the scenario credential file."
-    )
-  }
-  if (scenario === "orcid-local") {
-    environment.NODE_EXTRA_CA_CERTS =
-      credentials.NODE_EXTRA_CA_CERTS || process.env.NODE_EXTRA_CA_CERTS || ""
-  }
-}
-
-if (scenario.endsWith("local") && !environment.NODE_EXTRA_CA_CERTS) {
-  throw new Error("Set NODE_EXTRA_CA_CERTS to the local API certificate.")
 }
 
 Object.assign(environment, scenarioValues)

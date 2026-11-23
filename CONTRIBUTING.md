@@ -15,7 +15,7 @@ The dev server serves <http://127.0.0.1:3000/hub/> on a strict port. `HUB_DATA_S
 
 ## Development scenarios
 
-Each `npm run dev:<scenario>` script loads nonsecret settings from [`config/env/`](config/env/), clears settings left over from other scenarios, and gives credentials only to the server process.
+Each `npm run dev:<scenario>` script loads nonsecret settings from [`config/env/`](config/env/), clears settings left over from other scenarios, and gives credentials only to the server process. It reads credentials only from that scenario's own file and stops with an error naming the missing file or setting; there is no shared fallback file and no shell fallback.
 
 | Scenario                                           | Data source                                 | Credential file (gitignored)                            |
 | -------------------------------------------------- | ------------------------------------------- | ------------------------------------------------------- |
@@ -23,9 +23,8 @@ Each `npm run dev:<scenario>` script loads nonsecret settings from [`config/env/
 | `dev:api-local`, `dev:api-staging`, `dev:api-main` | A live API, acting as you with your API key | `.env.api-<name>.local` with `CRUCIBLE_API_KEY`         |
 | `dev:orcid-local`, `dev:orcid-staging`             | A live API through Hub sign-in              | `.env.orcid-<name>.local` with `HUB_AUTH_CLIENT_SECRET` |
 
-API-key scenarios are the quickest way to develop against real data. The server sends every request as you, so they can change real records: use test resources and staging for workflow testing, and use `dev:api-main` only when you mean to work against production data. They do not exercise sign-in, session cookies, or logout, and they refuse to run in production. An exported `CRUCIBLE_API_KEY` or `.env.api-key.local` works as a fallback.
-
-Sign-in scenarios exercise the real login, session, and logout flow. `dev:orcid-local` also reads `HUB_AUTH_PUBLIC_API_URL` and `HUB_AUTH_CALLBACK_URI` from `.env.orcid-local.local`; the API must allow that exact callback. To reach a dev server through another host name, set `HUB_DEV_ALLOWED_HOSTS` (comma-separated) in a gitignored `.env.local`. For a local HTTPS API, set `NODE_EXTRA_CA_CERTS` before Node starts. [Authentication](docs/authentication.md) describes every setting.
+API-key scenarios are the quickest way to develop against real data. The server sends every request as you, so they can change real records: use test resources and staging for workflow testing, and use `dev:api-main` only when you mean to work against production data. They do not exercise sign-in, session cookies, or logout, and they refuse to run in production.
+Sign-in scenarios exercise the real login, session, and logout flow. `dev:orcid-local` also reads `HUB_AUTH_PUBLIC_API_URL` and `HUB_AUTH_CALLBACK_URI` from `.env.orcid-local.local`; the API must allow that exact callback. To reach a dev server through another host name, set `HUB_DEV_ALLOWED_HOSTS` (comma-separated) in a gitignored `.env.local`. The `-local` scenarios also need `NODE_EXTRA_CA_CERTS`, the local API's certificate, in their credential file. [Authentication](docs/authentication.md) describes every setting.
 
 Never give a credential a `VITE_` prefix, enter it in the browser, expose it to browser code or storage, print it, or commit a local credential file.
 
