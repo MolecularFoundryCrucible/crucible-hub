@@ -319,27 +319,14 @@ export function enforceHubLoginRateLimit() {
   loginAttempts.set(ip, attempts)
 }
 
-let singleInstanceWarned = false
-
-function warnSingleInstanceDeprecated() {
-  if (singleInstanceWarned) return
-  singleInstanceWarned = true
-  console.warn(
-    "[Crucible Hub] HUB_AUTH_SESSION_MODE=single-instance is deprecated and will be removed in the next major release; use postgres."
-  )
-}
-
 export function productionHubAuthReady() {
   if (process.env.NODE_ENV !== "production") return true
   if (process.env.HUB_AUTH_PRODUCTION_ENABLED !== "true") return false
-  const mode = process.env.HUB_AUTH_SESSION_MODE
-  if (mode === "postgres")
-    return sharedSessionsConfigured() && sharedSessionStoreKind() === mode
-  if (process.env.HUB_AUTH_SESSION_MODE === "single-instance") {
-    warnSingleInstanceDeprecated()
-    return !sharedSessionsRequested()
-  }
-  return false
+  return (
+    process.env.HUB_AUTH_SESSION_MODE === "postgres" &&
+    sharedSessionsConfigured() &&
+    sharedSessionStoreKind() === "postgres"
+  )
 }
 
 function localSession(id: string, touch = false) {

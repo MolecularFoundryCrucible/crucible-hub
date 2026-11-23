@@ -14,6 +14,7 @@ import {
 import {
   beginHubLogin,
   finishHubLogin,
+  hubApiAuthorizationUrl,
   hasHubSession,
   hubSessionIdentity,
   hubSignInFailureDetails,
@@ -156,9 +157,36 @@ describe.skipIf(!databaseUrl)("Hub sessions shared through Postgres", () => {
     expect(productionHubAuthReady()).toBe(true)
     vi.stubEnv("HUB_AUTH_SESSION_MODE", "redis")
     expect(productionHubAuthReady()).toBe(false)
+    vi.stubEnv("HUB_AUTH_SESSION_MODE", "single-instance")
+    expect(productionHubAuthReady()).toBe(false)
     vi.stubEnv("HUB_AUTH_SESSION_MODE", "postgres")
     vi.stubEnv("HUB_SESSION_KEYS", "")
     expect(productionHubAuthReady()).toBe(false)
+  })
+
+  it("signs in over plain HTTP on this machine in production", async () => {
+    stubSharedEnv()
+    vi.stubEnv("NODE_ENV", "production")
+    vi.stubEnv("HUB_AUTH_PRODUCTION_ENABLED", "true")
+    vi.stubEnv("HUB_AUTH_SESSION_MODE", "postgres")
+    vi.stubEnv("CRUCIBLE_API_BASE_URL", "http://127.0.0.1:8000/api")
+    vi.stubEnv("HUB_AUTH_PUBLIC_API_URL", "http://localhost:8080/api")
+    vi.stubEnv(
+      "HUB_AUTH_CALLBACK_URI",
+      "http://localhost:8080/hub/auth/callback"
+    )
+    const scope = startRequestScope("http://127.0.0.1:3000/hub/auth/login")
+    const location = await scope.run(() => beginHubLogin("/hub/data"))
+
+    expect(location.startsWith("http://localhost:8080/api/")).toBe(true)
+    expect(
+      scope
+        .setCookies()
+        .find((value) => value.startsWith("crucible_hub_login="))
+    ).not.toContain("Secure")
+    expect(
+      hubApiAuthorizationUrl("http://localhost:8080/api/oauth/link/start")
+    ).toBe("http://localhost:8080/api/oauth/link/start")
   })
 
   it("reaches the session table from a plain database URL in production", async () => {

@@ -978,27 +978,6 @@ describe("hub login exchange", () => {
     }
   )
 
-  it("signs in over plain HTTP on this machine in production", async () => {
-    stubHubAuthEnv()
-    vi.stubEnv("NODE_ENV", "production")
-    vi.stubEnv("HUB_AUTH_PRODUCTION_ENABLED", "true")
-    vi.stubEnv("HUB_AUTH_SESSION_MODE", "single-instance")
-    vi.stubEnv("CRUCIBLE_API_BASE_URL", "http://127.0.0.1:8000/api")
-    vi.stubEnv("HUB_AUTH_PUBLIC_API_URL", "http://localhost:8080/api")
-    vi.stubEnv(
-      "HUB_AUTH_CALLBACK_URI",
-      "http://localhost:8080/hub/auth/callback"
-    )
-    vi.spyOn(console, "warn").mockImplementation(() => undefined)
-    const { scope, location } = await beginLogin("/hub/data")
-
-    expect(location.startsWith("http://localhost:8080/api/")).toBe(true)
-    expect(loginCookie(scope)).not.toContain("Secure")
-    expect(
-      hubApiAuthorizationUrl("http://localhost:8080/api/oauth/link/start")
-    ).toBe("http://localhost:8080/api/oauth/link/start")
-  })
-
   it("rejects a plain HTTP public API address on a non-loopback host", async () => {
     stubHubAuthEnv()
     vi.stubEnv("HUB_AUTH_PUBLIC_API_URL", "http://api.example.test")
