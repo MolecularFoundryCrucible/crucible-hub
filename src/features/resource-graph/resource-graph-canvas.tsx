@@ -866,7 +866,7 @@ function ResourceGraphFlow({
         aria-describedby="resource-graph-instructions"
         aria-label={`Graph of ${graph.nodes.length} resources and ${graph.edges.length} relationships`}
         ariaLabelConfig={graphAriaLabels}
-        colorMode={theme}
+        forceColorMode={theme === "system" ? undefined : theme}
         className="resource-graph-canvas"
         edges={flowEdges}
         edgesFocusable={false}

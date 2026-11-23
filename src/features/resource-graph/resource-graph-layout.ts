@@ -407,7 +407,11 @@ export function interpolateLayoutPositions(
 }
 
 export function fitAllViewportOptions(element: HTMLElement | null) {
-  return { ...graphViewportOptions(element), maxZoom: 1, padding: 0.16 }
+  return {
+    ...graphViewportOptions(element),
+    maxZoom: 1,
+    padding: "7%" as const,
+  }
 }
 
 export function graphViewportOptions(element: HTMLElement | null) {
