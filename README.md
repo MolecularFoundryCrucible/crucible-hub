@@ -26,7 +26,7 @@ The [self-hosting guide](deploy/compose/README.md) runs the Hub with its own ses
 
 ## Try it without an API
 
-You need Node.js 22.22 and npm 10.9.
+You need Node.js 26.13 and npm 11.20.
 
 ```bash
 npm ci
