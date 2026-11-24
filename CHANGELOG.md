@@ -6,6 +6,7 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- Pages download less code before they open: sign-in loads about 29% less JavaScript and CSS (284 kB instead of 399 kB gzipped) and Home about 6% less, and graph styles load only with the graph view.
 - The test suite is roughly halved and follows the testing rules in `CONTRIBUTING.md`; the two browser suites merge into one run on the production build with `npm run test:e2e`, which replaces `test:browser` and `test:production`. The footer version link now names its visible text ("Version v1.8.2") for voice control.
 - Keyboard focus on footer, section navigation, list and text links now uses the same soft 3 px ring as buttons and inputs.
 - Screen readers and voice control name the account menu button after the signed-in person ("Avery Chen account menu"), and metadata group summaries read as their visible text, meeting WCAG 2.5.3 Label in Name.

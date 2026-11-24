@@ -46,7 +46,7 @@ A proposal or unmerged API contract is not accepted behavior.
 
 ## Repository layout
 
-- `src/routes/`: route modules and persistent layouts
+- `src/routes/`: route configuration only (search validation, loaders, head, and the page and pending components imported from `src/features/`)
 - `src/features/`: product workflows and page composition
 - `src/components/ui/`: controlled shadcn primitives
 - `src/components/crucible/`: shared domain components and semantic icons
@@ -72,7 +72,7 @@ A proposal or unmerged API contract is not accepted behavior.
 - Feature screens prefer `src/components/crucible` components over raw `src/components/ui` primitives.
 - Prefer semantic HTML and native behavior. Verify keyboard, focus, disabled, error, theme, and accessible-name states when changing a primitive.
 - Never rely on color alone for resource type, lifecycle, permission, or state.
-- Keep heavy optional code (graph canvas, ELK, forms, QR rendering) in on-demand chunks loaded with `React.lazy` or dynamic imports, and out of the `vendor` and `shared` chunk groups in `vite.config.ts`.
+- Keep heavy optional code (graph canvas, ELK, forms, QR rendering) and its styles in on-demand chunks loaded with `React.lazy` or dynamic imports. Route search schemas and loader helpers live in modules without UI imports, because they load on every page, and page components read route state with `getRouteApi`. `npm run test:e2e` fails when sign-in or Home first-load size exceeds its budget.
 
 ## Security and live systems
 
