@@ -1,9 +1,13 @@
-import { resolveCollectionAffiliation } from "@/data/crucible/public-data"
+import {
+  resolveCollectionAffiliation,
+  publicDataSearchSchema,
+} from "@/data/crucible/public-data"
 import type {
   PublicDataAccess,
   PublicDataChoice,
 } from "@/data/crucible/public-data"
 import type { WorkspaceSearchKind } from "@/data/crucible/workspace-source"
+import { z } from "zod"
 
 export type SearchTab = WorkspaceSearchKind | "all" | "metadata"
 
@@ -47,3 +51,20 @@ export function searchKindsForFilters(
     ? kinds.filter((kind) => kind !== "person")
     : kinds
 }
+
+export const kinds = [
+  "person",
+  "project",
+  "instrument",
+  "sample",
+  "dataset",
+] as const satisfies readonly WorkspaceSearchKind[]
+
+export const searchSchema = z.object({
+  affiliation: z.enum(["owner"]).optional().catch(undefined),
+  kind: z.enum(kinds).optional().catch(undefined),
+  mode: z.enum(["metadata"]).optional().catch(undefined),
+  projectMfid: z.string().trim().min(1).max(255).optional().catch(undefined),
+  publicData: publicDataSearchSchema.optional().catch(undefined),
+  q: z.string().trim().max(200).optional().catch(undefined),
+})

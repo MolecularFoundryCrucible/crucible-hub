@@ -1,0 +1,679 @@
+import { useEffect, useMemo, useState } from "react"
+import {
+  useInfiniteQuery,
+  useQuery,
+  useSuspenseQuery,
+} from "@tanstack/react-query"
+import { Link, getRouteApi } from "@tanstack/react-router"
+import type { z } from "zod"
+import { useEnteringClassName } from "@/hooks/use-entering-keys"
+import { resourceDisplayName } from "@/lib/resource-name"
+import {
+  CollectionSection,
+  CollectionToolbar,
+} from "@/components/crucible/collection-browser"
+import {
+  collectionActiveFilter,
+  collectionActiveFilters,
+  CollectionFilterPanel,
+  FilterForm,
+  FilterSection,
+} from "@/components/crucible/collection-filter-panel"
+import { CollectionPagination } from "@/components/crucible/collection-pagination"
+import {
+  CollectionLoadError,
+  CollectionTablePending,
+  CollectionUpdateError,
+  CollectionUpdateStatus,
+} from "@/components/crucible/collection-state"
+import { PageHeader } from "@/components/crucible/page-header"
+import { PageLayout } from "@/components/crucible/page-layout"
+import { PendingRegion } from "@/components/crucible/pending-region"
+import { PersonLink } from "@/components/crucible/person-link"
+import { ProjectRoleBadge } from "@/components/crucible/project-members"
+import { RefreshButton } from "@/components/crucible/refresh-button"
+import {
+  ResourceCreatedCell,
+  ResourceOpenCell,
+  ResourceActivityCell,
+} from "@/components/crucible/resource-collection-cells"
+import { ResourceCreationLink } from "@/components/crucible/resource-creation-actions"
+import { ResourceDirectoryNameCell } from "@/components/crucible/resource-directory-name-cell"
+import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
+import { accountQueryOptions } from "@/data/crucible/account.queries"
+import type { IdentityScope } from "@/data/crucible/query-keys"
+import { SyncProjectsButton } from "@/features/project-membership/sync-projects-button"
+import { Card, CardContent } from "@/components/ui/card"
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@/components/ui/empty"
+import { Field, FieldLabel } from "@/components/ui/field"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { SortableTableHead } from "@/components/crucible/sortable-table-head"
+import { TableSortControl } from "@/components/crucible/table-sort-control"
+import type { TableSortField } from "@/components/crucible/table-sort-control"
+import { capitalize } from "@/data/crucible/filter-draft"
+import {
+  projectPageLimit,
+  projectsCursorQueryOptions,
+  projectsQueryOptions,
+} from "@/data/crucible/projects.queries"
+import type { SortDirection } from "@/data/crucible/collection-query"
+import {
+  cursorPageTotal,
+  flattenCursorPages,
+} from "@/data/crucible/cursor-pages"
+import type { WorkspaceProject } from "@/data/crucible/workspace-source"
+import { useDefaultSort } from "@/features/preferences/data-group-by"
+import { useDebouncedValue } from "@/hooks/use-debounced-value"
+import { searchDebounceMs } from "@/lib/search"
+import {
+  DateRangeFilter,
+  dateRangeLabel,
+} from "@/components/crucible/date-range-filter"
+import type {
+  projectSearchSchema,
+  projectSortFieldSchema,
+} from "@/features/projects/projects-search"
+import { projectRoleFilterSchema } from "@/features/projects/projects-search"
+
+const route = getRouteApi("/_app/projects/")
+
+export type ProjectSortField = z.infer<typeof projectSortFieldSchema>
+
+const sortFields = [
+  { field: "name", label: "Project", preferredDirection: "asc" },
+  { field: "created", kind: "date", label: "Created" },
+  { field: "activity", kind: "date", label: "Last activity" },
+] as const satisfies readonly TableSortField<ProjectSortField>[]
+
+export type ProjectRoleFilter = z.infer<typeof projectRoleFilterSchema>
+
+type ProjectSearch = z.infer<typeof projectSearchSchema>
+
+export function ProjectsPage() {
+  const scope = useWorkspaceScope()
+  const { data: account } = useSuspenseQuery(accountQueryOptions(scope))
+  const loaderData = route.useLoaderData()
+  const defaultSort = useDefaultSort(loaderData?.defaultSort)
+  const preferredSort = defaultSort?.projects
+  const search = route.useSearch()
+  const navigate = route.useNavigate()
+
+  const effectiveSort = search.sort ?? preferredSort?.sort
+  const queryDirection =
+    search.direction ?? (search.sort ? undefined : preferredSort?.direction)
+  const apiSort = effectiveSort === "name" ? "title" : effectiveSort
+
+  const projectResult = useInfiniteQuery(
+    projectsCursorQueryOptions(scope, {
+      activeSince: search.activeSince,
+      affiliation: search.role ? undefined : search.affiliation,
+      cursor: search.cursor,
+      direction: apiSort ? queryDirection : undefined,
+      includeTotal: true,
+      limit: projectPageLimit,
+      memberRef: search.role ? account.unique_id : undefined,
+      memberRole: search.role,
+      sort: apiSort,
+    })
+  )
+
+  const projects = useMemo(
+    () => flattenCursorPages(projectResult.data?.pages),
+    [projectResult.data]
+  )
+  const total = cursorPageTotal(projectResult.data?.pages)
+  const updating = projectResult.isFetching && !projectResult.isFetchingNextPage
+
+  const sort = effectiveSort
+  const direction = queryDirection ?? "asc"
+  const hasActiveFilters = Boolean(
+    search.activeSince || search.affiliation || search.role
+  )
+
+  function handleSortChange(
+    nextField: ProjectSortField,
+    nextDirection: SortDirection
+  ) {
+    void navigate({
+      replace: true,
+      search: (previous) => ({
+        ...previous,
+        cursor: undefined,
+        direction: nextDirection,
+        sort: nextField,
+      }),
+      state: {},
+      to: "/projects",
+    })
+  }
+
+  return (
+    <PageLayout>
+      <ProjectsPageHeader
+        canCreate={account.capabilities.can_create_project}
+        canSync={!account.is_service_account}
+        scope={scope}
+      />
+      <CollectionSection>
+        <CollectionToolbar
+          actions={
+            <RefreshButton
+              label="Refresh projects"
+              onClick={() => void projectResult.refetch()}
+              refreshing={updating}
+            />
+          }
+          filters={<ProjectDirectoryFilters values={search} />}
+        />
+        {projectResult.isPending ? (
+          <CollectionTablePending label="projects" presentation="projects" />
+        ) : projectResult.isError && !projectResult.data ? (
+          <>
+            <CollectionLoadError
+              label="Projects"
+              retry={() => void projectResult.refetch()}
+            />
+          </>
+        ) : (
+          <>
+            {projectResult.isError && !projectResult.isFetchNextPageError ? (
+              <CollectionUpdateError
+                label="Projects"
+                preserved
+                retry={() => void projectResult.refetch()}
+              />
+            ) : null}
+            <ProjectCollection
+              accountUserMfid={account.unique_id}
+              affiliation={search.affiliation}
+              direction={direction}
+              hasActiveFilters={hasActiveFilters}
+              hasNextPage={Boolean(projectResult.hasNextPage)}
+              isLoadingMore={projectResult.isFetchingNextPage}
+              loadMoreError={projectResult.isFetchNextPageError}
+              onLoadMore={() => void projectResult.fetchNextPage()}
+              onSortChange={handleSortChange}
+              projects={projects}
+              sort={sort}
+              total={total}
+              updating={updating}
+            />
+          </>
+        )}
+      </CollectionSection>
+    </PageLayout>
+  )
+}
+
+export function ProjectsRoutePending() {
+  const scope = useWorkspaceScope()
+  const { data: account } = useQuery(accountQueryOptions(scope))
+  return (
+    <PageLayout>
+      <ProjectsPageHeader
+        canCreate={account?.capabilities.can_create_project === true}
+        canSync={account?.is_service_account === false}
+        scope={scope}
+      />
+      <CollectionSection>
+        <CollectionToolbar
+          actions={
+            <RefreshButton
+              label="Refresh projects"
+              onClick={() => undefined}
+              refreshing={false}
+            />
+          }
+          filters={<ProjectDirectoryFilters values={route.useSearch()} />}
+        />
+        <CollectionTablePending label="projects" presentation="projects" />
+      </CollectionSection>
+    </PageLayout>
+  )
+}
+
+function ProjectsPageHeader({
+  canCreate,
+  canSync,
+  scope,
+}: {
+  canCreate: boolean
+  canSync: boolean
+  scope: IdentityScope
+}) {
+  return (
+    <PageHeader
+      actions={
+        canCreate || canSync ? (
+          <div className="flex flex-wrap gap-2">
+            {canSync ? <SyncProjectsButton scope={scope} /> : null}
+            {canCreate ? (
+              <ResourceCreationLink
+                kind="project"
+                label="Create project"
+                render={<Link to="/projects/new" />}
+              />
+            ) : null}
+          </div>
+        ) : null
+      }
+      divider={false}
+      title="Projects"
+    />
+  )
+}
+
+type ProjectFilterValues = Omit<ProjectSearch, "cursor">
+
+function ProjectDirectoryFilters({ values }: { values: ProjectFilterValues }) {
+  const navigate = route.useNavigate()
+  const scope = useWorkspaceScope()
+  const [open, setOpen] = useState(false)
+  const [draft, setDraft] = useState<ProjectFilterValues>(values)
+  const valuesKey = JSON.stringify({
+    activeSince: values.activeSince,
+    affiliation: values.affiliation,
+    direction: values.direction,
+    role: values.role,
+    sort: values.sort,
+  })
+
+  useEffect(() => {
+    setDraft(JSON.parse(valuesKey) as ProjectFilterValues)
+  }, [valuesKey])
+
+  const countKey = useDebouncedValue(
+    JSON.stringify({
+      activeSince: draft.activeSince,
+      affiliation: draft.role ? undefined : draft.affiliation,
+      memberRef: draft.role ? scope[2] : undefined,
+      memberRole: draft.role,
+    }),
+    searchDebounceMs
+  )
+  const count = useQuery({
+    ...projectsQueryOptions(scope, {
+      ...(JSON.parse(countKey) as Pick<
+        Parameters<typeof projectsQueryOptions>[1],
+        "activeSince" | "affiliation" | "memberRef" | "memberRole"
+      >),
+      includeTotal: true,
+      limit: 1,
+    }),
+    enabled: open,
+  })
+
+  const boundsFilters = {
+    ...(JSON.parse(countKey) as Pick<
+      Parameters<typeof projectsQueryOptions>[1],
+      "affiliation" | "memberRef" | "memberRole"
+    >),
+    activeSince: undefined,
+    includeTotal: false,
+    limit: 1,
+  }
+  const leastActive = useQuery({
+    ...projectsQueryOptions(scope, {
+      ...boundsFilters,
+      direction: "asc",
+      sort: "activity",
+    }),
+    enabled: open,
+  })
+  const mostActive = useQuery({
+    ...projectsQueryOptions(scope, {
+      ...boundsFilters,
+      direction: "desc",
+      sort: "activity",
+    }),
+    enabled: open,
+  })
+
+  const active = collectionActiveFilters(
+    collectionActiveFilter(
+      "role",
+      values.role
+        ? `Role: ${capitalize(values.role)}`
+        : values.affiliation === "owner"
+          ? "Role: Led by me"
+          : undefined
+    ),
+    collectionActiveFilter(
+      "active-since",
+      dateRangeLabel("Active", { from: values.activeSince })
+    )
+  )
+  const defaults: ProjectFilterValues = {
+    direction: values.direction,
+    sort: values.sort,
+  }
+
+  function updateSearch(next: ProjectFilterValues) {
+    void navigate({
+      search: () => ({
+        activeSince: next.activeSince || undefined,
+        affiliation: next.role ? undefined : next.affiliation,
+        cursor: undefined,
+        direction: next.sort ? next.direction : undefined,
+        role: next.role,
+        sort: next.sort,
+      }),
+      state: {},
+      to: "/projects",
+    })
+  }
+
+  function apply(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setOpen(false)
+    updateSearch(draft)
+  }
+
+  function clear() {
+    setDraft(defaults)
+    updateSearch(defaults)
+  }
+
+  function changeOpen(nextOpen: boolean) {
+    setOpen(nextOpen)
+    if (nextOpen) setDraft(values)
+  }
+
+  function removeFilter(id: string) {
+    if (id === "role") {
+      updateSearch({ ...values, affiliation: undefined, role: undefined })
+    } else if (id === "active-since") {
+      updateSearch({ ...values, activeSince: undefined })
+    }
+  }
+
+  const draftRoleValue =
+    draft.role ?? (draft.affiliation === "owner" ? "owner" : "")
+  const formId = "project-filters"
+
+  return (
+    <CollectionFilterPanel
+      activeFilters={active}
+      formId={formId}
+      onClearFilters={clear}
+      onOpenChange={changeOpen}
+      onRemoveFilter={removeFilter}
+      onReset={() => setDraft(defaults)}
+      open={open}
+      resetDisabled={JSON.stringify(draft) === JSON.stringify(defaults)}
+      resultCount={count.data?.total ?? undefined}
+      resultNoun={["project", "projects"]}
+      title="Project filters"
+    >
+      <FilterForm id={formId} onSubmit={apply}>
+        <FilterSection title="Membership">
+          <Field>
+            <FieldLabel htmlFor="project-filter-role">Your role</FieldLabel>
+            <NativeSelect
+              className="w-full"
+              id="project-filter-role"
+              onChange={(event) => {
+                const nextValue = event.target.value
+                setDraft((current) => ({
+                  ...current,
+                  affiliation: nextValue === "owner" ? "owner" : undefined,
+                  role: projectRoleFilterSchema.safeParse(nextValue).success
+                    ? (nextValue as ProjectRoleFilter)
+                    : undefined,
+                }))
+              }}
+              value={draftRoleValue}
+            >
+              <NativeSelectOption value="">Any role</NativeSelectOption>
+              <NativeSelectOption value="owner">Led by me</NativeSelectOption>
+              <NativeSelectOption value="admin">Admin</NativeSelectOption>
+              <NativeSelectOption value="editor">Editor</NativeSelectOption>
+              <NativeSelectOption value="contributor">
+                Contributor
+              </NativeSelectOption>
+              <NativeSelectOption value="viewer">Viewer</NativeSelectOption>
+            </NativeSelect>
+          </Field>
+        </FilterSection>
+        <FilterSection title="Last activity">
+          <DateRangeFilter
+            bounds={{
+              earliest: leastActive.data?.items[0]?.last_activity_at,
+              latest: mostActive.data?.items[0]?.last_activity_at,
+            }}
+            boundsPending={leastActive.isPending || mostActive.isPending}
+            idPrefix="project-filter-active"
+            mode="since"
+            onChange={({ from }) =>
+              setDraft((current) => ({ ...current, activeSince: from }))
+            }
+            value={{ from: draft.activeSince }}
+          />
+        </FilterSection>
+      </FilterForm>
+    </CollectionFilterPanel>
+  )
+}
+
+function resolveProjectRole(
+  project: WorkspaceProject,
+  accountUserMfid?: string
+): string | null {
+  return (
+    project.role ??
+    (accountUserMfid && project.owner?.unique_id === accountUserMfid
+      ? "owner"
+      : (project.members?.find((m) => m.unique_id === accountUserMfid)?.role ??
+        null))
+  )
+}
+
+function ProjectCollection({
+  accountUserMfid,
+  affiliation,
+  direction = "asc",
+  hasActiveFilters,
+  hasNextPage,
+  isLoadingMore,
+  loadMoreError,
+  onLoadMore,
+  onSortChange,
+  projects,
+  sort,
+  total,
+  updating,
+}: {
+  accountUserMfid?: string
+  affiliation?: "owner"
+  direction?: SortDirection
+  hasActiveFilters: boolean
+  hasNextPage: boolean
+  isLoadingMore: boolean
+  loadMoreError: boolean
+  onLoadMore: () => void
+  onSortChange: (field: ProjectSortField, direction: SortDirection) => void
+  projects: readonly WorkspaceProject[]
+  sort?: ProjectSortField
+  total: number | null
+  updating: boolean
+}) {
+  const enterClassName = useEnteringClassName(
+    projects.map((item) => item.unique_id)
+  )
+  return (
+    <>
+      <CollectionUpdateStatus label="projects" updating={updating} />
+      {projects.length > 0 ? (
+        <PendingRegion pending={updating} render={<Card />}>
+          <CardContent className="px-0">
+            <Table
+              aria-label="Project collection"
+              before={
+                <TableSortControl
+                  direction={direction}
+                  fields={sortFields}
+                  onChange={onSortChange}
+                  sort={sort}
+                />
+              }
+              className="resource-directory-table resource-directory-project-table table-fixed"
+            >
+              <colgroup>
+                <col className="resource-directory-name-column" />
+                <col className="resource-directory-person-column" />
+                <col className="resource-directory-role-column" />
+                <col className="resource-directory-date-column resource-directory-created-column" />
+                <col className="resource-directory-date-column" />
+                <col className="resource-directory-action-column" />
+              </colgroup>
+              <TableHeader>
+                <TableRow>
+                  <SortableTableHead
+                    active={sort === "name"}
+                    direction={direction}
+                    field="name"
+                    label="Project"
+                    onChange={onSortChange}
+                    preferredDirection="asc"
+                  />
+                  <TableHead className="resource-directory-person">
+                    Lead
+                  </TableHead>
+                  <TableHead className="resource-directory-role">
+                    Role
+                  </TableHead>
+                  <SortableTableHead
+                    active={sort === "created"}
+                    className="resource-directory-created"
+                    direction={direction}
+                    field="created"
+                    kind="date"
+                    label="Created"
+                    onChange={onSortChange}
+                    preferredDirection="desc"
+                  />
+                  <SortableTableHead
+                    active={sort === "activity"}
+                    direction={direction}
+                    field="activity"
+                    kind="date"
+                    label="Last activity"
+                    onChange={onSortChange}
+                    preferredDirection="desc"
+                  />
+                  <TableHead kind="action">
+                    <span className="sr-only">Open</span>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {projects.map((project) => {
+                  const complete = "status" in project
+                  const title = project.title?.trim()
+                  const name = resourceDisplayName("project", project.title, {
+                    identifier: project.project_id,
+                    mfid: project.unique_id,
+                  })
+                  const effectiveRole = resolveProjectRole(
+                    project,
+                    accountUserMfid
+                  )
+                  return (
+                    <TableRow
+                      className={enterClassName(project.unique_id)}
+                      key={project.unique_id}
+                    >
+                      <ResourceDirectoryNameCell
+                        identifier={title ? project.project_id : null}
+                        kind="project"
+                        mfid={project.unique_id}
+                        name={name}
+                      />
+                      <TableCell
+                        className="resource-directory-person"
+                        data-label="Lead"
+                      >
+                        {complete && project.owner ? (
+                          <PersonLink
+                            nameStyle="abbreviated"
+                            person={project.owner}
+                            presentation="collection"
+                          />
+                        ) : (
+                          <span aria-label="Not available">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell
+                        className="resource-directory-role"
+                        data-label="Role"
+                      >
+                        {effectiveRole ? (
+                          <ProjectRoleBadge role={effectiveRole} />
+                        ) : (
+                          <span aria-label="Not available">-</span>
+                        )}
+                      </TableCell>
+                      <ResourceCreatedCell
+                        className="resource-directory-created"
+                        value={complete ? project.creation_time : undefined}
+                      />
+                      <ResourceActivityCell
+                        value={complete ? project.last_activity_at : undefined}
+                      />
+                      <ResourceOpenCell
+                        kind="project"
+                        mfid={project.unique_id}
+                        name={name}
+                      />
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </PendingRegion>
+      ) : (
+        <PendingRegion
+          pending={updating}
+          render={<Empty className="min-h-state border" />}
+        >
+          <EmptyHeader>
+            <EmptyTitle>No projects found</EmptyTitle>
+            <EmptyDescription>
+              {affiliation
+                ? "You do not lead any projects."
+                : hasActiveFilters
+                  ? "No projects match the current filters."
+                  : "No projects are available to this account."}
+            </EmptyDescription>
+          </EmptyHeader>
+        </PendingRegion>
+      )}
+      {projects.length ? (
+        <CollectionPagination
+          disabled={updating}
+          hasNextPage={hasNextPage}
+          isError={loadMoreError}
+          isLoading={isLoadingMore}
+          label="projects"
+          loaded={projects.length}
+          onLoadMore={onLoadMore}
+          total={total}
+        />
+      ) : null}
+    </>
+  )
+}

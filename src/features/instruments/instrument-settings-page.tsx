@@ -1,0 +1,109 @@
+import { useSuspenseQuery } from "@tanstack/react-query"
+import { useNavigate, getRouteApi } from "@tanstack/react-router"
+import { ContentBoundary } from "@/components/crucible/content-layout"
+import {
+  useWorkspaceMode,
+  useWorkspaceScope,
+} from "@/components/crucible/workspace-provider"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { resourceQueryOptions } from "@/data/crucible/resources.queries"
+import { InstrumentLifecycleCard } from "@/features/instrument-lifecycle/instrument-lifecycle-card"
+import { InstrumentAccessCard } from "@/features/instrument-operators/instrument-operators-card"
+import { OwnershipTransferCard } from "@/features/resource-ownership/ownership-transfer-card"
+import { ResourceForcedDeletionCard } from "@/features/resource-deletion/resource-forced-deletion"
+
+const route = getRouteApi("/_app/instruments/$instrumentMfid/settings/")
+
+export function InstrumentManagePage() {
+  const { instrumentMfid } = route.useParams()
+  const mode = useWorkspaceMode()
+  const scope = useWorkspaceScope()
+  const navigate = useNavigate({
+    from: "/instruments/$instrumentMfid/settings/",
+  })
+  const { data: resource } = useSuspenseQuery(
+    resourceQueryOptions(scope, instrumentMfid)
+  )
+
+  if (!resource || resource.kind !== "instrument") return null
+
+  const canChangeStatus = resource.capabilities?.can_change_status === true
+  const canManageAccess = resource.capabilities?.can_manage_access === true
+  const canViewAccess =
+    canManageAccess || resource.capabilities?.can_view_access === true
+  const canTransfer = resource.capabilities?.can_transfer === true
+  const canDelete = resource.capabilities?.can_delete === true
+  const hasResourceManagement = canChangeStatus || canTransfer || canDelete
+
+  if (!canViewAccess && !hasResourceManagement) {
+    return <ManagementUnavailable />
+  }
+
+  return (
+    <div className="flex min-w-0 flex-col gap-6">
+      {canViewAccess ? (
+        <ContentBoundary width="reading">
+          <InstrumentAccessCard instrument={resource} scope={scope} />
+        </ContentBoundary>
+      ) : null}
+      {hasResourceManagement ? (
+        <ContentBoundary width="reading">
+          <Card>
+            <CardHeader>
+              <CardTitle>Resource management</CardTitle>
+            </CardHeader>
+            <CardContent className="divide-y px-0">
+              {canChangeStatus ? (
+                <InstrumentLifecycleCard
+                  instrument={resource}
+                  mode={mode}
+                  presentation="row"
+                  scope={scope}
+                />
+              ) : null}
+              {canTransfer ? (
+                <OwnershipTransferCard
+                  mode={mode}
+                  presentation="row"
+                  resource={resource}
+                  scope={scope}
+                />
+              ) : null}
+              {canDelete ? (
+                <ResourceForcedDeletionCard
+                  onSuccess={() =>
+                    void navigate({
+                      replace: true,
+                      search: { cursor: undefined },
+                      to: "/instruments",
+                    })
+                  }
+                  presentation="row"
+                  resource={resource}
+                  scope={scope}
+                />
+              ) : null}
+            </CardContent>
+          </Card>
+        </ContentBoundary>
+      ) : null}
+    </div>
+  )
+}
+
+function ManagementUnavailable() {
+  return (
+    <ContentBoundary width="reading">
+      <Card>
+        <CardHeader>
+          <CardTitle aria-level={2} role="heading">
+            Management unavailable
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="text-body text-muted-foreground">
+          You do not have an available instrument management action.
+        </CardContent>
+      </Card>
+    </ContentBoundary>
+  )
+}
