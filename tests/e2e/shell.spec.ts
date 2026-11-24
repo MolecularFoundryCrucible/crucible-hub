@@ -110,6 +110,8 @@ test("keeps the origin on a native logout form submission", async ({
   })
 
   expect((await logoutRequest).headers()["origin"]).toBe(expectedOrigin)
+  await expect(page.getByText("Signed out")).toBeVisible()
+  await page.unrouteAll({ behavior: "ignoreErrors" })
 })
 
 test("fits Home within a compact browser viewport", async ({ page }) => {
