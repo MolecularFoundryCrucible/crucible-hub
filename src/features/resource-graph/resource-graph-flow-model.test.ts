@@ -90,10 +90,10 @@ describe("presentResourceFlowNodes", () => {
       })
     )
     expect(hovered[0]).not.toBe(nodes[0])
-    expect(hovered[0].data.highlighted).toBe(true)
+    expect(hovered[0]!.data.highlighted).toBe(true)
     expect(hovered[1]).toBe(nodes[1])
     expect(hovered[2]).not.toBe(nodes[2])
-    expect(hovered[2].data.dimmed).toBe(true)
+    expect(hovered[2]!.data.dimmed).toBe(true)
   })
 
   it("gives each node only its own expansion state", () => {
@@ -104,7 +104,7 @@ describe("presentResourceFlowNodes", () => {
       presentation(),
       new Set()
     )
-    expect(nodes[1].data.expansions).toEqual([
+    expect(nodes[1]!.data.expansions).toEqual([
       { mode: "ancestors", status: "idle" },
     ])
     const pending = presentResourceFlowNodes(
@@ -125,7 +125,7 @@ describe("presentResourceFlowNodes", () => {
         ]),
       })
     )
-    expect(pending[1].data.expansions).toEqual([
+    expect(pending[1]!.data.expansions).toEqual([
       { mode: "ancestors", status: "pending" },
     ])
     expect(pending[0]).toBe(nodes[0])

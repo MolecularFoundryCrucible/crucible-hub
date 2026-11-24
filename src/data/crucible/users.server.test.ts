@@ -103,7 +103,7 @@ describe("workspace user source", () => {
       unique_id: "user-1",
       user_capabilities: { can_change_platform_role: true },
     })
-    expect(Object.fromEntries(new URL(requests[0].url).searchParams)).toEqual({
+    expect(Object.fromEntries(new URL(requests[0]!.url).searchParams)).toEqual({
       include_total: "true",
       limit: "50",
       q: "ada",

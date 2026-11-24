@@ -29,8 +29,7 @@ import type { FormFieldLike } from "./field-state"
 import { fieldErrors, shouldShowFieldError } from "./field-state"
 import { PendingIcon } from "@/components/crucible/pending-icon"
 
-export type SlugAvailabilityStatus =
-  "checking" | "no-exact-match" | "taken" | "error"
+type SlugAvailabilityStatus = "checking" | "no-exact-match" | "taken" | "error"
 
 type CheckResult = {
   candidate: string

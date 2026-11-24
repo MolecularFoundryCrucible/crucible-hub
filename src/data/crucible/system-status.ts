@@ -1,4 +1,4 @@
-export type ServiceStatus = "ok" | "degraded" | "unreachable"
+type ServiceStatus = "ok" | "degraded" | "unreachable"
 
 export interface SystemStatus {
   status: ServiceStatus

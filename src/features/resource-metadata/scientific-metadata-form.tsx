@@ -69,7 +69,7 @@ function metadataEqual(
     leftEntries.every(
       ([key, value]) =>
         Object.hasOwn(rightObject, key) &&
-        metadataEqual(value, rightObject[key])
+        metadataEqual(value, rightObject[key]!)
     )
   )
 }
@@ -97,7 +97,7 @@ export function scientificMetadataWrite(
   const changed = Object.fromEntries(
     Object.entries(edited).filter(
       ([key, value]) =>
-        !Object.hasOwn(current, key) || !metadataEqual(current[key], value)
+        !Object.hasOwn(current, key) || !metadataEqual(current[key]!, value)
     )
   ) as WorkspaceScientificMetadata
   return { kind: "merge", metadata: changed }
@@ -278,7 +278,9 @@ export function ScientificMetadataForm({
             </FieldGroup>
           </form>
         </CardContent>
-        <form.Subscribe selector={(state) => [state.canSubmit, state.isDirty]}>
+        <form.Subscribe
+          selector={(state) => [state.canSubmit, state.isDirty] as const}
+        >
           {([canSubmit, dirty]) => (
             <EditableCardActions
               canSubmit={canSubmit}

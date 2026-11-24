@@ -212,13 +212,15 @@ export function AccountProfileForm({
           </form>
         </CardContent>
         <form.Subscribe
-          selector={(state) => [
-            state.canSubmit &&
-              !matchesRejectedValue(state.values.email, rejectedEmail) &&
-              !usernameConflict.isTaken(state.values.username),
-            accountProfileHasChanges(account, state.values),
-            state.isSubmitting,
-          ]}
+          selector={(state) =>
+            [
+              state.canSubmit &&
+                !matchesRejectedValue(state.values.email, rejectedEmail) &&
+                !usernameConflict.isTaken(state.values.username),
+              accountProfileHasChanges(account, state.values),
+              state.isSubmitting,
+            ] as const
+          }
         >
           {([canSubmit, dirty, submitting]) => (
             <EditableCardActions

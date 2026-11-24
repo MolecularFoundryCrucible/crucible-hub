@@ -74,15 +74,15 @@ describe("workspace resource access source", () => {
       expect.objectContaining({ principal_type: "service_account" }),
       expect.objectContaining({ principal_type: "unknown" }),
     ])
-    expect(requests[0].method).toBe("PUT")
-    expect(new URL(requests[0].url).pathname).toBe(
+    expect(requests[0]!.method).toBe("PUT")
+    expect(new URL(requests[0]!.url).pathname).toBe(
       "/resources/resource-1/access/users/user-1"
     )
-    await expect(requests[0].json()).resolves.toEqual({
+    await expect(requests[0]!.json()).resolves.toEqual({
       permission: "contributor",
     })
-    expect(requests[1].method).toBe("GET")
-    expect(new URL(requests[1].url).pathname).toBe(
+    expect(requests[1]!.method).toBe("GET")
+    expect(new URL(requests[1]!.url).pathname).toBe(
       "/resources/resource-1/access"
     )
 
@@ -92,11 +92,11 @@ describe("workspace resource access source", () => {
       "projects",
       "project-1"
     )
-    expect(requests[0].method).toBe("DELETE")
-    expect(new URL(requests[0].url).pathname).toBe(
+    expect(requests[0]!.method).toBe("DELETE")
+    expect(new URL(requests[0]!.url).pathname).toBe(
       "/resources/resource-1/access/projects/project-1"
     )
-    expect(requests[1].method).toBe("GET")
+    expect(requests[1]!.method).toBe("GET")
   })
 
   it("publishes and unpublishes through API then rereads grants and detail", async () => {
@@ -127,8 +127,8 @@ describe("workspace resource access source", () => {
       grants: [],
       resource: { kind: "sample", unique_id: "resource-1" },
     })
-    expect(requests[0].method).toBe("PUT")
-    expect(new URL(requests[0].url).pathname).toBe(
+    expect(requests[0]!.method).toBe("PUT")
+    expect(new URL(requests[0]!.url).pathname).toBe(
       "/resources/resource-1/access/public"
     )
     expect(
@@ -142,8 +142,8 @@ describe("workspace resource access source", () => {
 
     requests.length = 0
     await unpublishWorkspaceResourceAccess("resource-1")
-    expect(requests[0].method).toBe("DELETE")
-    expect(new URL(requests[0].url).pathname).toBe(
+    expect(requests[0]!.method).toBe("DELETE")
+    expect(new URL(requests[0]!.url).pathname).toBe(
       "/resources/resource-1/access/public"
     )
   })

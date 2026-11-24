@@ -689,11 +689,12 @@ export async function searchWorkspace(
   const settled = await Promise.allSettled(requests)
   return {
     query: input.query,
-    groups: settled.map((result, index) =>
-      result.status === "fulfilled"
+    groups: input.kinds.map((kind, index) => {
+      const result = settled[index]
+      return result?.status === "fulfilled"
         ? result.value
-        : group(input.kinds[index], [], null, true)
-    ),
+        : group(kind, [], null, true)
+    }),
   }
 }
 

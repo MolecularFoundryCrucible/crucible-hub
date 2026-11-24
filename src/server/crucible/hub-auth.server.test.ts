@@ -66,7 +66,7 @@ async function finishLogin(
   issuer: string | null = "https://api.example.test"
 ) {
   const scope = startRequestScope("http://127.0.0.1:3000/hub/auth/callback", {
-    headers: { cookie: transactionCookie.split(";")[0] },
+    headers: { cookie: transactionCookie.split(";")[0]! },
   })
   const destination = await scope.run(() =>
     finishHubLogin(code, state, null, issuer)
@@ -232,7 +232,7 @@ describe("hub login exchange", () => {
       vi.stubGlobal("fetch", fetch)
       const callback = startRequestScope(
         "http://127.0.0.1:3000/hub/auth/callback",
-        { headers: { cookie: transactionCookie.split(";")[0] } }
+        { headers: { cookie: transactionCookie.split(";")[0]! } }
       )
       const failure: unknown = await callback
         .run(() =>
@@ -497,7 +497,7 @@ describe("hub login exchange", () => {
       const { cookies } = await finishLogin(loginCookie(scope), "code", state)
       return cookies
         .find((value) => value.startsWith("crucible_hub_session="))!
-        .split(";")[0]
+        .split(";")[0]!
     }
 
     async function stepUp(
@@ -539,7 +539,7 @@ describe("hub login exchange", () => {
         "http://127.0.0.1:3000/hub/auth/callback",
         {
           headers: {
-            cookie: `${session}; ${loginCookie(scope).split(";")[0]}`,
+            cookie: `${session}; ${loginCookie(scope).split(";")[0]!}`,
           },
         }
       )
@@ -665,7 +665,7 @@ describe("hub login exchange", () => {
         {
           headers: {
             cookie: `${session}; crucible_hub_administrator_view=elevated; ${
-              loginCookie(scope).split(";")[0]
+              loginCookie(scope).split(";")[0]!
             }`,
           },
         }
@@ -758,7 +758,7 @@ describe("hub login exchange", () => {
     const { cookies } = await finishLogin(loginCookie(scope), "code", state)
     const sessionCookie = cookies
       .find((value) => value.startsWith("crucible_hub_session="))!
-      .split(";")[0]
+      .split(";")[0]!
 
     const apiScope = startRequestScope("http://127.0.0.1:3000/hub/account", {
       headers: { cookie: sessionCookie },
@@ -797,7 +797,7 @@ describe("hub login exchange", () => {
     const { cookies } = await finishLogin(loginCookie(scope), "code", state)
     const sessionCookie = cookies
       .find((value) => value.startsWith("crucible_hub_session="))!
-      .split(";")[0]
+      .split(";")[0]!
     const call = () => {
       const apiScope = startRequestScope("http://127.0.0.1:3000/hub/data", {
         headers: { cookie: sessionCookie },

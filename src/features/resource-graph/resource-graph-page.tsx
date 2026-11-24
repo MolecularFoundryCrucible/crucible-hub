@@ -157,8 +157,8 @@ export function ResourceGraphPage({
       descendantQuery.data,
       associationQuery.data,
     ].flatMap((graph) => (graph ? [graph] : []))
-    if (graphs.length === 0) return undefined
     const [baseGraph, ...additionalGraphs] = graphs
+    if (!baseGraph) return undefined
     if (additionalGraphs.length === 0) {
       return baseGraph
     }
@@ -212,7 +212,7 @@ export function ResourceGraphPage({
       new Map<string, GraphExpansionState>(
         expansionRequests.map((request, index) => [
           graphExpansionKey(request.nodeMfid, request.mode),
-          expansions.states[index],
+          expansions.states[index]!,
         ])
       ),
     [expansionRequests, expansions.states]

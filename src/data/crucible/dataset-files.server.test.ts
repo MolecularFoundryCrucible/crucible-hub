@@ -34,7 +34,7 @@ describe("dataset file sources", () => {
     await expect(
       readWorkspaceDatasetIngestionRequests("dataset-1")
     ).resolves.toEqual({ items: [], total: 0 })
-    const query = new URL(requests[0].url).searchParams
+    const query = new URL(requests[0]!.url).searchParams
     expect(query.get("dataset_mfid")).toBe("dataset-1")
     expect(query.has("dataset_id")).toBe(false)
   })
@@ -62,10 +62,10 @@ describe("dataset file sources", () => {
     })
 
     expect(requests).toHaveLength(1)
-    expect(new URL(requests[0].url).pathname).toBe(
+    expect(new URL(requests[0]!.url).pathname).toBe(
       "/files/file-mfid/download_link"
     )
-    expect(requests[0].headers.get("Authorization")).toBe(
+    expect(requests[0]!.headers.get("Authorization")).toBe(
       "Bearer local-test-key"
     )
 
@@ -88,8 +88,10 @@ describe("dataset file sources", () => {
       undefined,
       "inline"
     )
-    expect(new URL(requests[0].url).searchParams.has("disposition")).toBe(false)
-    expect(new URL(requests[1].url).searchParams.get("disposition")).toBe(
+    expect(new URL(requests[0]!.url).searchParams.has("disposition")).toBe(
+      false
+    )
+    expect(new URL(requests[1]!.url).searchParams.get("disposition")).toBe(
       "inline"
     )
 

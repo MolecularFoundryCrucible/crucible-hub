@@ -45,10 +45,12 @@ describe("resource deletion sources", () => {
     await expect(
       requestWorkspaceResourceDeletion("sample-1", "cleanup")
     ).resolves.toMatchObject({ id: 12, resource_mfid: "sample-1" })
-    expect(requests[0].method).toBe("POST")
-    expect(new URL(requests[0].url).pathname).toBe("/resources/sample-1/delete")
-    expect(new URL(requests[0].url).search).toBe("?reason=cleanup")
-    expect(requests[0].signal).toBeDefined()
+    expect(requests[0]!.method).toBe("POST")
+    expect(new URL(requests[0]!.url).pathname).toBe(
+      "/resources/sample-1/delete"
+    )
+    expect(new URL(requests[0]!.url).search).toBe("?reason=cleanup")
+    expect(requests[0]!.signal).toBeDefined()
 
     vi.stubGlobal(
       "fetch",

@@ -26,7 +26,7 @@ test("navigates projects, preview deep links, and nested instrument datasets wit
   )
   await expect(page.getByLabel("Project data type")).toBeVisible()
   expect(projectDataResponses).toHaveLength(1)
-  const samplesHandler = new URL(projectDataResponses[0]).pathname
+  const samplesHandler = new URL(projectDataResponses[0]!).pathname
   await page
     .getByLabel("Project data type")
     .getByRole("button", { name: "Datasets" })
@@ -35,7 +35,7 @@ test("navigates projects, preview deep links, and nested instrument datasets wit
     page.getByRole("link", { name: /Preview NiFe K-edge/ })
   ).toBeVisible()
   expect(projectDataResponses).toHaveLength(2)
-  expect(new URL(projectDataResponses[1]).pathname).not.toBe(samplesHandler)
+  expect(new URL(projectDataResponses[1]!).pathname).not.toBe(samplesHandler)
   const projectSections = page.getByRole("navigation", {
     name: "Project sections",
   })

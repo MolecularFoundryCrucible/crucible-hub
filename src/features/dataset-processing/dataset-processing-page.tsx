@@ -539,7 +539,7 @@ function IngestionRequestDialog({
         )
       )
       return results.map((result, index) => ({
-        fileMfid: fileMfids[index],
+        fileMfid: fileMfids[index]!,
         result,
       }))
     },
@@ -580,12 +580,12 @@ function IngestionRequestDialog({
       exact: true,
       queryKey: crucibleKeys.datasetIngestionRequests(scope, datasetMfid),
     })
-    if (!failures.length) {
+    const firstFailure = failures[0]?.result
+    if (!firstFailure) {
       onOpenChange(false)
       return
     }
     setSelectedMfids(failures.map((failure) => failure.fileMfid))
-    const firstFailure = failures[0].result
     setError(
       firstFailure.status === "rejected" &&
         firstFailure.reason instanceof HubApiClientError

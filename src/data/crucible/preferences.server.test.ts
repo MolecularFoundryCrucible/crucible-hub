@@ -72,9 +72,9 @@ describe("account preferences transport", () => {
       current.etag
     )
     expect(update.state).toBe("saved")
-    expect(requests[1].method).toBe("PATCH")
-    expect(requests[1].headers.get("if-match")).toBe('"p2"')
-    await expect(requests[1].json()).resolves.toEqual({
+    expect(requests[1]!.method).toBe("PATCH")
+    expect(requests[1]!.headers.get("if-match")).toBe('"p2"')
+    await expect(requests[1]!.json()).resolves.toEqual({
       default_record_kind: "datasets",
     })
   })

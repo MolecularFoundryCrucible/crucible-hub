@@ -117,7 +117,7 @@ describe("ResourceRelationships", () => {
     render(
       <ResourceRelationships
         kind="sample"
-        links={[links[0]]}
+        links={[links[0]!]}
         managing
         renderManagementAction={(link) => (
           <button type="button">Unlink {link.name}</button>

@@ -95,7 +95,10 @@ export const instrumentDatasetBrowseOptions = [
 
 export function resolveCollectionBrowse<TField extends string>(
   search: CollectionBrowseSearch,
-  options: readonly CollectionBrowseOption<TField>[],
+  options: readonly [
+    CollectionBrowseOption<TField>,
+    ...CollectionBrowseOption<TField>[],
+  ],
   defaultGroupBy?: string
 ) {
   const preferred =

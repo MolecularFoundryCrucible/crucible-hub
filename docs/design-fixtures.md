@@ -30,7 +30,7 @@ Dense fixtures apply instrument and project scope before cursor slicing and mode
 - `npm run dev:fixtures` starts the dev server on fixture data.
 - `/hub/fixtures/scenarios` selects a scenario and keeps `scenario` in navigation; the scenario is part of the Query identity scope, so scenarios never share cache entries.
 - `/hub/fixtures/design-system` shows theme roles, controls, statuses, identities, access roles, visibility, and loading, empty, restricted, partial, error, and dense specimens.
-- Fixture routes are unlinked and `noindex`.
+- Fixture routes are unlinked and `noindex`, and return 404 unless the server runs on fixture data.
 - Fixtures are on outside production. In production they fail closed unless `HUB_ENABLE_FIXTURES=true`, which allows only `populated` and is never a real deployment setting.
 - API calls are server-only, so browser tests substitute the server adapter rather than intercepting browser requests.
 - `npm run test:e2e` runs the Playwright suite against fixtures on the production build without storing screenshots.

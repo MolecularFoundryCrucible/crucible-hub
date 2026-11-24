@@ -50,6 +50,10 @@ export async function safeCrucibleCall<T>(
         status,
       })
     }
+    const firstValueIssue =
+      error instanceof CrucibleResponseError
+        ? error.valueIssues?.[0]
+        : undefined
     return {
       status: "error",
       error: toHubApiError({
@@ -83,7 +87,9 @@ export async function safeCrucibleCall<T>(
                   [valueIssueMessage(issue.kind)],
                 ])
               ),
-              message: `${valueIssueMessage(error.valueIssues[0].kind)} (${error.valueIssues[0].field})`,
+              message: firstValueIssue
+                ? `${valueIssueMessage(firstValueIssue.kind)} (${firstValueIssue.field})`
+                : undefined,
             }
           : {}),
       }),

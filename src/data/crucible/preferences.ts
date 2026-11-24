@@ -121,15 +121,7 @@ export const accountPreferencesPatchSchema = z
   )
 
 export type ThemePreference = z.infer<typeof themePreferenceSchema>
-export type RecordKindPreference = z.infer<typeof recordKindPreferenceSchema>
-export type HomeRecentScopePreference = z.infer<
-  typeof homeRecentScopePreferenceSchema
->
 export type DirectorySortField = z.infer<typeof directorySortFieldSchema>
-export type DataSortPreference = z.infer<typeof dataSortPreferenceSchema>
-export type DirectorySortPreference = z.infer<
-  typeof directorySortPreferenceSchema
->
 export type ResourceSequencePreference = z.infer<
   typeof resourceSequencePreferenceSchema
 >

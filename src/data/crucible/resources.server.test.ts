@@ -99,12 +99,12 @@ describe("workspace resource sources", () => {
       unique_id: "selected-sample",
     })
     expect(requests).toHaveLength(1)
-    expect(requests[0].method).toBe("PATCH")
-    expect(new URL(requests[0].url).pathname).toBe("/samples/selected-sample")
-    expect(requests[0].headers.get("Authorization")).toBe(
+    expect(requests[0]!.method).toBe("PATCH")
+    expect(new URL(requests[0]!.url).pathname).toBe("/samples/selected-sample")
+    expect(requests[0]!.headers.get("Authorization")).toBe(
       "Bearer local-test-key"
     )
-    await expect(requests[0].json()).resolves.toEqual({
+    await expect(requests[0]!.json()).resolves.toEqual({
       description: "Updated description",
       sample_type: null,
       timestamp: "2026-09-05T18:45:00Z",
@@ -153,12 +153,14 @@ describe("workspace resource sources", () => {
       unique_id: "selected-dataset",
     })
     expect(requests).toHaveLength(1)
-    expect(requests[0].method).toBe("PATCH")
-    expect(new URL(requests[0].url).pathname).toBe("/datasets/selected-dataset")
-    expect(requests[0].headers.get("Authorization")).toBe(
+    expect(requests[0]!.method).toBe("PATCH")
+    expect(new URL(requests[0]!.url).pathname).toBe(
+      "/datasets/selected-dataset"
+    )
+    expect(requests[0]!.headers.get("Authorization")).toBe(
       "Bearer local-test-key"
     )
-    await expect(requests[0].json()).resolves.toEqual({
+    await expect(requests[0]!.json()).resolves.toEqual({
       data_type: null,
       dataset_name: "Updated dataset",
       session_name: null,
@@ -214,14 +216,14 @@ describe("workspace resource sources", () => {
         unique_id: "selected-resource",
       })
       expect(requests).toHaveLength(1)
-      expect(requests[0].method).toBe(method)
-      const url = new URL(requests[0].url)
+      expect(requests[0]!.method).toBe(method)
+      const url = new URL(requests[0]!.url)
       expect(url.pathname).toBe("/resources/selected-resource/metadata")
       expect(Object.fromEntries(url.searchParams)).toEqual(query)
-      expect(requests[0].headers.get("Authorization")).toBe(
+      expect(requests[0]!.headers.get("Authorization")).toBe(
         "Bearer local-test-key"
       )
-      await expect(requests[0].json()).resolves.toEqual(metadata)
+      await expect(requests[0]!.json()).resolves.toEqual(metadata)
     }
   )
 
@@ -318,7 +320,7 @@ describe("workspace resource sources", () => {
       scientific_metadata: { spatial_resolution_nm: 120 },
     })
     expect(requests).toHaveLength(1)
-    const url = new URL(requests[0].url)
+    const url = new URL(requests[0]!.url)
     expect(url.pathname).toBe("/resources/01J6Y8N4Q2R7M9K3T5V0W1X2Z4")
     expect(Object.fromEntries(url.searchParams)).toEqual({
       include_datasets: "false",
@@ -408,7 +410,7 @@ describe("workspace resource sources", () => {
 
       expect(detail).toMatchObject({ kind: "dataset", links: expected })
       expect(requests).toHaveLength(1)
-      const url = new URL(requests[0].url)
+      const url = new URL(requests[0]!.url)
       expect(url.pathname).toBe("/resources/selected-dataset")
       expect(Object.fromEntries(url.searchParams)).toEqual({
         include_datasets: "false",

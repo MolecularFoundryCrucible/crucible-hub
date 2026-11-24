@@ -33,7 +33,7 @@ async function signIn(accessToken = "access-1") {
   const transaction = login
     .setCookies()
     .find((value) => value.startsWith("crucible_hub_login="))!
-    .split(";")[0]
+    .split(";")[0]!
   vi.stubGlobal(
     "fetch",
     vi.fn(async () =>
@@ -57,7 +57,7 @@ async function signIn(accessToken = "access-1") {
   return callback
     .setCookies()
     .find((value) => value.startsWith("crucible_hub_session="))!
-    .split(";")[0]
+    .split(";")[0]!
 }
 
 function inSession<T>(session: string | null, run: () => Promise<T>) {

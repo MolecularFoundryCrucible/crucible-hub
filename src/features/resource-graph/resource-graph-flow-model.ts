@@ -40,7 +40,7 @@ export type ResourceFlowNodeData = {
 
 export type ResourceFlowNode = Node<ResourceFlowNodeData, "resource">
 
-export type ResourceFlowEdgeData = {
+type ResourceFlowEdgeData = {
   highlighted: boolean
   relationship: "associated" | "parent"
 }
@@ -216,7 +216,7 @@ function sameExpansions(
     left.length === right.length &&
     left.every(
       (item, index) =>
-        item.mode === right[index].mode && item.status === right[index].status
+        item.mode === right[index]?.mode && item.status === right[index].status
     )
   )
 }

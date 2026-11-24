@@ -242,10 +242,12 @@ export function InstrumentRegistrationForm({
             </form>
           </CardContent>
           <form.Subscribe
-            selector={(state) => [
-              instrumentIdConflict.isTaken(state.values.instrument_id),
-              state.isSubmitting,
-            ]}
+            selector={(state) =>
+              [
+                instrumentIdConflict.isTaken(state.values.instrument_id),
+                state.isSubmitting,
+              ] as const
+            }
           >
             {([isTaken, submitting]) => (
               <CreationFormActions

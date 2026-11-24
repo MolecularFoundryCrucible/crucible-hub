@@ -268,10 +268,12 @@ export function ProjectCreationForm({ scope }: { scope: IdentityScope }) {
             </form>
           </CardContent>
           <form.Subscribe
-            selector={(state) => [
-              projectIdConflict.isTaken(state.values.project_id),
-              state.isSubmitting,
-            ]}
+            selector={(state) =>
+              [
+                projectIdConflict.isTaken(state.values.project_id),
+                state.isSubmitting,
+              ] as const
+            }
           >
             {([isTaken, submitting]) => (
               <CreationFormActions

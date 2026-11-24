@@ -117,7 +117,8 @@ function seal(
   value: SharedSession | SharedTransaction | SharedLink,
   storageKey: string
 ) {
-  const current = configuration().keys[0]
+  const [current] = configuration().keys
+  if (!current) throw new Error("Shared Hub sessions are not configured.")
   const nonce = randomBytes(12)
   const cipher = createCipheriv("aes-256-gcm", current.key, nonce)
   cipher.setAAD(Buffer.from(storageKey))

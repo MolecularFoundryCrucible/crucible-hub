@@ -53,10 +53,10 @@ export function motionDuration(token: MotionToken): number {
 /** The easing function a CSS `cubic-bezier(...)` value describes; linear otherwise. */
 export function cubicBezier(value: string): (progress: number) => number {
   const match = /cubic-bezier\(([^)]+)\)/.exec(value)
-  const points = match?.[1].split(",").map(Number)
+  const points = match?.[1]?.split(",").map(Number)
   if (points?.length !== 4 || points.some(Number.isNaN))
     return (progress) => progress
-  const [x1, y1, x2, y2] = points
+  const [x1, y1, x2, y2] = points as [number, number, number, number]
   const curve = (a: number, b: number, t: number) =>
     3 * a * t * (1 - t) ** 2 + 3 * b * t ** 2 * (1 - t) + t ** 3
   return (progress) => {

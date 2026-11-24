@@ -295,12 +295,13 @@ export function UploadFileList({
   const pendingItems = batch.items.filter(
     (item) => item.state.status !== "done"
   )
+  const [firstPending] = pendingItems
   const sharedIngestor =
-    pendingItems.length > 0 &&
+    firstPending &&
     pendingItems.every((item) =>
-      sameIngestorChoice(item.ingestor, pendingItems[0].ingestor)
+      sameIngestorChoice(item.ingestor, firstPending.ingestor)
     )
-      ? pendingItems[0].ingestor
+      ? firstPending.ingestor
       : "mixed"
   const finished = batch.items.length - pendingItems.length
 

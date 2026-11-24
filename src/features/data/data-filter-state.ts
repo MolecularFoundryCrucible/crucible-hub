@@ -68,7 +68,7 @@ export const dataSearchSchema = z.object({
   visibility: filterSearchValue,
 })
 
-export type DataKind = "datasets" | "samples"
+type DataKind = "datasets" | "samples"
 export type DataKindFilter = DataKind
 export type DataSearch = z.infer<typeof dataSearchSchema>
 export type DataFilterSearch = Omit<
@@ -97,7 +97,7 @@ export type DataFilterValues = CollectionFilters &
     publicData?: PublicDataChoice
   }
 
-export type DataFilterField = keyof DataFilterSearch
+type DataFilterField = keyof DataFilterSearch
 
 export type DataFilterError = {
   field: DataFilterField

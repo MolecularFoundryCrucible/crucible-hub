@@ -325,11 +325,9 @@ export function ServiceAccountProfileCard({
           </form>
         </CardContent>
         <form.Subscribe
-          selector={(state) => [
-            state.canSubmit,
-            state.isDirty,
-            state.isSubmitting,
-          ]}
+          selector={(state) =>
+            [state.canSubmit, state.isDirty, state.isSubmitting] as const
+          }
         >
           {([canSubmit, isDirty, isSubmitting]) => (
             <EditableCardActions

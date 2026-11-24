@@ -66,7 +66,7 @@ export function authEventLabel(event: string) {
   const known = eventLabels[event]
   if (known) return known
   const words = event.replaceAll("_", " ").trim()
-  return words ? words[0].toUpperCase() + words.slice(1) : event
+  return words ? words.charAt(0).toUpperCase() + words.slice(1) : event
 }
 
 export function authEventIssuer(issuer: string | null | undefined) {

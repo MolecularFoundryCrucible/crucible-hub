@@ -80,9 +80,11 @@ export function dateSliderStops(earliest: string, latest: string) {
   const span = dayNumber(latest) - dayNumber(earliest)
   const unit: DateSliderUnit =
     span <= 92 ? "day" : span <= 731 ? "week" : span <= 5479 ? "month" : "year"
-  const boundaries = [periodStart(earliest, unit)]
-  while (boundaries[boundaries.length - 1] <= latest) {
-    boundaries.push(nextPeriod(boundaries[boundaries.length - 1], unit))
+  let boundary = periodStart(earliest, unit)
+  const boundaries = [boundary]
+  while (boundary <= latest) {
+    boundary = nextPeriod(boundary, unit)
+    boundaries.push(boundary)
   }
   return { boundaries, unit }
 }
@@ -255,10 +257,10 @@ export function DateRangeFilter({
             }
             getThumbValueText={(position, index) =>
               index === 0
-                ? formatPeriod(stops.boundaries[position], stops.unit)
+                ? formatPeriod(stops.boundaries[position]!, stops.unit)
                 : stops.unit === "day" || stops.unit === "week"
-                  ? formatDay(addDays(stops.boundaries[position], -1))
-                  : formatPeriod(stops.boundaries[position - 1], stops.unit)
+                  ? formatDay(addDays(stops.boundaries[position]!, -1))
+                  : formatPeriod(stops.boundaries[position - 1]!, stops.unit)
             }
             largeStep={sliderLargeSteps[stops.unit]}
             max={mode === "range" ? last : last - 1}
@@ -270,7 +272,7 @@ export function DateRangeFilter({
                 from: start === 0 ? undefined : stops.boundaries[start],
                 to:
                   mode === "range" && end !== undefined && end < last
-                    ? addDays(stops.boundaries[end], -1)
+                    ? addDays(stops.boundaries[end]!, -1)
                     : undefined,
               })
             }}
@@ -278,8 +280,8 @@ export function DateRangeFilter({
             value={positions}
           />
           <div className="flex justify-between text-supporting text-muted-foreground tabular-nums">
-            <span>{formatPeriod(stops.boundaries[0], stops.unit)}</span>
-            <span>{formatPeriod(stops.boundaries[last - 1], stops.unit)}</span>
+            <span>{formatPeriod(stops.boundaries[0]!, stops.unit)}</span>
+            <span>{formatPeriod(stops.boundaries[last - 1]!, stops.unit)}</span>
           </div>
         </div>
       ) : null}

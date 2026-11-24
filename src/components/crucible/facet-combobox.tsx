@@ -35,7 +35,7 @@ export type FacetComboboxItem =
       value: string
     }
 
-export type FacetComboboxTarget =
+type FacetComboboxTarget =
   | {
       field: DatasetFacetField
       kind: "dataset"

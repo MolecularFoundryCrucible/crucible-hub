@@ -70,7 +70,7 @@ describe("useDefaultResourceSequence", () => {
   it("builds the default for a record opened outside a list", async () => {
     render()
     await waitFor(() => expect(mocks.activate).toHaveBeenCalledOnce())
-    expect(mocks.create.mock.calls[0][0]).toMatchObject({
+    expect(mocks.create.mock.calls[0]![0]).toMatchObject({
       affiliation: "member",
       configuration: { direction: "asc", scope: "subtype", sort: "created" },
     })

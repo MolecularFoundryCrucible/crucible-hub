@@ -151,7 +151,7 @@ describe("ApiKeysSection", () => {
     await waitFor(() =>
       expect(vi.mocked(createWorkspaceApiKeyFn)).toHaveBeenCalled()
     )
-    const { expiresAt } = vi.mocked(createWorkspaceApiKeyFn).mock.calls[0][0]
+    const { expiresAt } = vi.mocked(createWorkspaceApiKeyFn).mock.calls[0]![0]
       .data
     const days = (Date.parse(expiresAt!) - Date.now()) / 86_400_000
     expect(days).toBeGreaterThan(29.9)

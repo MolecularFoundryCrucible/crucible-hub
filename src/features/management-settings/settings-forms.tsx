@@ -320,12 +320,14 @@ export function ProjectSettingsForm({
         saveError={saveError}
         actions={
           <form.Subscribe
-            selector={(state) => [
-              state.canSubmit &&
-                !projectIdConflict.isTaken(state.values.project_id),
-              state.isDirty,
-              state.isSubmitting,
-            ]}
+            selector={(state) =>
+              [
+                state.canSubmit &&
+                  !projectIdConflict.isTaken(state.values.project_id),
+                state.isDirty,
+                state.isSubmitting,
+              ] as const
+            }
           >
             {([canSubmit, formIsDirty, submitting]) => (
               <EditableCardActions
@@ -462,12 +464,14 @@ export function InstrumentSettingsForm({
         saveError={saveError}
         actions={
           <form.Subscribe
-            selector={(state) => [
-              state.canSubmit &&
-                !instrumentIdConflict.isTaken(state.values.instrument_id),
-              state.isDirty,
-              state.isSubmitting,
-            ]}
+            selector={(state) =>
+              [
+                state.canSubmit &&
+                  !instrumentIdConflict.isTaken(state.values.instrument_id),
+                state.isDirty,
+                state.isSubmitting,
+              ] as const
+            }
           >
             {([canSubmit, formIsDirty, submitting]) => (
               <EditableCardActions

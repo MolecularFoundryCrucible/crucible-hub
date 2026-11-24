@@ -50,7 +50,7 @@ describe("resource ownership and assignment sources", () => {
         Object.fromEntries(new URL(request.url).searchParams)
       )
     ).toEqual([{ confirm: "false" }, { confirm: "true" }])
-    await expect(requests[0].json()).resolves.toEqual({
+    await expect(requests[0]!.json()).resolves.toEqual({
       new_owner_ref: "person-mfid",
     })
   })
@@ -83,10 +83,10 @@ describe("resource ownership and assignment sources", () => {
     expect(requests.map((request) => new URL(request.url).pathname)).toEqual([
       "/resources/resource-mfid/project",
     ])
-    expect(Object.fromEntries(new URL(requests[0].url).searchParams)).toEqual({
+    expect(Object.fromEntries(new URL(requests[0]!.url).searchParams)).toEqual({
       confirm: "false",
     })
-    await expect(requests[0].json()).resolves.toEqual({
+    await expect(requests[0]!.json()).resolves.toEqual({
       project_mfid: "project-mfid",
     })
   })

@@ -314,7 +314,7 @@ describe("DatasetFiles", () => {
     fireEvent.click(
       await screen.findByRole("button", { name: `Download ${file.filename}` })
     )
-    const signal = vi.mocked(requestWorkspaceFileDownload).mock.calls[0][0]
+    const signal = vi.mocked(requestWorkspaceFileDownload).mock.calls[0]![0]
       .signal
     cleanup()
     expect(signal?.aborted).toBe(true)
@@ -422,7 +422,7 @@ describe("DatasetFiles", () => {
         })
         .hasAttribute("disabled")
     ).toBe(true)
-    const signal = vi.mocked(requestWorkspaceFileDownload).mock.calls[0][0]
+    const signal = vi.mocked(requestWorkspaceFileDownload).mock.calls[0]![0]
       .signal
 
     result.rerender(view(otherScope))

@@ -46,7 +46,7 @@ describe("workspace data sources", () => {
       limit: 50,
     })
 
-    const query = new URL(requests[0].url).searchParams
+    const query = new URL(requests[0]!.url).searchParams
     expect(query.get("creation_time_gte")).toBe("2026-10-18T07:00:00.000Z")
     expect(query.get("creation_time_lte")).toBe("2026-10-19T06:59:59.999999Z")
   })
@@ -72,9 +72,9 @@ describe("workspace data sources", () => {
 
     await readWorkspaceDatasets({ affiliation: "member", limit: 50 })
 
-    expect(new URL(requests[0].url).searchParams.getAll("affiliation")).toEqual(
-      ["member"]
-    )
+    expect(
+      new URL(requests[0]!.url).searchParams.getAll("affiliation")
+    ).toEqual(["member"])
   })
 
   it("adds instrument access to the member affiliation only when asked", async () => {

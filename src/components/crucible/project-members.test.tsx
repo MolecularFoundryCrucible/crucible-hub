@@ -55,8 +55,8 @@ describe("ProjectMembers", () => {
 
   it("orders members by role hierarchy, then public name and stable identifier", () => {
     const tiedMembers = [
-      { ...members[4], first_name: "Alex", last_name: "Chen", unique_id: "b" },
-      { ...members[4], first_name: "Alex", last_name: "Chen", unique_id: "a" },
+      { ...members[4]!, first_name: "Alex", last_name: "Chen", unique_id: "b" },
+      { ...members[4]!, first_name: "Alex", last_name: "Chen", unique_id: "a" },
       ...members,
     ]
 

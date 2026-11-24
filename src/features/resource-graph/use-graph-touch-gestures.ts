@@ -90,8 +90,8 @@ export function useGraphTouchGestures({
         onTouchHintChange(false)
         return
       }
-      if (event.touches.length !== 1) return
       const touch = event.touches[0]
+      if (event.touches.length !== 1 || !touch) return
       const now = lastTouchTime.current
       if (
         lastTap &&
@@ -149,8 +149,8 @@ export function useGraphTouchGestures({
         onTouchHintChange(false)
         return
       }
-      if (event.touches.length !== 1) return
       const touch = event.touches[0]
+      if (event.touches.length !== 1 || !touch) return
       if (doubleTapZoom) {
         const deltaY = touch.clientY - doubleTapZoom.startY
         if (Math.abs(deltaY) > 4 || doubleTapZoom.moved) {

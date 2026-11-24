@@ -73,7 +73,7 @@ function privateIpv4(host: string) {
   const parts = host.split(".").map(Number)
   if (parts.length !== 4 || parts.some((part) => !(part >= 0 && part <= 255)))
     return false
-  const [a, b] = parts
+  const [a, b] = parts as [number, number, number, number]
   return (
     a === 10 || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168)
   )

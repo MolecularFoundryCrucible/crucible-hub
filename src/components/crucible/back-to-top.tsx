@@ -14,7 +14,9 @@ export function BackToTop() {
     if (!target || typeof IntersectionObserver === "undefined") return
 
     const observer = new IntersectionObserver(
-      ([entry]) => setVisible(!entry.isIntersecting),
+      ([entry]) => {
+        if (entry) setVisible(!entry.isIntersecting)
+      },
       { rootMargin: "-56px 0px 0px 0px" }
     )
     observer.observe(target)

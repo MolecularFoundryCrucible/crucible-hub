@@ -60,7 +60,7 @@ export function ThumbnailViewer({
                 const start = swipeStart.current
                 const touch = event.changedTouches[0]
                 swipeStart.current = null
-                if (!start) return
+                if (!start || !touch) return
                 const dx = touch.clientX - start.x
                 const dy = touch.clientY - start.y
                 if (Math.abs(dx) < swipeDistance || Math.abs(dx) < Math.abs(dy))
@@ -70,7 +70,7 @@ export function ThumbnailViewer({
               onTouchStart={(event) => {
                 const touch = event.touches[0]
                 swipeStart.current =
-                  event.touches.length === 1
+                  event.touches.length === 1 && touch
                     ? { x: touch.clientX, y: touch.clientY }
                     : null
               }}
