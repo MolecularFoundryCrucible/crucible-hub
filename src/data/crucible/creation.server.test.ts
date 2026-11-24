@@ -53,8 +53,8 @@ describe("workspace creation source", () => {
     })
 
     expect(requests).toHaveLength(1)
-    expect(new URL(requests[0].url).pathname).toBe("/projects")
-    await expect(requests[0].json()).resolves.toEqual({
+    expect(new URL(requests[0]!.url).pathname).toBe("/projects")
+    await expect(requests[0]!.json()).resolves.toEqual({
       organization: "Molecular Foundry",
       owner_ref: "person-mfid",
       project_id: "perovskite-1",
@@ -131,7 +131,7 @@ describe("workspace creation source", () => {
       "/samples",
       "/datasets",
     ])
-    await expect(requests[0].json()).resolves.toEqual({
+    await expect(requests[0]!.json()).resolves.toEqual({
       description: null,
       project_mfid: "project-mfid",
       public: false,
@@ -139,7 +139,7 @@ describe("workspace creation source", () => {
       sample_type: null,
       timestamp: null,
     })
-    await expect(requests[1].json()).resolves.toEqual({
+    await expect(requests[1]!.json()).resolves.toEqual({
       data_format: null,
       data_type: null,
       dataset_name: "Dataset A",

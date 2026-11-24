@@ -24,7 +24,7 @@ export type UploadPart = {
   end: number
 }
 
-export type UploadPartSignature = {
+type UploadPartSignature = {
   partNumber: number
   crc32cBase64: string
 }
@@ -115,7 +115,7 @@ export async function computeUploadDigests(
     file.size === 0
       ? parts.length === 0
       : parts.length > 0 &&
-        parts[0].start === 0 &&
+        parts[0]?.start === 0 &&
         lastPart !== undefined &&
         lastPart.end === file.size
   if (!tilesFile) {
@@ -143,10 +143,10 @@ export async function computeUploadDigests(
     wholeCrc32c.update(bytes)
     let chunkOffset = 0
     while (chunkOffset < bytes.length) {
-      if (partIndex >= parts.length) {
+      const part = parts[partIndex]
+      if (!part) {
         throw new Error("Upload parts do not tile the file.")
       }
-      const part = parts[partIndex]
       if (partHasher === undefined) {
         partHasher = await createCRC32(CRC32C_POLYNOMIAL)
         partHasher.init()
@@ -176,7 +176,7 @@ export async function computeUploadDigests(
   }
 }
 
-export type UploadPartChecksums = {
+type UploadPartChecksums = {
   ready: (partNumber: number) => string | undefined
   wait: (partNumber: number) => Promise<string>
 }
@@ -224,7 +224,7 @@ function knownChecksums(signatures: readonly string[]): UploadPartChecksums {
   }
 }
 
-export type SignedUploadPart = {
+type SignedUploadPart = {
   headers: Readonly<Record<string, string>>
   url: string
 }

@@ -479,7 +479,7 @@ export function SampleSummaryForm({
           <SummaryFields fields={contextFields(resource)} />
         </CardContent>
         <form.Subscribe
-          selector={(state) => [state.canSubmit, state.isSubmitting]}
+          selector={(state) => [state.canSubmit, state.isSubmitting] as const}
         >
           {([canSubmit, submitting]) => (
             <EditableCardActions
@@ -667,7 +667,7 @@ export function DatasetSummaryForm({
           <SummaryFields fields={contextFields(resource)} />
         </CardContent>
         <form.Subscribe
-          selector={(state) => [state.canSubmit, state.isSubmitting]}
+          selector={(state) => [state.canSubmit, state.isSubmitting] as const}
         >
           {([canSubmit, submitting]) => (
             <EditableCardActions

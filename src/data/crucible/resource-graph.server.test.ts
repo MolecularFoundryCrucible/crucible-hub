@@ -130,9 +130,9 @@ describe("resource graph source", () => {
         },
       ],
     })
-    expect(new URL(requests[0].url).pathname).toBe("/resources/sample-1/graph")
-    expect(new URL(requests[0].url).searchParams.get("depth")).toBe("1")
-    expect(new URL(requests[0].url).searchParams.get("direction")).toBe("both")
+    expect(new URL(requests[0]!.url).pathname).toBe("/resources/sample-1/graph")
+    expect(new URL(requests[0]!.url).searchParams.get("depth")).toBe("1")
+    expect(new URL(requests[0]!.url).searchParams.get("direction")).toBe("both")
 
     vi.stubGlobal(
       "fetch",
@@ -317,8 +317,8 @@ describe("resource graph source", () => {
         kind: operation.targetKind,
         unique_id: operation.targetMfid,
       })
-      expect(requests[0].method).toBe(method)
-      const mutationUrl = new URL(requests[0].url)
+      expect(requests[0]!.method).toBe(method)
+      const mutationUrl = new URL(requests[0]!.url)
       expect(mutationUrl.pathname).toBe(path)
       expect(mutationUrl.searchParams.get("relationship_type")).toBe(
         relationshipType

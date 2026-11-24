@@ -89,7 +89,7 @@ export type WorkspaceSignedInSessionPage = {
   total: number
 }
 
-export type WorkspaceResourceCapabilities = Schema<"ResourceCapabilities">
+type WorkspaceResourceCapabilities = Schema<"ResourceCapabilities">
 
 export type WorkspaceProject = Pick<
   Schema<"ProjectWithLead">,
@@ -339,12 +339,11 @@ export type WorkspaceResourceGraph = {
   truncationReasons: readonly Schema<"GraphTruncationReason">[]
 }
 
-export type WorkspaceResourceGraphDirection = Schema<"GraphDirection">
+type WorkspaceResourceGraphDirection = Schema<"GraphDirection">
 
-export type WorkspaceResourceGraphRelationshipKind =
-  Schema<"GraphRelationshipKind">
+type WorkspaceResourceGraphRelationshipKind = Schema<"GraphRelationshipKind">
 
-export type WorkspaceResourceGraphRelationshipType =
+type WorkspaceResourceGraphRelationshipType =
   Schema<"GraphRelationshipTypeFilter">
 
 export type WorkspaceResourceGraphRequest = {
@@ -695,8 +694,6 @@ export type WorkspaceUserUpdate = {
   last_name?: string
   username?: string | null
 }
-
-export type WorkspaceAccessGroup = Schema<"AccessGroupRead">
 
 export type WorkspaceSearchGroup = {
   error: boolean

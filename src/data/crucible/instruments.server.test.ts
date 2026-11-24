@@ -93,7 +93,7 @@ describe("workspace instrument source", () => {
     await expect(
       readWorkspaceInstrumentMembers("01J6Y8N4Q2R7M9K3T5V0W1X2Z4")
     ).resolves.toEqual([member])
-    const url = new URL(requests[0].url)
+    const url = new URL(requests[0]!.url)
     expect(url.pathname).toBe("/instruments/01J6Y8N4Q2R7M9K3T5V0W1X2Z4")
     expect(Object.fromEntries(url.searchParams)).toEqual({
       include_members: "true",
@@ -139,7 +139,7 @@ describe("workspace instrument source", () => {
       status: "decommissioned",
     })
 
-    expect(Object.fromEntries(new URL(requests[0].url).searchParams)).toEqual({
+    expect(Object.fromEntries(new URL(requests[0]!.url).searchParams)).toEqual({
       include_owner: "true",
       include_total: "true",
       instrument_type: "X-ray microscope",
@@ -199,14 +199,14 @@ describe("workspace instrument source", () => {
       unique_id: "selected-instrument",
     })
     expect(requests).toHaveLength(1)
-    expect(requests[0].method).toBe("PATCH")
-    expect(new URL(requests[0].url).pathname).toBe(
+    expect(requests[0]!.method).toBe("PATCH")
+    expect(new URL(requests[0]!.url).pathname).toBe(
       "/instruments/selected-instrument"
     )
-    expect(requests[0].headers.get("Authorization")).toBe(
+    expect(requests[0]!.headers.get("Authorization")).toBe(
       "Bearer local-test-key"
     )
-    await expect(requests[0].json()).resolves.toEqual({
+    await expect(requests[0]!.json()).resolves.toEqual({
       description: null,
       instrument_id: "renamed-microprobe",
       location: "Beamline 6.1",
@@ -244,13 +244,13 @@ describe("workspace instrument source", () => {
       unique_id: "selected-instrument",
     })
     expect(requests).toHaveLength(1)
-    expect(requests[0].method).toBe("POST")
-    const url = new URL(requests[0].url)
+    expect(requests[0]!.method).toBe("POST")
+    const url = new URL(requests[0]!.url)
     expect(url.pathname).toBe("/instruments/selected-instrument/status")
     expect(Object.fromEntries(url.searchParams)).toEqual({
       status: "maintenance",
     })
-    expect(requests[0].headers.get("Authorization")).toBe(
+    expect(requests[0]!.headers.get("Authorization")).toBe(
       "Bearer local-test-key"
     )
 
@@ -349,9 +349,9 @@ describe("workspace instrument source", () => {
       unique_id: "new-instrument-mfid",
     })
     expect(requests).toHaveLength(1)
-    expect(requests[0].method).toBe("POST")
-    expect(new URL(requests[0].url).pathname).toBe("/instruments")
-    await expect(requests[0].json()).resolves.toEqual({
+    expect(requests[0]!.method).toBe("POST")
+    expect(new URL(requests[0]!.url).pathname).toBe("/instruments")
+    await expect(requests[0]!.json()).resolves.toEqual({
       instrument_id: "new-instrument",
       instrument_name: "New instrument",
       location: "Beamline 1",
@@ -390,7 +390,7 @@ describe("instrument affiliation", () => {
     const [managed, owned] = requests.map(
       (request) => new URL(request.url).searchParams
     )
-    expect(managed.getAll("affiliation")).toEqual(["owner", "maintainer"])
-    expect(owned.getAll("affiliation")).toEqual(["owner"])
+    expect(managed!.getAll("affiliation")).toEqual(["owner", "maintainer"])
+    expect(owned!.getAll("affiliation")).toEqual(["owner"])
   })
 })

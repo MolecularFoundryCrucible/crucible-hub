@@ -18,7 +18,7 @@ function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
 
 function words(name: string) {
   const text = name.replaceAll("_", " ").trim()
-  return text ? text[0].toUpperCase() + text.slice(1) : name
+  return text ? text.charAt(0).toUpperCase() + text.slice(1) : name
 }
 
 export function pipelineLabel(name: string) {

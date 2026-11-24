@@ -589,5 +589,5 @@ function SearchResult({
 
 function kindLabel(kind: WorkspaceSearchKind) {
   if (kind === "person") return "People"
-  return `${kind[0].toLocaleUpperCase()}${kind.slice(1)}s`
+  return `${kind.charAt(0).toLocaleUpperCase()}${kind.slice(1)}s`
 }

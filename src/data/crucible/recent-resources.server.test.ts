@@ -74,11 +74,11 @@ describe("recent resources transport", () => {
         viewedAt: "2026-10-14T11:00:00Z",
       },
     ])
-    expect(new URL(requests[0].url).searchParams.get("limit")).toBe("10")
+    expect(new URL(requests[0]!.url).searchParams.get("limit")).toBe("10")
 
     await recordRecentResource("dataset-1")
-    expect(new URL(requests[1].url).pathname).toBe("/account/recent-resources")
-    await expect(requests[1].json()).resolves.toEqual({
+    expect(new URL(requests[1]!.url).pathname).toBe("/account/recent-resources")
+    await expect(requests[1]!.json()).resolves.toEqual({
       resource_mfid: "dataset-1",
     })
   })

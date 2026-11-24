@@ -77,8 +77,14 @@ const denseDatasetOneLinks = [
   },
 ] satisfies readonly ApiLinkedResource[]
 
+function cycle<T>(items: readonly T[], index: number): T {
+  const item = items[index % items.length]
+  if (item === undefined) throw new Error("Fixture list is empty.")
+  return item
+}
+
 const denseProjects = Array.from({ length: 24 }, (_, index) => ({
-  ...demoWorkspace.projects[index % demoWorkspace.projects.length],
+  ...cycle(demoWorkspace.projects, index),
   unique_id: `fixture-project-${index + 1}`,
   project_id: `project-${String(index + 1).padStart(2, "0")}`,
   title:
@@ -110,9 +116,9 @@ function denseWorkspace(): Workspace {
       const project =
         index === 2 || index === 4
           ? null
-          : denseProjects[index === 3 ? 0 : index % 24]
+          : cycle(denseProjects, index === 3 ? 0 : index)
       return {
-        ...demoWorkspace.samples[index % demoWorkspace.samples.length],
+        ...cycle(demoWorkspace.samples, index),
         unique_id: `fixture-sample-${index + 1}`,
         sample_name:
           index === 0
@@ -131,17 +137,16 @@ function denseWorkspace(): Workspace {
                 ? null
                 : index === 3
                   ? []
-                  : demoWorkspace.samples[index % demoWorkspace.samples.length]
-                      .links,
+                  : cycle(demoWorkspace.samples, index).links,
       }
     }),
     datasets: Array.from({ length: 57 }, (_, index) => {
       const project =
         index === 2 || index === 4
           ? null
-          : denseProjects[index === 3 ? 0 : index % 24]
+          : cycle(denseProjects, index === 3 ? 0 : index)
       return {
-        ...demoWorkspace.datasets[index % demoWorkspace.datasets.length],
+        ...cycle(demoWorkspace.datasets, index),
         unique_id: `fixture-dataset-${index + 1}`,
         project,
         project_id: project?.project_id ?? null,
@@ -168,8 +173,7 @@ function denseWorkspace(): Workspace {
         links:
           index === 0
             ? denseDatasetOneLinks
-            : demoWorkspace.datasets[index % demoWorkspace.datasets.length]
-                .links,
+            : cycle(demoWorkspace.datasets, index).links,
       }
     }),
   }

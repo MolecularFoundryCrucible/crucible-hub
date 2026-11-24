@@ -4,7 +4,7 @@ export const dateOnlySchema = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/, "Use the YYYY-MM-DD date format.")
   .refine((value) => {
-    const [year, month, day] = value.split("-").map(Number)
+    const [year = 0, month = 0, day = 0] = value.split("-").map(Number)
     const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0)
     const daysInMonth = [
       31,

@@ -46,9 +46,9 @@ describe("label printing", () => {
     })
 
     expect(result.status).toBe("ok")
-    expect(requests[0].method).toBe("POST")
-    expect(new URL(requests[0].url).pathname).toBe("/print/barcode")
-    expect(await requests[0].json()).toEqual({
+    expect(requests[0]!.method).toBe("POST")
+    expect(new URL(requests[0]!.url).pathname).toBe("/print/barcode")
+    expect(await requests[0]!.json()).toEqual({
       mfid: "01J6Y8N4Q2R7M9K3T5V0W1X2Z9",
       name: "Activated catalyst morphology",
       printer_id: "spinbot",

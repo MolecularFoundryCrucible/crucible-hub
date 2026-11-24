@@ -66,13 +66,13 @@ describe("dataset upload transport", () => {
       state: "uploading",
       uploadId: "upload-1",
     })
-    expect(new URL(requests[0].url).pathname).toBe(
+    expect(new URL(requests[0]!.url).pathname).toBe(
       `/datasets/${datasetMfid}/upload/multipart/initiate`
     )
-    expect(requests[0].headers.get("idempotency-key")).toBe(
+    expect(requests[0]!.headers.get("idempotency-key")).toBe(
       "4b1d5c6e-2f3a-4b5c-8d9e-0f1a2b3c4d5e"
     )
-    await expect(requests[0].json()).resolves.toEqual({
+    await expect(requests[0]!.json()).resolves.toEqual({
       filename: "runs/data.csv",
       size: 128,
     })
@@ -106,14 +106,14 @@ describe("dataset upload transport", () => {
       state: "uploading",
       uploadId: "upload-2",
     })
-    expect(new URL(requests[0].url).pathname).toBe(
+    expect(new URL(requests[0]!.url).pathname).toBe(
       "/files/file-1/upload/multipart/initiate"
     )
-    expect(requests[0].headers.get("if-match")).toBe('"abc"')
-    expect(requests[0].headers.get("idempotency-key")).toBe(
+    expect(requests[0]!.headers.get("if-match")).toBe('"abc"')
+    expect(requests[0]!.headers.get("idempotency-key")).toBe(
       "4b1d5c6e-2f3a-4b5c-8d9e-0f1a2b3c4d5e"
     )
-    await expect(requests[0].json()).resolves.toEqual({ size: 256 })
+    await expect(requests[0]!.json()).resolves.toEqual({ size: 256 })
   })
 
   it("returns actionable results for an existing name or a changed file", async () => {
@@ -358,7 +358,7 @@ describe("dataset upload transport", () => {
     await expect(completeWorkspaceUpload(input)).resolves.toMatchObject({
       mfid: "file-1",
     })
-    await expect(requests[0].json()).resolves.toEqual({
+    await expect(requests[0]!.json()).resolves.toEqual({
       crc32c: "AAAAAA==",
       sha256_hash: "a".repeat(64),
       upload_id: "upload-1",

@@ -516,13 +516,15 @@ function UserProfileCard({
           </form>
         </CardContent>
         <form.Subscribe
-          selector={(state) => [
-            state.canSubmit &&
-              !usernameConflict.isTaken(state.values.username) &&
-              !emailConflict.isTaken(state.values.email),
-            hasChanges,
-            state.isSubmitting,
-          ]}
+          selector={(state) =>
+            [
+              state.canSubmit &&
+                !usernameConflict.isTaken(state.values.username) &&
+                !emailConflict.isTaken(state.values.email),
+              hasChanges,
+              state.isSubmitting,
+            ] as const
+          }
         >
           {([canSubmit, dirty, submitting]) => (
             <EditableCardActions

@@ -14,8 +14,8 @@ function diagnose(doc: string, validate?: (value: string) => string | null) {
 describe("JSON editor diagnostics", () => {
   it("points at the line and column of a syntax error", () => {
     const [diagnostic] = diagnose('{\n  "pressure": 2\n  "phase": "solid"\n}')
-    expect(diagnostic.severity).toBe("error")
-    expect(diagnostic.message).toMatch(
+    expect(diagnostic!.severity).toBe("error")
+    expect(diagnostic!.message).toMatch(
       /^JSON syntax error at line 3, column \d+\.$/
     )
   })
@@ -23,11 +23,11 @@ describe("JSON editor diagnostics", () => {
   it("flags duplicate keys that would silently drop a value", () => {
     const doc = '{"pressure": 2, "pressure": 3}'
     const [diagnostic] = diagnose(doc)
-    expect(diagnostic.message).toBe(
+    expect(diagnostic!.message).toBe(
       '"pressure" appears more than once. Only the last value would be kept.'
     )
-    expect(doc.slice(diagnostic.from, diagnostic.to)).toBe('"pressure"')
-    expect(diagnostic.from).toBe(doc.lastIndexOf('"pressure"'))
+    expect(doc.slice(diagnostic!.from, diagnostic!.to)).toBe('"pressure"')
+    expect(diagnostic!.from).toBe(doc.lastIndexOf('"pressure"'))
   })
 
   it("reports metadata rules once the JSON parses", () => {

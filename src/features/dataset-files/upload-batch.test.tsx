@@ -62,7 +62,7 @@ describe("upload item issues", () => {
   it("flags duplicates within the batch and in the dataset", () => {
     const items = [item("a", "a.h5"), item("b", "a.h5")]
     expect(
-      uploadItemIssues(items[0], items, new Map([stored("a.h5")]))
+      uploadItemIssues(items[0]!, items, new Map([stored("a.h5")]))
     ).toEqual([
       "Another file in this list has the same name.",
       "A file with this name is already in the dataset.",
@@ -71,7 +71,7 @@ describe("upload item issues", () => {
 
   it("flags invalid names and accepts empty files", () => {
     const items = [item("a", "../a.h5", 0)]
-    expect(uploadItemIssues(items[0], items, new Map())).toEqual([
+    expect(uploadItemIssues(items[0]!, items, new Map())).toEqual([
       "File names must not contain dot path segments.",
     ])
   })
@@ -201,7 +201,7 @@ describe("upload batch", () => {
       await result.current.start("dataset-1")
     })
 
-    expect(result.current.items[0].state).toEqual({
+    expect(result.current.items[0]!.state).toEqual({
       message: "File uploads aren't turned on for this Crucible server.",
       status: "error",
     })

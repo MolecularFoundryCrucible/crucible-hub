@@ -106,11 +106,11 @@ describe("SignInHistorySection", () => {
 
     const table = await screen.findByRole("table", { name: "Sign-in history" })
     const rows = within(table).getAllByRole("row").slice(1)
-    expect(within(rows[0]).getByText("Signed in")).toBeTruthy()
-    expect(within(rows[0]).getByText("ORCID · Crucible Hub")).toBeTruthy()
-    expect(within(rows[1]).getByText("Account approved")).toBeTruthy()
+    expect(within(rows[0]!).getByText("Signed in")).toBeTruthy()
+    expect(within(rows[0]!).getByText("ORCID · Crucible Hub")).toBeTruthy()
+    expect(within(rows[1]!).getByText("Account approved")).toBeTruthy()
     expect(
-      within(rows[1])
+      within(rows[1]!)
         .getByRole("link", { name: "by another person" })
         .getAttribute("href")
     ).toContain("/users/admin-1")

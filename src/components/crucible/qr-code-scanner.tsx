@@ -153,8 +153,10 @@ export function QrCodeScanner({
     const scanner = scannerRef.current
     if (!scanner || cameras.length < 2) return
     const nextIndex = (cameraIndex + 1) % cameras.length
+    const camera = cameras[nextIndex]
+    if (!camera) return
     try {
-      await scanner.setCamera(cameras[nextIndex].id)
+      await scanner.setCamera(camera.id)
       setCameraIndex(nextIndex)
     } catch (error) {
       scanner.stop()

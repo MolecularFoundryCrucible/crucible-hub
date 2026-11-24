@@ -98,7 +98,7 @@ const sortFields = [
   { field: "activity", kind: "date", label: "Last activity" },
 ] as const satisfies readonly TableSortField<ProjectSortField>[]
 
-export type ProjectRoleFilter = z.infer<typeof projectRoleFilterSchema>
+type ProjectRoleFilter = z.infer<typeof projectRoleFilterSchema>
 
 type ProjectSearch = z.infer<typeof projectSearchSchema>
 

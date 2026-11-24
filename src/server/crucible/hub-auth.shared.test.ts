@@ -85,7 +85,7 @@ async function signedInSession(
   const loginCookie = loginScope
     .setCookies()
     .find((value) => value.startsWith("crucible_hub_login="))!
-    .split(";")[0]
+    .split(";")[0]!
   const callbackScope = startRequestScope(
     "http://127.0.0.1:3000/hub/auth/callback",
     { headers: { cookie: loginCookie } }
@@ -96,7 +96,7 @@ async function signedInSession(
   const sessionCookie = callbackScope
     .setCookies()
     .find((value) => value.startsWith("crucible_hub_session="))!
-    .split(";")[0]
+    .split(";")[0]!
   const sessionId = sessionCookie.slice("crucible_hub_session=".length)
 
   let currentCookie = sessionCookie
@@ -110,7 +110,7 @@ async function signedInSession(
         const rotated = scope
           .setCookies()
           .find((value) => value.startsWith("crucible_hub_session="))
-        if (rotated) currentCookie = rotated.split(";")[0]
+        if (rotated) currentCookie = rotated.split(";")[0]!
       })
   }
   const call = () =>

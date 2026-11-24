@@ -76,8 +76,8 @@ test("requests only the selected file and hands off a fresh capability", async (
     `Preparing download for ${readyFile}`
   )
   expect(downloadRequests).toHaveLength(1)
-  expect(downloadRequests[0].postData()).toContain(readyFileMfid)
-  expect(downloadRequests[0].postData()).not.toContain(unavailableFileMfid)
+  expect(downloadRequests[0]!.postData()).toContain(readyFileMfid)
+  expect(downloadRequests[0]!.postData()).not.toContain(unavailableFileMfid)
 
   releaseRequest()
   await expect.poll(() => handoffs).toBe(1)
@@ -85,8 +85,8 @@ test("requests only the selected file and hands off a fresh capability", async (
   await download.click({ noWaitAfter: true })
   await expect.poll(() => downloadRequests.length).toBe(2)
   await expect.poll(() => handoffs).toBe(2)
-  expect(downloadRequests[1].postData()).toContain(readyFileMfid)
-  expect(downloadRequests[1].postData()).not.toContain(unavailableFileMfid)
+  expect(downloadRequests[1]!.postData()).toContain(readyFileMfid)
+  expect(downloadRequests[1]!.postData()).not.toContain(unavailableFileMfid)
 })
 
 test("opens stored files inline through a fresh link per visit", async ({

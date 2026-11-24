@@ -255,7 +255,7 @@ function getResourceContext(pathname: string): ResourceContext | null {
   )
   if (!match) return null
 
-  const kind = match[1].slice(0, -1)
+  const kind = match[1]?.slice(0, -1)
   const mfid = match[2]
   if (
     !mfid ||

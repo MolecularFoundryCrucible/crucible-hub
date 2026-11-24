@@ -43,12 +43,12 @@ function startOfDay(year: number, month: number, day: number, zone: string) {
 }
 
 export function dayStartUtc(date: string, timeZone: string) {
-  const [year, month, day] = date.split("-").map(Number)
+  const [year = NaN, month = NaN, day = NaN] = date.split("-").map(Number)
   return new Date(startOfDay(year, month, day, timeZone)).toISOString()
 }
 
 export function dayEndUtc(date: string, timeZone: string) {
-  const [year, month, day] = date.split("-").map(Number)
+  const [year = NaN, month = NaN, day = NaN] = date.split("-").map(Number)
   const nextDay = new Date(Date.UTC(year, month - 1, day + 1))
   const end = new Date(
     startOfDay(

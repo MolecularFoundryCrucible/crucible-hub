@@ -119,7 +119,7 @@ describe("workspace service account source", () => {
       nextCursor: "next-sa-cursor",
       total: 1,
     })
-    const url = new URL(requests[0].url)
+    const url = new URL(requests[0]!.url)
     expect(url.pathname).toBe("/users")
     expect(Object.fromEntries(url.searchParams)).toEqual({
       cursor: "initial-cursor",

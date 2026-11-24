@@ -434,6 +434,7 @@ export function useUploadBatch({
         async () => {
           while (next < queue.length && !isAborted(current.signal)) {
             const item = queue[next]
+            if (!item) break
             next += 1
             await uploadItem(item)
           }

@@ -56,11 +56,11 @@ describe("createLayoutQueue", () => {
     expect(engine.runs.map((run) => run.input)).toEqual(["first"])
     await replaced
 
-    engine.runs[0].result.resolve("first done")
+    engine.runs[0]!.result.resolve("first done")
     await expect(first).resolves.toBe("first done")
     await vi.advanceTimersByTimeAsync(0)
     expect(engine.runs.map((run) => run.input)).toEqual(["first", "third"])
-    engine.runs[1].result.resolve("third done")
+    engine.runs[1]!.result.resolve("third done")
     await expect(third).resolves.toBe("third done")
     expect(queue.idle()).toBe(true)
   })
@@ -78,12 +78,12 @@ describe("createLayoutQueue", () => {
     const first = queue.run("first")
     const second = queue.run("second")
     await vi.advanceTimersByTimeAsync(5000)
-    engine.runs[0].result.resolve("first done")
+    engine.runs[0]!.result.resolve("first done")
     await expect(first).resolves.toBe("first done")
 
     await vi.advanceTimersByTimeAsync(5000)
     expect(onFailure).not.toHaveBeenCalled()
-    engine.runs[1].result.resolve("second done")
+    engine.runs[1]!.result.resolve("second done")
     await expect(second).resolves.toBe("second done")
   })
 

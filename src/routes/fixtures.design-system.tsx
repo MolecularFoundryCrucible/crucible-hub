@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, notFound } from "@tanstack/react-router"
+import { getFixtureRoutesEnabled } from "@/data/crucible/fixture-routes.functions"
 
 import {
   AccessRoleBadge,
@@ -53,6 +54,9 @@ const segmentedOptions = [
 ] as const
 
 export const Route = createFileRoute("/fixtures/design-system")({
+  beforeLoad: async () => {
+    if (!(await getFixtureRoutesEnabled())) throw notFound()
+  },
   head: () => ({
     meta: [
       { title: "Design system fixtures | Crucible Hub" },

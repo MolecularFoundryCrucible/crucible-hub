@@ -31,7 +31,7 @@ const linkStatuses = [
   "orcid_of_another",
 ] as const
 
-export type HubLinkStatus = (typeof linkStatuses)[number] | "unknown"
+type HubLinkStatus = (typeof linkStatuses)[number] | "unknown"
 
 const previewSchema = z.object({
   label: z.string().nullable().optional(),

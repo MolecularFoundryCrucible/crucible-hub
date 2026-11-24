@@ -139,8 +139,8 @@ describe("system-status server source", () => {
     const status = await readSystemStatus(undefined, true)
 
     expect(status.api.status).toBe("ok")
-    expect(new URL(requests[0].url).pathname).toBe("/health/ready")
-    expect(requests[0].headers.get("authorization")).toBeNull()
+    expect(new URL(requests[0]!.url).pathname).toBe("/health/ready")
+    expect(requests[0]!.headers.get("authorization")).toBeNull()
   })
 
   it("caches status and reuses it until bypassCache is requested", async () => {

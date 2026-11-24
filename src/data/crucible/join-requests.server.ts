@@ -138,6 +138,7 @@ export async function createJoinRequest(
   }
   if (configuration.mode === "fixture") {
     const [request] = fixtureJoinRequests(scenario)
+    if (!request) throw new CrucibleResponseError(404)
     return {
       ...request,
       capabilities: { can_review: false, can_withdraw: true },

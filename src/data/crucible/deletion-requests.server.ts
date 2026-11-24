@@ -28,11 +28,10 @@ export type WorkspaceDeletionAuditFilters = {
   scope: "all" | "submitted"
 }
 
-export type WorkspaceDeletionRequestScope =
-  "accessible" | "reviewable" | "submitted"
+type WorkspaceDeletionRequestScope = "accessible" | "reviewable" | "submitted"
 export type WorkspaceDeletionRequestStatus = "approved" | "pending" | "rejected"
 export type WorkspaceDeletionReviewDecision = "approved" | "rejected"
-export type WorkspaceDeletionRequestDirection = "asc" | "desc"
+type WorkspaceDeletionRequestDirection = "asc" | "desc"
 
 export type WorkspaceDeletionRequestFilters = {
   cursor?: string
@@ -147,6 +146,7 @@ function fixtureDeletionRequests(
   if (source.status === "unavailable") throw new Error(source.reason)
   const resource = source.workspace.datasets[0]
   const submittedResource = source.workspace.samples[1]
+  if (!resource || !submittedResource) return []
   const requester = source.workspace.people[1] ?? source.workspace.account
   const request = {
     capabilities: { can_review: true },
@@ -258,6 +258,7 @@ export async function readWorkspaceDeletionAudit(
     if (source.status === "unavailable") throw new Error(source.reason)
     const resource = source.workspace.samples[0]
     const reviewer = source.workspace.account
+    if (!resource) return fixtureCursorPage([], input)
     const requester = source.workspace.people[1] ?? reviewer
     const items: WorkspaceDeletionAudit[] = [
       {

@@ -188,7 +188,7 @@ describe("workspace search source", () => {
       query: "service",
     })
 
-    expect(result.groups[0].items.map((item) => item.name)).toEqual([
+    expect(result.groups[0]!.items.map((item) => item.name)).toEqual([
       "Titanx Admin",
       "sa-hip",
       "user-mfid-3",
@@ -239,12 +239,12 @@ describe("workspace search source", () => {
     })
 
     expect(requestedPaths.sort()).toEqual(["/projects", "/users"])
-    expect(result.groups[0].items[0]).toMatchObject({
+    expect(result.groups[0]!.items[0]).toMatchObject({
       kind: "project",
       name: "Demo Project",
       unique_id: "proj-1",
     })
-    expect(result.groups[1].items[0]).toMatchObject({
+    expect(result.groups[1]!.items[0]).toMatchObject({
       kind: "person",
       name: "Alice Smith",
       unique_id: "user-1",

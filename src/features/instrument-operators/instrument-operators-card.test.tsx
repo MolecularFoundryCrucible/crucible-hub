@@ -122,7 +122,7 @@ function memberFor(
   candidate: WorkspaceSearchResult,
   role: string
 ): WorkspaceInstrumentMember {
-  const [first_name, last_name] = candidate.name.split(" ")
+  const [first_name = "", last_name = ""] = candidate.name.split(" ")
   return {
     first_name,
     is_service_account: false,
@@ -255,8 +255,8 @@ describe("InstrumentAccessCard", () => {
 
   it("toggles managing mode and updates a member's role", async () => {
     const updatedMembers = withEntryCapabilities([
-      initialMembers[0],
-      { ...initialMembers[1], role: "admin" },
+      initialMembers[0]!,
+      { ...initialMembers[1]!, role: "admin" },
     ])
     vi.mocked(updateWorkspaceInstrumentMemberRole).mockResolvedValue(
       ok(updatedMembers)
@@ -306,7 +306,7 @@ describe("InstrumentAccessCard", () => {
 
   it("removes a member via confirmation dialog", async () => {
     vi.mocked(removeWorkspaceInstrumentMember).mockResolvedValue(
-      ok([initialMembers[0]])
+      ok([initialMembers[0]!])
     )
 
     renderCard()
@@ -483,10 +483,10 @@ describe("InstrumentAccessCard", () => {
     ])
     queryClient.setQueryData(
       instrumentMembersQueryOptions(scope, instrument.unique_id).queryKey,
-      [...initialMembers, secondMember]
+      [...initialMembers, secondMember!]
     )
     vi.mocked(removeWorkspaceInstrumentMember).mockResolvedValue(
-      ok([initialMembers[0]])
+      ok([initialMembers[0]!])
     )
 
     renderCard()

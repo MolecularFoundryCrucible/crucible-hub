@@ -45,7 +45,7 @@ export function CollectionPagination({
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (!entry.isIntersecting) return
+        if (!entry?.isIntersecting) return
         observer.disconnect()
         requestNextPage()
       },

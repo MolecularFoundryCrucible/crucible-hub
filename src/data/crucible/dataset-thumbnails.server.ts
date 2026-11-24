@@ -61,7 +61,7 @@ function readFixtureDatasetThumbnails(
   const stored = fixtureThumbnailState.get(key)
   if (stored) return stored
   const thumbnails =
-    datasetMfid === demoWorkspace.datasets[0]?.unique_id ||
+    datasetMfid === demoWorkspace.datasets[0].unique_id ||
     datasetMfid === "fixture-dataset-1"
       ? [
           {

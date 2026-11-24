@@ -1,4 +1,5 @@
-import { Link, createFileRoute } from "@tanstack/react-router"
+import { Link, createFileRoute, notFound } from "@tanstack/react-router"
+import { getFixtureRoutesEnabled } from "@/data/crucible/fixture-routes.functions"
 
 import { buttonVariants } from "@/components/ui/button"
 import {
@@ -11,6 +12,9 @@ import {
 import type { FixtureScenario } from "@/data/crucible/fixture-scenarios"
 
 export const Route = createFileRoute("/fixtures/scenarios")({
+  beforeLoad: async () => {
+    if (!(await getFixtureRoutesEnabled())) throw notFound()
+  },
   head: () => ({
     meta: [
       { title: "Route scenarios | Crucible Hub" },

@@ -7,12 +7,18 @@ type DemoWorkspaceContract = {
   id: "operando-catalyst-study"
   referenceTime: string
   account: Schema<"AccountProfileRead">
-  people: readonly Schema<"UserPublicRead">[]
-  projects: readonly Schema<"ProjectWithLead">[]
-  instruments: readonly Schema<"InstrumentResponse">[]
-  samples: readonly Schema<"SampleResponse">[]
-  datasets: readonly Schema<"DatasetResponse">[]
-  files: readonly Schema<"AssociatedFileRead">[]
+  people: readonly [Schema<"UserPublicRead">, ...Schema<"UserPublicRead">[]]
+  projects: readonly [Schema<"ProjectWithLead">, ...Schema<"ProjectWithLead">[]]
+  instruments: readonly [
+    Schema<"InstrumentResponse">,
+    ...Schema<"InstrumentResponse">[],
+  ]
+  samples: readonly [Schema<"SampleResponse">, ...Schema<"SampleResponse">[]]
+  datasets: readonly [Schema<"DatasetResponse">, ...Schema<"DatasetResponse">[]]
+  files: readonly [
+    Schema<"AssociatedFileRead">,
+    ...Schema<"AssociatedFileRead">[],
+  ]
 }
 
 const account = {

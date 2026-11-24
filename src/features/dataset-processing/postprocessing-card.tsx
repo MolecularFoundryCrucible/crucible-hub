@@ -246,7 +246,9 @@ function RunPipelineDialog({
       }}
       onOpenChangeComplete={(isOpen) => {
         if (!isOpen) return
-        setPipelineName(pipelines.length === 1 ? pipelines[0].name : "")
+        setPipelineName(
+          pipelines.length === 1 ? (pipelines[0]?.name ?? "") : ""
+        )
         setValues({})
         setError(undefined)
         setIdempotencyKey(crypto.randomUUID())

@@ -218,11 +218,13 @@ export function UserCreateDialog({
           {error ? <InlineError className="mt-4">{error}</InlineError> : null}
         </form>
         <form.Subscribe
-          selector={(state) => [
-            usernameConflict.isTaken(state.values.username) ||
-              emailConflict.isTaken(state.values.email),
-            state.isSubmitting,
-          ]}
+          selector={(state) =>
+            [
+              usernameConflict.isTaken(state.values.username) ||
+                emailConflict.isTaken(state.values.email),
+              state.isSubmitting,
+            ] as const
+          }
         >
           {([isTaken, isSubmitting]) => (
             <DialogFooter>
