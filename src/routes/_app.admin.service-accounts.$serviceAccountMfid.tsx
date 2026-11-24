@@ -75,7 +75,6 @@ export const Route = createFileRoute(
     meta: [{ title: hubPageTitle(loaderData?.username) }],
   }),
   pendingComponent: () => <IdentityDetailPending kind="service_account" />,
-  errorComponent: ServiceAccountLoadError,
   component: ServiceAccountAdminPage,
 })
 
@@ -101,17 +100,6 @@ function ServiceAccountAdminPage() {
       administrationScope={administrationScope}
       serviceAccountMfid={serviceAccountMfid}
     />
-  )
-}
-
-function ServiceAccountLoadError() {
-  return (
-    <Card className="mx-auto mt-16 max-w-state">
-      <CardHeader>
-        <CardTitle>Service account could not be loaded</CardTitle>
-        <CardDescription>Try opening this account again.</CardDescription>
-      </CardHeader>
-    </Card>
   )
 }
 

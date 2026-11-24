@@ -2,10 +2,7 @@ import { useSuspenseQuery } from "@tanstack/react-query"
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router"
 
 import { CardViewAllLink } from "@/components/crucible/card-view-all-link"
-import {
-  ResourceManagementPending,
-  ResourceTabLoadError,
-} from "@/components/crucible/resource-tab-state"
+import { ResourceManagementPending } from "@/components/crucible/resource-tab-state"
 import { ContentBoundary } from "@/components/crucible/content-layout"
 import {
   useWorkspaceMode,
@@ -38,7 +35,6 @@ export const Route = createFileRoute("/_app/projects/$projectMfid/settings/")({
     )
   },
   pendingComponent: ResourceManagementPending,
-  errorComponent: ResourceTabLoadError,
   component: ProjectManagePage,
 })
 

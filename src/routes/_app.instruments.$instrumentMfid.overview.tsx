@@ -3,10 +3,7 @@ import { ScientificMetadataEditor } from "@/features/resource-metadata/scientifi
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 
-import {
-  ResourceOverviewPending,
-  ResourceTabLoadError,
-} from "@/components/crucible/resource-tab-state"
+import { ResourceOverviewPending } from "@/components/crucible/resource-tab-state"
 import { AccessRoleBadge } from "@/components/crucible/access-role-badge"
 import { EditableCardTrigger } from "@/components/crucible/editable-card-actions"
 import { IdentityFieldIcon } from "@/components/crucible/identity-field-icon"
@@ -59,7 +56,6 @@ export const Route = createFileRoute(
     )
   },
   pendingComponent: () => <ResourceOverviewPending resourceKind="instrument" />,
-  errorComponent: ResourceTabLoadError,
   component: InstrumentOverviewPage,
 })
 

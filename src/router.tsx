@@ -1,4 +1,5 @@
 import { createRouter as createTanStackRouter } from "@tanstack/react-router"
+import { RouteError } from "@/components/crucible/route-error"
 import { createQueryClient } from "@/data/query-client"
 import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query"
 import { routeTree } from "./routeTree.gen"
@@ -14,6 +15,7 @@ export function getRouter() {
       location.state.resourcePreview?.returnKey ??
       location.state.__TSR_key ??
       location.href,
+    defaultErrorComponent: RouteError,
     defaultPreload: "intent",
     defaultPreloadStaleTime: 0,
     defaultStaleTime: Infinity,

@@ -11,10 +11,7 @@ import { PrintLabelButton } from "@/features/label-printing/print-label-dialog"
 import { resourceDisplayName } from "@/lib/resource-name"
 import { MfidValue } from "@/components/crucible/mfid-value"
 import { PersonLink } from "@/components/crucible/person-link"
-import {
-  ProjectOverviewPending,
-  ResourceTabLoadError,
-} from "@/components/crucible/resource-tab-state"
+import { ProjectOverviewPending } from "@/components/crucible/resource-tab-state"
 import { StatusBadge } from "@/components/crucible/status-badge"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import {
@@ -47,7 +44,6 @@ type ProjectDetail = Extract<WorkspaceProject, { status: string | null }>
 
 export const Route = createFileRoute("/_app/projects/$projectMfid/overview")({
   pendingComponent: ProjectOverviewPending,
-  errorComponent: ResourceTabLoadError,
   component: ProjectOverviewPage,
 })
 

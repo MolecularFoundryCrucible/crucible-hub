@@ -1,10 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 
-import {
-  ResourceManagementPending,
-  ResourceTabLoadError,
-} from "@/components/crucible/resource-tab-state"
+import { ResourceManagementPending } from "@/components/crucible/resource-tab-state"
 import { ContentBoundary } from "@/components/crucible/content-layout"
 import {
   useWorkspaceMode,
@@ -33,7 +30,6 @@ export const Route = createFileRoute(
     )
   },
   pendingComponent: ResourceManagementPending,
-  errorComponent: ResourceTabLoadError,
   component: InstrumentManagePage,
 })
 
