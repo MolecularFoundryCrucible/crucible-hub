@@ -8,6 +8,7 @@ import {
 import { z } from "zod"
 
 import { AppShell } from "@/components/crucible/app-shell"
+import { RootError } from "@/components/crucible/route-error"
 import { useReauthenticationNotice } from "@/components/crucible/reauthentication"
 import { WorkspaceProvider } from "@/components/crucible/workspace-provider"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -97,6 +98,7 @@ export const Route = createFileRoute("/_app")({
     }
   },
   staleTime: Infinity,
+  errorComponent: RootError,
   component: WorkspaceLayout,
 })
 

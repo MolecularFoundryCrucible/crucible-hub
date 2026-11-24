@@ -1,4 +1,4 @@
-import { Link, useRouter, useRouterState } from "@tanstack/react-router"
+import { Link, useRouterState } from "@tanstack/react-router"
 
 import {
   ContentBoundary,
@@ -6,10 +6,7 @@ import {
   ContentGridItem,
 } from "@/components/crucible/content-layout"
 import { EntityOverviewLayout } from "@/components/crucible/entity-overview-layout"
-import {
-  CollectionTablePending,
-  PanelState,
-} from "@/components/crucible/collection-state"
+import { CollectionTablePending } from "@/components/crucible/collection-state"
 import { PageHeaderSkeleton } from "@/components/crucible/page-header"
 import { PageLayout } from "@/components/crucible/page-layout"
 import {
@@ -18,7 +15,6 @@ import {
   resourceSectionLinkClassName,
 } from "@/components/crucible/resource-section-navigation"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
-import { useRouteErrorReport } from "@/components/crucible/route-error-report"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -30,7 +26,6 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
-import type { ErrorComponentProps } from "@tanstack/react-router"
 
 type ResourceOverviewKind = "dataset" | "instrument" | "sample"
 type EntityWorkspacePendingKind =
@@ -240,32 +235,6 @@ export function ResourceManagementPending() {
         <ResourceCardPending title="Resource management" />
       </ContentBoundary>
     </div>
-  )
-}
-
-export function ResourceTabLoadError({ error, info }: ErrorComponentProps) {
-  const router = useRouter()
-  const report = useRouteErrorReport({
-    error,
-    info,
-    scope: "resource-tab",
-  })
-  return (
-    <ContentBoundary width="reading">
-      <PanelState
-        description={`${report.message} Reference: ${report.reference}`}
-        retry={() => {
-          if (report.reloadRequired) {
-            window.location.reload()
-            return
-          }
-          void router.invalidate()
-        }}
-        retryLabel={report.reloadRequired ? "Reload page" : "Try again"}
-        role="alert"
-        title="This section could not be loaded"
-      />
-    </ContentBoundary>
   )
 }
 

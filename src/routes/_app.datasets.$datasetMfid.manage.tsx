@@ -1,9 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router"
 
-import {
-  ResourceManagementPending,
-  ResourceTabLoadError,
-} from "@/components/crucible/resource-tab-state"
+import { ResourceManagementPending } from "@/components/crucible/resource-tab-state"
 import { preloadResourceDetail } from "@/data/crucible/resources.queries"
 import { ResourceManagePage } from "@/features/resource-access/resource-manage-page"
 
@@ -18,7 +15,6 @@ export const Route = createFileRoute("/_app/datasets/$datasetMfid/manage")({
     )
   },
   pendingComponent: ResourceManagementPending,
-  errorComponent: ResourceTabLoadError,
   component: DatasetManagePage,
 })
 

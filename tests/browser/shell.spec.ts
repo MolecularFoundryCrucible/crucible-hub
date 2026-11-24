@@ -903,3 +903,22 @@ test("renders ordered sidebar navigation with sub-navigation and creation action
   await datasetsSubLink.click()
   await expect(page).toHaveURL(/\/hub\/data\?kind=datasets/)
 })
+
+test("keeps the app shell when a page fails to load", async ({ page }) => {
+  await page.goto("/hub/projects")
+  await page.waitForLoadState("networkidle")
+  await page.route("**/_serverFn/**", (route) => route.abort())
+
+  await page
+    .getByRole("main")
+    .locator('a[href^="/hub/projects/"]:not([href$="/new"])')
+    .first()
+    .click()
+
+  await expect(
+    page.getByRole("alert").getByText("This page could not be loaded")
+  ).toBeVisible()
+  await expect(
+    page.getByRole("navigation").getByRole("link", { name: "Projects" })
+  ).toBeVisible()
+})

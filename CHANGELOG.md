@@ -6,6 +6,7 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- A page that fails to load now shows its error inside the workspace, keeping navigation and the account menu, with a reference and a Try again button; only a failure of the workspace itself shows the full-page error.
 - The Hub runs on Node.js 26 LTS (image base `node:26.13.1-bookworm-slim`); building from source needs Node.js 26.13 and npm 11.20.
 - Removed the Cloud Build configurations; every deployment runs the images published to GHCR.
 - Development scenarios read credentials only from their own `.env.<scenario>.local` file; the shared `.env.api-key.local` and `.env.hub-auth.local` fallbacks and the shell fallback are removed.
