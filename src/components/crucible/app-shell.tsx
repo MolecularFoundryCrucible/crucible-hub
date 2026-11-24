@@ -32,7 +32,10 @@ import {
   KeyboardShortcuts,
   KeyboardShortcutsTrigger,
 } from "@/components/crucible/keyboard-shortcuts"
-import { PersonIdentity } from "@/components/crucible/person-identity"
+import {
+  PersonIdentity,
+  personDisplayName,
+} from "@/components/crucible/person-identity"
 import {
   AccountIcon,
   AdministratorViewDisabledIcon,
@@ -566,21 +569,18 @@ function AccountControls({
           <form action="/hub/auth/logout" id="hub-sign-out" method="post" />
         ) : null}
         <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <Button
-                aria-label="Open account menu"
-                size="lg"
-                variant="ghost"
+          <DropdownMenuTrigger render={<Button size="lg" variant="ghost" />}>
+            <span aria-hidden="true" className="contents">
+              <PersonIdentity
+                detailsClassName="hidden md:grid"
+                person={account}
+                presentation="avatar"
+                size="sm"
               />
-            }
-          >
-            <PersonIdentity
-              detailsClassName="hidden md:grid"
-              person={account}
-              presentation="avatar"
-              size="sm"
-            />
+            </span>
+            <span className="sr-only">
+              {personDisplayName(account)} account menu
+            </span>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="min-w-56">
             <DropdownMenuGroup>

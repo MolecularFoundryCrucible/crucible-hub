@@ -238,9 +238,9 @@ test("switches every top bar control to its compact form at once", async ({
         const create = [...header.querySelectorAll("span")].find(
           (span) => span.textContent === "Create"
         )
-        const name = [
-          ...header.querySelectorAll('[aria-label="Open account menu"] *'),
-        ].find((element) => element.textContent === "Avery Chen")
+        const name = [...header.querySelectorAll("button *")].find(
+          (element) => element.textContent === "Avery Chen"
+        )
         const hint = header.querySelector('[data-slot="kbd"]')
         return [visible(create), visible(name), visible(hint)]
       })

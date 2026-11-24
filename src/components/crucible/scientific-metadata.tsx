@@ -396,7 +396,7 @@ function MetadataCollection({
       >
         <span className="text-label-compact break-words text-muted-foreground">
           {label}
-        </span>
+        </span>{" "}
         <span className="text-supporting text-muted-foreground">{count}</span>
       </DisclosureSummary>
       <div className="mb-1 ml-0.5 min-w-0 border-l pl-2 sm:ml-1 sm:pl-3">

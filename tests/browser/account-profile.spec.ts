@@ -16,7 +16,7 @@ test("opens profile management from the account avatar and saves changes", async
 
   await page.goto("/hub/?scenario=populated")
   await page.waitForLoadState("networkidle")
-  const accountMenu = page.getByRole("button", { name: "Open account menu" })
+  const accountMenu = page.getByRole("button", { name: /account menu$/ })
   const profileAction = page.getByRole("menuitem", { name: "My profile" })
   await expect(accountMenu).toBeEnabled()
   await expect
@@ -65,7 +65,7 @@ test("opens profile management from the account avatar and saves changes", async
     page.getByRole("definition").filter({ hasText: /^Averie Chen$/ })
   ).toBeVisible()
   await expect(
-    page.getByRole("button", { name: "Open account menu" })
+    page.getByRole("button", { name: /account menu$/ })
   ).toContainText("averie_chen")
   expect(mutationRequests).toHaveLength(1)
 })
