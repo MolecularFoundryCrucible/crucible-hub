@@ -244,7 +244,10 @@ test("renders exact dataset detail and file metadata from a canonical link", asy
   await expect(page).toHaveURL(/\/hub\/projects\/01J6Y8N4Q2R7M9K3T5V0W1X2Z3/)
 
   await page.goBack()
-  await page.getByRole("link", { name: "Hard X-ray Microprobe" }).click()
+  await page
+    .getByRole("main")
+    .getByRole("link", { name: "Hard X-ray Microprobe" })
+    .click()
   await expect(page).toHaveURL(/\/hub\/instruments\/01J6Y8N4Q2R7M9K3T5V0W1X2Z4/)
 
   await page.goBack()
