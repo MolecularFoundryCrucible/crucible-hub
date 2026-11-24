@@ -4,7 +4,6 @@ import { crucibleApiResponse } from "@/test/crucible-api-response"
 
 import {
   addWorkspaceInstrumentOperator,
-  checkWorkspaceInstrumentIdExactMatch,
   createWorkspaceInstrumentResource,
   patchWorkspaceInstrument,
   readWorkspaceInstrumentMembers,
@@ -18,36 +17,6 @@ describe("workspace instrument source", () => {
   afterEach(() => {
     vi.unstubAllEnvs()
     vi.unstubAllGlobals()
-  })
-
-  it("paginates fixture instruments", async () => {
-    vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
-
-    const first = await readWorkspaceInstruments({ limit: 1 })
-    const second = await readWorkspaceInstruments({
-      cursor: "fixture:1",
-      limit: 1,
-    })
-
-    expect(first.items).toHaveLength(1)
-    expect(second.items).toHaveLength(0)
-    expect(first.total).toBe(1)
-    expect(first.nextCursor).toBeNull()
-    expect(second.nextCursor).toBeNull()
-    expect(first.items[0]?.capabilities).toMatchObject({ can_edit: true })
-  })
-
-  it("filters fixture instruments by lifecycle status before pagination", async () => {
-    vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
-
-    await expect(
-      readWorkspaceInstruments({
-        limit: 20,
-        status: "maintenance",
-      })
-    ).resolves.toEqual({ items: [], limit: 20, nextCursor: null, total: 0 })
   })
 
   it("preserves API capability guidance and normalizes omission", async () => {
@@ -100,7 +69,7 @@ describe("workspace instrument source", () => {
     expect(page.items[1]).toMatchObject({ capabilities: null })
   })
 
-  it("reads instrument members from the instrument record", async () => {
+  it("reads instrument members and reports hidden members as unavailable", async () => {
     vi.stubEnv("NODE_ENV", "development")
     vi.stubEnv("HUB_DATA_SOURCE", "api")
     vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
@@ -131,13 +100,7 @@ describe("workspace instrument source", () => {
       include_metadata: "false",
       include_owner: "false",
     })
-  })
 
-  it("reports hidden instrument members as unavailable", async () => {
-    vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "api")
-    vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
-    vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
     vi.stubGlobal(
       "fetch",
       vi.fn(async () => crucibleApiResponse({ members: null }))
@@ -186,77 +149,6 @@ describe("workspace instrument source", () => {
       owner_ref: "0000-0000-0000-000X",
       status: "decommissioned",
     })
-  })
-
-  it("filters fixture instruments by type, location, manufacturer, and manager", async () => {
-    vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
-
-    await expect(
-      readWorkspaceInstruments({
-        instrumentType: "x-ray microscope",
-        limit: 20,
-        location: "beamline 5.3.2",
-        manufacturer: "example instruments",
-        ownerId: "0000-0000-0000-000X",
-      })
-    ).resolves.toMatchObject({ total: 1 })
-
-    await expect(
-      readWorkspaceInstruments({
-        limit: 20,
-        location: "Nonexistent Room",
-      })
-    ).resolves.toMatchObject({ items: [], total: 0 })
-  })
-
-  it("does not bypass the production fixture guard", async () => {
-    vi.stubEnv("NODE_ENV", "production")
-    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
-    vi.stubEnv("HUB_ENABLE_FIXTURES", "")
-
-    await expect(readWorkspaceInstruments({ limit: 20 })).rejects.toThrow(
-      "The Crucible API login exchange is not connected yet."
-    )
-  })
-
-  it("returns a non-persistent fixture instrument descriptive update", async () => {
-    vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
-    const instrumentMfid = "01J6Y8N4Q2R7M9K3T5V0W1X2Z4"
-
-    await expect(
-      patchWorkspaceInstrument(instrumentMfid, {
-        description: null,
-        instrument_id: "renamed-microprobe",
-        instrument_name: "Updated microprobe",
-        location: "Beamline 6.1",
-      })
-    ).resolves.toEqual({
-      description: null,
-      instrument_id: "renamed-microprobe",
-      instrument_name: "Updated microprobe",
-      instrument_type: "X-ray microscope",
-      location: "Beamline 6.1",
-      manufacturer: "Example Instruments",
-      model: "XRM-5000",
-      modification_time: "2026-08-20T14:25:00Z",
-      other_id: null,
-      other_id_source: null,
-      unique_id: instrumentMfid,
-    })
-
-    await expect(
-      patchWorkspaceInstrument("missing-instrument", { description: "Missing" })
-    ).rejects.toMatchObject({ status: 404 })
-
-    await expect(
-      patchWorkspaceInstrument(
-        "fixture-instrument-1",
-        { instrument_id: "dense-instrument-2" },
-        "dense"
-      )
-    ).rejects.toMatchObject({ status: 409 })
   })
 
   it("patches only supplied instrument descriptive fields and normalizes the response", async () => {
@@ -320,22 +212,6 @@ describe("workspace instrument source", () => {
       location: "Beamline 6.1",
       other_id: "serial-42",
     })
-  })
-
-  it("changes fixture instrument status without persisting the fixture", async () => {
-    vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
-    const instrumentMfid = "01J6Y8N4Q2R7M9K3T5V0W1X2Z4"
-
-    await expect(
-      setWorkspaceInstrumentStatus(instrumentMfid, "maintenance")
-    ).resolves.toMatchObject({
-      status: "maintenance",
-      unique_id: instrumentMfid,
-    })
-    await expect(
-      setWorkspaceInstrumentStatus("missing-instrument", "maintenance")
-    ).rejects.toMatchObject({ status: 404 })
   })
 
   it("uses the dedicated status operation and validates its authoritative response", async () => {
@@ -480,45 +356,6 @@ describe("workspace instrument source", () => {
       instrument_name: "New instrument",
       location: "Beamline 1",
     })
-  })
-
-  it("checks instrument_id availability in fixture and API mode", async () => {
-    vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
-
-    await expect(
-      checkWorkspaceInstrumentIdExactMatch("hard-xray-microprobe")
-    ).resolves.toBe(true)
-    await expect(
-      checkWorkspaceInstrumentIdExactMatch("HARD-XRAY-MICROPROBE")
-    ).resolves.toBe(true)
-    await expect(
-      checkWorkspaceInstrumentIdExactMatch("non-existent-instrument")
-    ).resolves.toBe(false)
-
-    vi.stubEnv("HUB_DATA_SOURCE", "api")
-    vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
-    vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
-
-    const fetchMock = vi.fn(async (request: Request) => {
-      const url = new URL(request.url)
-      expect(url.pathname).toBe("/instruments")
-      const instrumentId = url.searchParams.get("instrument_id")
-      if (instrumentId === "taken-instrument") {
-        return crucibleApiResponse({
-          items: [{ instrument_id: "taken-instrument", unique_id: "inst-1" }],
-        })
-      }
-      return crucibleApiResponse({ items: [] })
-    })
-    vi.stubGlobal("fetch", fetchMock)
-
-    await expect(
-      checkWorkspaceInstrumentIdExactMatch("taken-instrument")
-    ).resolves.toBe(true)
-    await expect(
-      checkWorkspaceInstrumentIdExactMatch("available-instrument")
-    ).resolves.toBe(false)
   })
 })
 

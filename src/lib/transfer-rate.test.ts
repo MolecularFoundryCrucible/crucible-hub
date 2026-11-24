@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import { createTransferRate, formatDuration } from "./transfer-rate"
 
 describe("transfer rate", () => {
-  it("waits for enough samples before estimating", () => {
+  it("waits for enough samples from the first transferred byte before estimating", () => {
     const rate = createTransferRate()
     expect(rate.update(100, 1000, 0)).toBeUndefined()
     expect(rate.update(200, 1000, 1000)).toBeUndefined()
@@ -11,23 +11,12 @@ describe("transfer rate", () => {
       bytesPerSecond: 100,
       secondsRemaining: 7,
     })
-  })
 
-  it("starts timing at the first transferred byte", () => {
-    const rate = createTransferRate()
-    expect(rate.update(0, 1000, 0)).toBeUndefined()
-    expect(rate.update(0, 1000, 5000)).toBeUndefined()
-    expect(rate.update(100, 1000, 6000)).toBeUndefined()
-    expect(rate.update(300, 1000, 8000)?.bytesPerSecond).toBe(100)
-  })
-
-  it("smooths changes in throughput", () => {
-    const rate = createTransferRate(1000)
-    rate.update(1000, 10_000, 0)
-    rate.update(2000, 10_000, 1000)
-    const estimate = rate.update(5000, 10_000, 2000)
-    expect(estimate?.bytesPerSecond).toBeGreaterThan(1000)
-    expect(estimate?.bytesPerSecond).toBeLessThan(3000)
+    const fromZero = createTransferRate()
+    expect(fromZero.update(0, 1000, 0)).toBeUndefined()
+    expect(fromZero.update(0, 1000, 5000)).toBeUndefined()
+    expect(fromZero.update(100, 1000, 6000)).toBeUndefined()
+    expect(fromZero.update(300, 1000, 8000)?.bytesPerSecond).toBe(100)
   })
 
   it("formats remaining time", () => {

@@ -38,13 +38,4 @@ describe("useExitSafeValue", () => {
     act(() => result.current.onOpenChangeComplete(false))
     expect(result.current.value).toBeUndefined()
   })
-
-  it("shows a new value immediately", () => {
-    const { rerender, result } = renderHook(
-      ({ value }: { value: string | undefined }) => useExitSafeValue(value),
-      { initialProps }
-    )
-    rerender({ value: "request-2" })
-    expect(result.current.value).toBe("request-2")
-  })
 })

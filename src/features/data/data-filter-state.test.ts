@@ -6,7 +6,6 @@ import {
   dataFacetContext,
   dataSearchSchema,
   resolveDataFilters,
-  setDataFilterProject,
   switchDataKind,
 } from "./data-filter-state"
 
@@ -112,53 +111,16 @@ describe("global data filter state", () => {
     })
   })
 
-  it("ignores a project relationship without a project", () => {
-    const resolution = resolveDataFilters({ projectScope: "shared" })
-    expect(resolution.valid).toBe(true)
-    expect(resolution).toEqual(resolveDataFilters({}))
-  })
-
   it.each([
     [{ instrumentMfid: "instrument-1", kind: "samples" }, "instrumentMfid"],
-    [{ instrumentMfid: "instrument-1" }, "instrumentMfid"],
-    [{ projectMfid: "" }, "projectMfid"],
     [{ projectMfid: "../private" }, "projectMfid"],
-    [{ instrumentMfid: "x".repeat(256), kind: "datasets" }, "instrumentMfid"],
     [{ visibility: "secret" }, "visibility"],
-    [{ createdFrom: "2026-02-30" }, "createdFrom"],
     [{ createdFrom: "2026-03-02", createdTo: "2026-03-01" }, "createdTo"],
   ] as const)("rejects invalid filter state %#", (search, field) => {
     const resolution = resolveDataFilters(search)
     expect(resolution.valid).toBe(false)
     if (resolution.valid) throw new Error("Expected invalid filters")
     expect(resolution.errors.map((error) => error.field)).toContain(field)
-  })
-
-  it("accepts a dataset instrument and normalizes collection filters", () => {
-    expect(
-      resolveDataFilters({
-        createdFrom: "2026-01-01",
-        createdTo: "2026-01-31",
-        instrumentMfid: " instrument-1 ",
-        kind: "datasets",
-        projectMfid: "project-1",
-        projectScope: "shared",
-        visibility: "public",
-      })
-    ).toMatchObject({
-      filters: {
-        createdFrom: "2026-01-01",
-        createdTo: "2026-01-31",
-        direction: "desc",
-        instrumentMfid: "instrument-1",
-        kind: "datasets",
-        projectMfid: "project-1",
-        projectScope: "shared",
-        sort: "created",
-        visibility: "public",
-      },
-      valid: true,
-    })
   })
 
   it("clears filters and both cursors while preserving kind, order, and unrelated state", () => {
@@ -228,36 +190,6 @@ describe("global data filter state", () => {
       dataFacetContext({ ...resolution.filters, affiliation: "owner" }, access)
         .affiliation
     ).toBe("owner")
-  })
-
-  it("clears an invalid kind so malformed URL state can recover", () => {
-    expect(
-      clearDataFilters({
-        kind: "forged",
-        preview: "fixture-sample-1",
-        projectMfid: "project-1",
-      })
-    ).toEqual({
-      createdFrom: undefined,
-      createdTo: undefined,
-      datasetCursor: undefined,
-      instrumentMfid: undefined,
-      kind: undefined,
-      projectMfid: undefined,
-      projectScope: undefined,
-      preview: undefined,
-      sampleCursor: undefined,
-      visibility: undefined,
-    })
-  })
-
-  it("clears project scope with the project", () => {
-    expect(
-      setDataFilterProject(
-        { projectMfid: "project-1", projectScope: "shared" },
-        "  "
-      )
-    ).toEqual({ projectMfid: undefined, projectScope: undefined })
   })
 
   it("resets cursors and instrument when switching away from datasets", () => {

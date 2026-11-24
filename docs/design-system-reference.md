@@ -120,7 +120,7 @@ Button variants are summarized in [design-system.md](design-system.md#actions). 
 - Feature `className` on a `Button` may set layout only (width, flex, alignment, position).
 - `SegmentedControl` serves small exclusive choices; long option sets switch to `NativeSelect` below the `labels` threshold.
 - `Switch` owns toggle dimensions and variants, including `warning` for Administrator view.
-- Every enabled control that activates on click uses the pointer cursor; `tests/production/cursor.spec.ts` checks it.
+- Every enabled control that activates on click uses the pointer cursor.
 
 ## Shell and page composition
 
@@ -229,4 +229,4 @@ Behavior is in [decision 0026](../decisions/0026-explore-bounded-resource-graphs
 
 Target WCAG 2.2 AA in both themes: keyboard operation without traps, visible unobscured focus, 4.5:1 text and 3:1 large text and boundaries, 200 percent zoom, text-spacing overrides, reflow at 320 CSS px, target sizes, announced async status, correct landmarks and semantics, and nothing that requires color, hover, drag, precise pointing, or animation. Keyboard shortcuts are listed in the Shortcuts dialog and never fire while typing or inside a dialog. Graphs have a non-visual alternative through focusable nodes, the Relationships card, and the inspector.
 
-Validation uses the fixture pages, `npm run design:check` (token policy, raw buttons, uncatalogued icons, and contrast for every role pair in both themes), component tests, and the Playwright suites in `tests/browser` and `tests/production`. Screenshots are local review artifacts and are not committed.
+Validation uses the fixture pages, `npm run design:check` (token policy, raw buttons, uncatalogued icons, and contrast for every role pair in both themes), component tests, and the Playwright suite in `tests/e2e`. Screenshots are local review artifacts and are not committed.

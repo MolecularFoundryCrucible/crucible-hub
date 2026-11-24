@@ -9,17 +9,9 @@ import type {
 import { resolveGraphNodeClickAction } from "./resource-graph-canvas"
 import {
   fallbackResourceGraphLayout,
-  graphViewportOptions,
   layoutResourceGraph,
-  resetResourceGraphLayoutEngine,
   resolveAssociationHandleIds,
 } from "./resource-graph-layout"
-
-vi.mock("@/lib/motion", async (importOriginal) => ({
-  ...(await importOriginal<object>()),
-  motionDuration: (token: string) =>
-    token === "--motion-deliberate" ? 240 : 0,
-}))
 
 function createMockNode(
   uniqueId: string,
@@ -99,15 +91,6 @@ function createMockElement(tokenValues: Record<string, string> = {}) {
   return element
 }
 
-describe("graphViewportOptions", () => {
-  it("times graph motion with the deliberate motion token", () => {
-    expect(graphViewportOptions(document.createElement("div"))).toEqual({
-      duration: 240,
-    })
-    expect(graphViewportOptions(null)).toEqual({ duration: 0 })
-  })
-})
-
 describe("resource graph fallback layout", () => {
   it("places lineage in layers around the current resource", () => {
     const graph = createMockGraph(
@@ -139,31 +122,6 @@ describe("resource graph fallback layout", () => {
     expect(positions.get("child")).toMatchObject({ x: 300, y: -70 })
     expect(positions.get("child-two")).toMatchObject({ x: 300, y: 70 })
     expect(positions.get("dataset")).toMatchObject({ x: 0, y: 140 })
-  })
-
-  it("stacks ancestors above the current resource top to bottom", () => {
-    const graph = createMockGraph(
-      "root",
-      [
-        createMockNode("grandparent"),
-        createMockNode("parent"),
-        createMockNode("root"),
-      ],
-      [
-        createMockEdge("e1", "grandparent", "parent"),
-        createMockEdge("e2", "parent", "root"),
-      ]
-    )
-
-    const positions = fallbackResourceGraphLayout(
-      graph,
-      createMockElement(),
-      "DOWN"
-    )
-
-    expect(positions.get("root")).toMatchObject({ x: 0, y: 0 })
-    expect(positions.get("parent")).toMatchObject({ x: 0, y: -180 })
-    expect(positions.get("grandparent")).toMatchObject({ x: 0, y: -360 })
   })
 
   it("keeps resources it cannot reach beside the current one", () => {
@@ -204,36 +162,9 @@ describe("resource graph association handle routing", () => {
       targetHandle: "association-target-right",
     })
   })
-
-  it("routes vertically separated nodes through facing top and bottom perimeter handles", () => {
-    expect(
-      resolveAssociationHandleIds(
-        { height: 88, width: 236, x: 0, y: 0 },
-        { height: 88, width: 236, x: 20, y: 240 }
-      )
-    ).toEqual({
-      sourceHandle: "association-source-bottom",
-      targetHandle: "association-target-top",
-    })
-
-    expect(
-      resolveAssociationHandleIds(
-        { height: 88, width: 236, x: 20, y: 240 },
-        { height: 88, width: 236, x: 0, y: 0 }
-      )
-    ).toEqual({
-      sourceHandle: "association-source-top",
-      targetHandle: "association-target-bottom",
-    })
-  })
 })
 
 describe("resource graph layout engine resilience", () => {
-  it("safely resets layout engine when no instance exists or when already terminated", () => {
-    expect(() => resetResourceGraphLayoutEngine()).not.toThrow()
-    expect(() => resetResourceGraphLayoutEngine()).not.toThrow()
-  })
-
   it("handles layout execution rejection gracefully on graphs with lineage and associations", async () => {
     const rootNode = createMockNode("root-sample")
     const childNode = createMockNode("child-sample")

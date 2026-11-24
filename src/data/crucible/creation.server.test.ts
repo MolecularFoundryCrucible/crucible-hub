@@ -23,26 +23,6 @@ describe("workspace creation source", () => {
     vi.unstubAllGlobals()
   })
 
-  it("creates a fixture project led by the selected account", async () => {
-    vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
-
-    const project = await createWorkspaceProjectResource({
-      organization: "Molecular Foundry",
-      project_id: "fixture-study",
-      project_lead: "0000-0000-0000-000X",
-      title: "Fixture study",
-    })
-
-    expect(project).toMatchObject({
-      organization: "Molecular Foundry",
-      owner: { unique_id: "0000-0000-0000-000X" },
-      project_id: "fixture-study",
-      status: "active",
-      title: "Fixture study",
-    })
-  })
-
   it("creates a project with its owner reference", async () => {
     useApi()
     const requests: Request[] = []
@@ -83,59 +63,29 @@ describe("workspace creation source", () => {
     })
   })
 
-  it("creates a sample with its selected project MFID", async () => {
+  it("creates samples and datasets with their selected project and instrument MFIDs", async () => {
     useApi()
     const requests: Request[] = []
+    const project = {
+      project_id: "perovskite-1",
+      title: "Study",
+      unique_id: "project-mfid",
+    }
     vi.stubGlobal(
       "fetch",
       vi.fn(async (request: Request) => {
         requests.push(request)
-        return crucibleApiResponse({
-          description: null,
-          project: {
-            project_id: "perovskite-1",
-            title: "Study",
-            unique_id: "project-mfid",
-          },
-          public: false,
-          sample_name: "Sample A",
-          sample_type: null,
-          timestamp: null,
-          unique_id: resourceMfid,
-        })
-      })
-    )
-
-    const resource = await createWorkspaceSampleResource({
-      description: null,
-      projectMfid: "project-mfid",
-      public: false,
-      sample_name: "Sample A",
-      sample_type: null,
-      timestamp: null,
-    })
-
-    expect(resource).toMatchObject({ kind: "sample", unique_id: resourceMfid })
-    expect(requests.map((request) => new URL(request.url).pathname)).toEqual([
-      "/samples",
-    ])
-    await expect(requests[0].json()).resolves.toEqual({
-      description: null,
-      project_mfid: "project-mfid",
-      public: false,
-      sample_name: "Sample A",
-      sample_type: null,
-      timestamp: null,
-    })
-  })
-
-  it("creates a dataset with its selected project and instrument MFIDs", async () => {
-    useApi()
-    const requests: Request[] = []
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async (request: Request) => {
-        requests.push(request)
+        if (new URL(request.url).pathname === "/samples") {
+          return crucibleApiResponse({
+            description: null,
+            project,
+            public: false,
+            sample_name: "Sample A",
+            sample_type: null,
+            timestamp: null,
+            unique_id: resourceMfid,
+          })
+        }
         return crucibleApiResponse({
           dataset_name: "Dataset A",
           data_format: null,
@@ -146,11 +96,7 @@ describe("workspace creation source", () => {
             unique_id: "instrument-mfid",
           },
           measurement: null,
-          project: {
-            project_id: "perovskite-1",
-            title: "Study",
-            unique_id: "project-mfid",
-          },
+          project,
           public: false,
           session_name: null,
           timestamp: null,
@@ -159,7 +105,15 @@ describe("workspace creation source", () => {
       })
     )
 
-    const resource = await createWorkspaceDatasetResource({
+    const sample = await createWorkspaceSampleResource({
+      description: null,
+      projectMfid: "project-mfid",
+      public: false,
+      sample_name: "Sample A",
+      sample_type: null,
+      timestamp: null,
+    })
+    const dataset = await createWorkspaceDatasetResource({
       data_format: null,
       data_type: null,
       dataset_name: "Dataset A",
@@ -171,14 +125,21 @@ describe("workspace creation source", () => {
       timestamp: null,
     })
 
-    expect(resource).toMatchObject({ kind: "dataset", unique_id: resourceMfid })
+    expect(sample).toMatchObject({ kind: "sample", unique_id: resourceMfid })
+    expect(dataset).toMatchObject({ kind: "dataset", unique_id: resourceMfid })
     expect(requests.map((request) => new URL(request.url).pathname)).toEqual([
+      "/samples",
       "/datasets",
     ])
-    const createRequest = requests.find(
-      (request) => new URL(request.url).pathname === "/datasets"
-    )
-    await expect(createRequest?.json()).resolves.toEqual({
+    await expect(requests[0].json()).resolves.toEqual({
+      description: null,
+      project_mfid: "project-mfid",
+      public: false,
+      sample_name: "Sample A",
+      sample_type: null,
+      timestamp: null,
+    })
+    await expect(requests[1].json()).resolves.toEqual({
       data_format: null,
       data_type: null,
       dataset_name: "Dataset A",

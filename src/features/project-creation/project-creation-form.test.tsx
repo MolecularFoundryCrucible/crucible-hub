@@ -71,15 +71,14 @@ function renderForm(privilegeMode: WorkspacePrivilegeMode) {
 describe("ProjectCreationForm lead", () => {
   afterEach(cleanup)
 
-  it("makes you the lead outside Administrator view", () => {
+  it("makes you the lead outside Administrator view and lets an administrator in it choose", () => {
     renderForm("normal")
 
     expect(screen.getByText("Project lead")).toBeTruthy()
     expect(screen.getByText("Avery Chen")).toBeTruthy()
     expect(document.getElementById("project_lead")).toBeNull()
-  })
+    cleanup()
 
-  it("lets an administrator in Administrator view choose the lead", () => {
     renderForm("elevated")
 
     expect(document.getElementById("project_lead")).not.toBeNull()

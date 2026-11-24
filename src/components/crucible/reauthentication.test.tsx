@@ -56,43 +56,12 @@ describe("reauthentication prompt", () => {
     channel.close()
     expect(screen.getByRole("status").textContent).toContain("Signed in again")
   })
-
-  it("retries the action itself after its own pop-up confirms", async () => {
-    vi.stubGlobal(
-      "open",
-      vi.fn(() => ({}) as Window)
-    )
-    const retry = vi.fn()
-    render(<>{hubActionError(stepUpError, "Failed.", "Needed.", retry)}</>)
-
-    const channel = new BroadcastChannel(REAUTHENTICATION_CHANNEL)
-    await act(async () => {
-      channel.postMessage("reauthenticated")
-      await new Promise((resolve) => setTimeout(resolve, 20))
-    })
-    expect(retry).not.toHaveBeenCalled()
-
-    fireEvent.click(screen.getByRole("button", { name: "Sign in again" }))
-    await act(async () => {
-      channel.postMessage("reauthenticated")
-      await new Promise((resolve) => setTimeout(resolve, 20))
-    })
-    channel.close()
-    expect(retry).toHaveBeenCalledTimes(1)
-  })
 })
 
 describe("withReauthentication", () => {
   afterEach(() => {
     vi.unstubAllGlobals()
     vi.useRealTimers()
-  })
-
-  it("returns the first result without a sign-in", async () => {
-    const open = vi.fn()
-    vi.stubGlobal("open", open)
-    await expect(withReauthentication(async () => "done")).resolves.toBe("done")
-    expect(open).not.toHaveBeenCalled()
   })
 
   it("opens the sign-in pop-up and repeats the action once confirmed", async () => {

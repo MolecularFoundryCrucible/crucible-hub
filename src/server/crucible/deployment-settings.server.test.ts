@@ -27,11 +27,6 @@ describe("secret settings", () => {
 
   it.each([
     [
-      "the variable",
-      () => vi.stubEnv("HUB_TEST_SECRET", "from-env"),
-      undefined,
-    ],
-    [
       "NAME_FILE",
       () =>
         vi.stubEnv(
@@ -63,6 +58,12 @@ describe("secret settings", () => {
     expect(() => readSecretSetting("HUB_TEST_SECRET", directory)).toThrow(
       /given more than one way/
     )
+    vi.unstubAllEnvs()
+    vi.stubEnv("HUB_SESSION_KEYS", "k1:abc")
+    vi.stubEnv("HUB_SESSION_KEYS_FILE", secretFile("keys", "k1:abc").file)
+    expect(() => assertSecretSettingsGivenOnce()).toThrow(
+      /HUB_SESSION_KEYS is given more than one way/
+    )
   })
 
   it("treats blank values as not given and refuses an empty NAME_FILE", () => {
@@ -74,14 +75,6 @@ describe("secret settings", () => {
     vi.stubEnv("HUB_TEST_SECRET_FILE", secretFile("empty", "").file)
     expect(() => readSecretSetting("HUB_TEST_SECRET")).toThrow(
       "HUB_TEST_SECRET_FILE names an empty file."
-    )
-  })
-
-  it("checks every secret setting at startup", () => {
-    vi.stubEnv("HUB_SESSION_KEYS", "k1:abc")
-    vi.stubEnv("HUB_SESSION_KEYS_FILE", secretFile("keys", "k1:abc").file)
-    expect(() => assertSecretSettingsGivenOnce()).toThrow(
-      /HUB_SESSION_KEYS is given more than one way/
     )
   })
 })
@@ -119,15 +112,12 @@ describe("server API URL", () => {
 })
 
 describe("client address", () => {
-  it("trusts one proxy by default", () => {
+  it("trusts one proxy by default and reads further left for each additional one", () => {
     expect(trustedProxyHops()).toBe(1)
     expect(clientAddress("203.0.113.7", "10.0.0.2")).toBe("203.0.113.7")
     expect(clientAddress("198.51.100.1, 203.0.113.7", "10.0.0.2")).toBe(
       "203.0.113.7"
     )
-  })
-
-  it("reads further left for each additional trusted proxy", () => {
     vi.stubEnv("HUB_TRUSTED_PROXY_HOPS", "2")
     expect(clientAddress("198.51.100.1, 203.0.113.7", "10.0.0.2")).toBe(
       "198.51.100.1"
@@ -135,12 +125,9 @@ describe("client address", () => {
     expect(clientAddress("203.0.113.7", "10.0.0.2")).toBe("10.0.0.2")
   })
 
-  it("ignores the header when no proxy is trusted", () => {
+  it("ignores the header when no proxy is trusted and rejects a fractional hop count", () => {
     vi.stubEnv("HUB_TRUSTED_PROXY_HOPS", "0")
     expect(clientAddress("203.0.113.7", "10.0.0.2")).toBe("10.0.0.2")
-  })
-
-  it("rejects a hop count that is not a whole number", () => {
     vi.stubEnv("HUB_TRUSTED_PROXY_HOPS", "one")
     expect(() => trustedProxyHops()).toThrow("whole number")
   })

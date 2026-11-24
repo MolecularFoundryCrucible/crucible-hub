@@ -31,17 +31,14 @@ function renderButton(proposalSync: boolean) {
 describe("SyncProjectsButton", () => {
   afterEach(cleanup)
 
-  it("offers Sync from proposals when the server has it", () => {
+  it("offers Sync from proposals only when the server has it", () => {
     renderButton(true)
-
     expect(
       screen.getByRole("button", { name: /Sync from proposals/ })
     ).toBeTruthy()
-  })
+    cleanup()
 
-  it("is hidden when proposal sync is switched off", () => {
     renderButton(false)
-
     expect(
       screen.queryByRole("button", { name: /Sync from proposals/ })
     ).toBeNull()
@@ -56,7 +53,7 @@ const base = {
 }
 
 describe("projectSyncSummary", () => {
-  it("names the projects it added and counts proposals without one", () => {
+  it("names the projects it added, counts proposals without one, and says when nothing new turned up", () => {
     expect(
       projectSyncSummary({
         ...base,
@@ -67,9 +64,7 @@ describe("projectSyncSummary", () => {
       title: "Added to 2 projects",
       description: "10234, 10301. 1 proposal has no Crucible project yet.",
     })
-  })
 
-  it("says when nothing new turned up", () => {
     expect(
       projectSyncSummary({ ...base, projectsAlreadyMember: ["10234"] })
     ).toEqual({

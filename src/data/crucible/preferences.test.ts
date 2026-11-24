@@ -22,7 +22,7 @@ describe("account preferences", () => {
     })
   })
 
-  it("ignores unknown keys and invalid values from newer clients", () => {
+  it("ignores unknown keys and invalid saved values", () => {
     expect(
       accountPreferencesSchema.parse({
         theme: "sepia",
@@ -48,23 +48,9 @@ describe("account preferences", () => {
         },
       },
     })
-  })
-
-  it("keeps the include public data default only when it is a boolean", () => {
-    expect(
-      accountPreferencesSchema.parse({ hub: { include_public_data: true } })
-    ).toEqual({ hub: { include_public_data: true } })
     expect(
       accountPreferencesSchema.parse({ hub: { include_public_data: "yes" } })
     ).toEqual({ hub: {} })
-    expect(
-      accountPreferencesPatchSchema.parse({
-        hub: { include_public_data: false },
-      })
-    ).toEqual({ hub: { include_public_data: false } })
-  })
-
-  it("drops an invalid saved neighbour sequence", () => {
     expect(
       accountPreferencesSchema.parse({
         hub: {
@@ -81,11 +67,6 @@ describe("account preferences", () => {
         },
       },
     })
-    expect(
-      accountPreferencesPatchSchema.safeParse({
-        hub: { resource_sequence: { samples: null } },
-      }).success
-    ).toBe(true)
   })
 
   it("accepts only known, non-empty patches", () => {
@@ -117,14 +98,11 @@ describe("default collection grouping", () => {
     { label: "Owner", value: "owner" },
   ] as const
 
-  it("groups by the preferred field when the URL does not choose a view", () => {
+  it("groups by the preferred field unless the URL chooses a view or the field is not offered", () => {
     expect(resolveCollectionBrowse({}, options, "owner")).toMatchObject({
       field: "owner",
       view: "grouped",
     })
-  })
-
-  it("keeps an explicit flat list and an explicit field", () => {
     expect(
       resolveCollectionBrowse({ view: "list" }, options, "owner").view
     ).toBe("list")
@@ -135,9 +113,6 @@ describe("default collection grouping", () => {
         "owner"
       ).field
     ).toBe("sample_type")
-  })
-
-  it("ignores a preferred field the collection does not offer", () => {
     expect(resolveCollectionBrowse({}, options, "instrument").view).toBe("list")
   })
 })

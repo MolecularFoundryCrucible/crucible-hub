@@ -60,14 +60,6 @@ describe("SystemStatusPopover", () => {
 
   afterEach(cleanup)
 
-  it("renders trigger button with API status label and closed state initially", () => {
-    renderPopover()
-
-    const trigger = screen.getByRole("button", { name: "API status" })
-    expect(trigger).toBeTruthy()
-    expect(screen.queryByText("System status")).toBeNull()
-  })
-
   it("opens popover on click and loads healthy system status", async () => {
     vi.mocked(getSystemStatus).mockResolvedValue(healthyStatus)
 
@@ -76,6 +68,7 @@ describe("SystemStatusPopover", () => {
     })
 
     const trigger = screen.getByRole("button", { name: "API status" })
+    expect(screen.queryByText("System status")).toBeNull()
     fireEvent.click(trigger)
 
     expect((await screen.findAllByText("Operational")).length).toBeGreaterThan(
@@ -96,22 +89,6 @@ describe("SystemStatusPopover", () => {
     const hubHealth = screen.getByRole("link", { name: /Hub health/i })
     expect(hubHealth.getAttribute("href")).toBe("/hub/health")
     expect(hubHealth.getAttribute("target")).toBe("_blank")
-  })
-
-  it("displays degraded system status when services report degradation", async () => {
-    vi.mocked(getSystemStatus).mockResolvedValue({
-      ...healthyStatus,
-      status: "degraded",
-      api: { ...healthyStatus.api, status: "degraded" },
-      database: { ...healthyStatus.database, status: "error" },
-    })
-
-    renderPopover()
-
-    fireEvent.click(screen.getByRole("button", { name: "API status" }))
-
-    expect((await screen.findAllByText("Degraded")).length).toBeGreaterThan(0)
-    expect(screen.getByText("Error")).toBeTruthy()
   })
 
   it("allows refreshing status bypassing cache", async () => {

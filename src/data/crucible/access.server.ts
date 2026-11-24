@@ -52,10 +52,6 @@ function cloneFixtureGrants(state: {
   }))
 }
 
-export function resetWorkspaceFixtureAccessState() {
-  fixtureAccessStates.clear()
-}
-
 async function fixtureResource(
   resourceMfid: string,
   scenario?: FixtureScenario,

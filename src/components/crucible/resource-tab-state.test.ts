@@ -6,7 +6,7 @@ const labels = (sections: { label: string }[]) =>
   sections.map((section) => section.label)
 
 describe("pendingSections", () => {
-  it("includes Manage wherever the loaded tabs always show it", () => {
+  it("includes Manage wherever the loaded tabs show it, and on projects only when active", () => {
     expect(labels(pendingSections("dataset", "overview"))).toEqual([
       "Overview",
       "Processing",
@@ -18,9 +18,6 @@ describe("pendingSections", () => {
       "Graph",
       "Manage",
     ])
-  })
-
-  it("includes Manage on projects only when it is the active tab", () => {
     expect(labels(pendingSections("project", "data"))).toEqual([
       "Data",
       "Overview",

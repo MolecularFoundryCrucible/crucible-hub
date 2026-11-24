@@ -30,15 +30,11 @@ describe("TimeZoneSync", () => {
     vi.restoreAllMocks()
   })
 
-  it("does not refetch when the server already used the browser time zone", () => {
-    const invalidate = renderSync("UTC")
+  it("refetches date-filtered data only when the browser time zone differs", () => {
+    expect(renderSync("UTC")).not.toHaveBeenCalled()
+    cleanup()
+    vi.restoreAllMocks()
 
-    expect(invalidate).not.toHaveBeenCalled()
-  })
-
-  it("refetches date-filtered data when the browser time zone differs", () => {
-    const invalidate = renderSync("America/Los_Angeles")
-
-    expect(invalidate).toHaveBeenCalledTimes(1)
+    expect(renderSync("America/Los_Angeles")).toHaveBeenCalledTimes(1)
   })
 })

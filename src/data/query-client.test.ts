@@ -10,21 +10,6 @@ import {
 } from "./query-client"
 
 describe("Crucible Query client", () => {
-  it("dehydrates the deletion request lists the server renders", () => {
-    const scope = identityScope("staging", "user-a")
-    const source = createQueryClient()
-    source.setQueryData(crucibleKeys.deletionRequests(scope, {}), {
-      pages: [],
-      pageParams: [],
-    })
-    source.setQueryData(crucibleKeys.deletionAudit(scope, {}), {
-      pages: [],
-      pageParams: [],
-    })
-
-    expect(dehydrate(source).queries).toHaveLength(2)
-  })
-
   it("dehydrates and hydrates only successful identity-scoped queries in normal and elevated mode", async () => {
     const scope = identityScope("staging", "user-a")
     const elevatedScope = identityScope("staging", "user-a", "elevated")
@@ -48,6 +33,17 @@ describe("Crucible Query client", () => {
       crucibleKeys.search(scope, { query: "private experiment" }),
       { groups: [], query: "private experiment" }
     )
+    source.setQueryData(crucibleKeys.deletionRequests(scope, {}), {
+      pages: [],
+      pageParams: [],
+    })
+    source.setQueryData(crucibleKeys.deletionAudit(scope, {}), {
+      pages: [],
+      pageParams: [],
+    })
+    source.setQueryData(crucibleKeys.accountPreferences(scope), {
+      preferences: { hub: { home_recent_scope: "mine" } },
+    })
     await source
       .fetchQuery({
         queryKey: [...scope, "unknown", "failure"],
@@ -60,7 +56,14 @@ describe("Crucible Query client", () => {
     const target = createQueryClient()
     hydrate(target, dehydrated)
 
-    expect(dehydrated.queries).toHaveLength(3)
+    expect(dehydrated.queries.map((query) => query.queryKey)).toEqual(
+      expect.arrayContaining([
+        crucibleKeys.deletionRequests(scope, {}),
+        crucibleKeys.deletionAudit(scope, {}),
+        crucibleKeys.accountPreferences(scope),
+      ])
+    )
+    expect(dehydrated.queries).toHaveLength(6)
     expect(target.getQueryData(crucibleKeys.accountProfile(scope))).toEqual({
       unique_id: "user-a",
       username: "ada",
@@ -80,19 +83,6 @@ describe("Crucible Query client", () => {
     expect(JSON.stringify(dehydrated)).not.toContain("upstream detail")
     expect(JSON.stringify(dehydrated)).not.toContain("private experiment")
   })
-
-  it("dehydrates account preferences so the client renders with them", () => {
-    const client = createQueryClient()
-    const scope = identityScope("server-a", "account-a", "normal")
-    client.setQueryData(crucibleKeys.accountPreferences(scope), {
-      preferences: { hub: { home_recent_scope: "mine" } },
-    })
-
-    expect(
-      dehydrate(client).queries.map((query) => query.queryKey)
-    ).toContainEqual(crucibleKeys.accountPreferences(scope))
-  })
-
   it("keeps collection rows from overwriting authoritative detail", () => {
     const scope = identityScope("staging", "user-a")
     const client = createQueryClient()
@@ -124,21 +114,14 @@ describe("Crucible Query client", () => {
     })
   })
 
-  it("does not retry terminal API errors", () => {
-    const error = new HubApiClientError({
+  it("retries only retryable API errors within bounded timing", () => {
+    const terminal = new HubApiClientError({
       correlationId: "correlation-id",
       kind: "not-found",
       message: "The resource was not found.",
       retryable: false,
     })
-
-    expect(shouldRetryQuery(0, error)).toBe(false)
-    expect(shouldRetryQuery(1, new Error("Network error"))).toBe(true)
-    expect(shouldRetryQuery(2, new Error("Network error"))).toBe(false)
-  })
-
-  it("honors bounded API retry timing", () => {
-    const error = new HubApiClientError({
+    const rateLimited = new HubApiClientError({
       correlationId: "correlation-id",
       kind: "rate-limited",
       message: "Try again shortly.",
@@ -146,8 +129,11 @@ describe("Crucible Query client", () => {
       retryable: true,
     })
 
-    expect(shouldRetryQuery(0, error)).toBe(false)
-    expect(queryRetryDelay(0, error)).toBe(30_000)
+    expect(shouldRetryQuery(0, terminal)).toBe(false)
+    expect(shouldRetryQuery(1, new Error("Network error"))).toBe(true)
+    expect(shouldRetryQuery(2, new Error("Network error"))).toBe(false)
+    expect(shouldRetryQuery(0, rateLimited)).toBe(false)
+    expect(queryRetryDelay(0, rateLimited)).toBe(30_000)
     expect(queryRetryDelay(2, new Error("Network error"))).toBe(4_000)
   })
 })

@@ -13,32 +13,15 @@ import {
 } from "./format"
 
 describe("local date and time formatting", () => {
-  it("round-trips an API UTC timestamp through a local picker value", () => {
+  it("converts between API UTC timestamps and local picker values", () => {
     const timestamp = "2026-09-05T19:42:18.000Z"
     expect(localDateTimeToUtc(timestampToLocalInput(timestamp))).toBe(timestamp)
-  })
-
-  it("maps an empty picker to a null API timestamp", () => {
     expect(localDateTimeToUtc("")).toBeNull()
-  })
-
-  it("rejects invalid and normalized local wall times", () => {
     expect(isValidLocalDateTime("2026-02-30T12:00:00")).toBe(false)
     expect(isValidLocalDateTime("not-a-time")).toBe(false)
     expect(() => localDateTimeToUtc("2026-02-30T12:00:00")).toThrow(RangeError)
-  })
-
-  it("formats the stored instant with local date and 24-hour time", () => {
-    expect(formatLocalDateTime("2026-09-05T19:42:18.000Z")).toBe(
-      new Intl.DateTimeFormat("en-US", {
-        day: "numeric",
-        hour: "2-digit",
-        hourCycle: "h23",
-        minute: "2-digit",
-        month: "short",
-        year: "numeric",
-      }).format(new Date("2026-09-05T19:42:18.000Z"))
-    )
+    expect(formatLocalDateTime("beamtime cycle 4")).toBe("beamtime cycle 4")
+    expect(timestampToLocalInput("beamtime cycle 4")).toBe("")
   })
 
   it("reads API microseconds, offsets, and offset-free values as instants", () => {
@@ -56,11 +39,6 @@ describe("local date and time formatting", () => {
     expect(formatUtcDateTime("2026-10-19T07:00:00Z")).toBe(
       "Oct 19, 2026, 07:00 UTC"
     )
-  })
-
-  it("preserves a nonstandard timestamp for fallback display", () => {
-    expect(formatLocalDateTime("beamtime cycle 4")).toBe("beamtime cycle 4")
-    expect(timestampToLocalInput("beamtime cycle 4")).toBe("")
   })
 })
 
@@ -88,7 +66,7 @@ describe("recent activity", () => {
 })
 
 describe("time zone aware formatting", () => {
-  it("formats absolute times in the given zone, independent of the runtime", () => {
+  it("formats times and counts recent activity days in the given zone", () => {
     expect(
       formatDateInZone("2026-08-30T17:31:00Z", "America/Los_Angeles")
     ).toBe("Aug 30, 2026, 10:31")
@@ -98,9 +76,7 @@ describe("time zone aware formatting", () => {
     expect(
       formatZonedDateTimeInZone("2026-08-30T17:31:00Z", "America/Los_Angeles")
     ).toBe("Aug 30, 2026, 10:31 PDT")
-  })
 
-  it("counts recent activity days in the given zone", () => {
     const now = new Date("2026-08-31T06:00:00Z")
     expect(
       formatRecentActivity("2026-08-31T01:00:00Z", now, "America/Los_Angeles")

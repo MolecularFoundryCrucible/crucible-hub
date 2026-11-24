@@ -3,23 +3,6 @@ import { describe, expect, it } from "vitest"
 import { fieldErrors, shouldShowFieldError } from "./field-state"
 
 describe("shouldShowFieldError", () => {
-  it("returns false when field is valid", () => {
-    expect(
-      shouldShowFieldError({
-        state: {
-          meta: {
-            errors: [],
-            isBlurred: true,
-            isDirty: true,
-            isTouched: true,
-            isValid: true,
-          },
-          value: "Valid entry",
-        },
-      })
-    ).toBe(false)
-  })
-
   it("returns false for pristine untouched field before submission", () => {
     expect(
       shouldShowFieldError({
@@ -56,7 +39,7 @@ describe("shouldShowFieldError", () => {
     ).toBe(false)
   })
 
-  it("returns true on submission attempt even if pristine", () => {
+  it("returns true after a submission attempt even if pristine", () => {
     expect(
       shouldShowFieldError({
         form: { state: { submissionAttempts: 1 } },
@@ -72,9 +55,6 @@ describe("shouldShowFieldError", () => {
         },
       })
     ).toBe(true)
-  })
-
-  it("returns true on submission attempt when isSubmitted is true", () => {
     expect(
       shouldShowFieldError({
         form: { state: { isSubmitted: true, submissionAttempts: 0 } },
@@ -87,9 +67,6 @@ describe("shouldShowFieldError", () => {
         },
       })
     ).toBe(true)
-  })
-
-  it("returns true when submissionAttempts override is greater than zero", () => {
     expect(
       shouldShowFieldError(
         {
@@ -204,25 +181,6 @@ describe("fieldErrors", () => {
       value: "",
     },
   }
-
-  const validField = {
-    form: { state: { submissionAttempts: 0 } },
-    state: {
-      meta: {
-        errors: [],
-        isValid: true,
-      },
-      value: "Good",
-    },
-  }
-
-  it("returns empty array when field should not show errors", () => {
-    expect(fieldErrors(validField)).toEqual([])
-  })
-
-  it("returns errors when field should show errors", () => {
-    expect(fieldErrors(invalidField)).toEqual([{ message: "Enter a title" }])
-  })
 
   it("includes extraErrors when invalid", () => {
     expect(

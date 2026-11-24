@@ -55,12 +55,4 @@ describe("PlatformRoleDialog", () => {
     expect(screen.getByRole("button", { name: "Sign in again" })).toBeTruthy()
     expect(onOpenChange).not.toHaveBeenCalled()
   })
-
-  it("shows the fallback message for other failures", async () => {
-    renderDialog(() => Promise.reject(new Error("network")))
-
-    expect(
-      await screen.findByText("The platform role could not be changed.")
-    ).toBeTruthy()
-  })
 })

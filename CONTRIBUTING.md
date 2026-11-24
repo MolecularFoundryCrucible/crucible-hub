@@ -32,10 +32,20 @@ Never give a credential a `VITE_` prefix, enter it in the browser, expose it to 
 
 - Branch from `main` and open a pull request back to `main`; nothing is committed to `main` directly. CI must pass before merging.
 - Keep each pull request focused, and prefer supported framework mechanisms, generated contract types, server-only credentials, TanStack Query for server state, semantic design tokens, and shared domain components.
-- Add tests for deterministic logic and changed failure or recovery paths.
+- Add or change tests as described in [Tests](#tests).
 - Update the document that owns the changed behavior, and add a decision record in [`decisions/`](decisions/README.md) for a durable architectural choice.
 - Run `npm run validate` before asking for review.
 - Dependabot opens one grouped pull request a month for npm minor and patch updates, separate ones for major updates, one for GitHub Actions, and one for the Docker base image, each a week after the release. Node.js majors, for the runtime and `@types/node`, move together by hand. Review them like any other change.
+
+## Tests
+
+A test earns its place by guarding behavior that could plausibly regress and that no other test covers. Write the fewest tests that would fail without the change, preferably in an existing file.
+
+- Test each behavior at one layer. Logic, state, and server adapters get Vitest unit tests; each user journey gets at most one Playwright test against the production build.
+- Do not test styling (class names, pixel geometry, cursors, animation timings), framework or library behavior (React, TanStack, Zod, Base UI, Tailwind), generated code, or fixture data. Fixture mode needs no test of its own when the API path is tested.
+- Cover one row per distinct branch, not every input variation; a table of inputs that take the same path is one case.
+- Always test security boundaries: sessions, origin and CSRF checks, permission and privilege checks, credential handling, cache and referrer headers, and API URL validation.
+- Accessibility runs as one axe check per major layout, in light and dark themes.
 
 ## Changelog
 
@@ -51,8 +61,7 @@ Write each Markdown paragraph or list item on one unwrapped line. Use no emojis 
 | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
 | `npm run validate`                         | Full gate: formatting, lint, types, unused code, unit tests, contract, boundary, tokens, docs, secrets, and build |
 | `npm run validate:static`                  | The same checks without the production build                                                                      |
-| `npm run test:browser`                     | Chromium smoke, responsive, theme, workflow, and accessibility checks                                             |
-| `npm run test:production`                  | Production build, Node runtime, `/hub` paths, health, shutdown, and server-function checks                        |
+| `npm run test:e2e`                         | Production build and runtime check, then Chromium workflow, accessibility, and server-function checks on fixtures |
 | `npm run api:fetch -- vX.Y.Z`              | Pin a published API release: download and verify its contract, update the lock, regenerate types                  |
 | `npm run api:generate`                     | Regenerate TypeScript from the pinned contract                                                                    |
 | `npm run api:check`                        | Verify the contract digest and that generated output is current                                                   |
@@ -65,7 +74,7 @@ Write each Markdown paragraph or list item on one unwrapped line. Use no emojis 
 | `npm run audit`                            | Fail on high or critical npm advisories                                                                           |
 | `npm run release`                          | Stamp `CHANGELOG.md`, commit, and tag `vX.Y.Z`                                                                    |
 
-CI runs `validate:static`, the npm audit, and the skill check in one job, and `test:production` in a parallel job. `test:browser` runs on the weekly schedule and on manual dispatch, with one worker and no retries so shared fixtures stay deterministic. Browser specs use [`tests/fixtures.ts`](tests/fixtures.ts), which fails a test on any uncaught page error.
+CI runs `validate:static`, the npm audit, and the skill check in one job, and `test:e2e` in a parallel job, with no retries, using the Chrome preinstalled on the GitHub runner instead of downloading a browser. Specs that change shared fixture state run in serial mode. Browser specs use [`tests/fixtures.ts`](tests/fixtures.ts), which fails a test on any uncaught page error.
 
 ## Visual and runtime review
 

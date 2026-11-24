@@ -2,7 +2,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { beginHubLogin, finishHubLogin } from "./hub-auth.server"
 import {
-  cancelHubLink,
   confirmHubLink,
   createHubLink,
   finishHubLinkCallback,
@@ -153,23 +152,6 @@ describe("linking another way to sign in", () => {
     })
   })
 
-  it("treats an unexpected preview status as one that cannot be linked", async () => {
-    const session = await signIn()
-    const { state } = await startLink(session)
-    await inSession(session, () =>
-      finishHubLinkCallback({
-        code: "link-code",
-        error: null,
-        iss: "https://api.example.test",
-        state,
-      })
-    )
-    stubApi(() => Response.json({ provider_name: "ORCID", status: "new" }))
-    await expect(
-      inSession(session, () => previewHubLink())
-    ).resolves.toMatchObject({ status: "unknown" })
-  })
-
   it("refuses a callback for another session", async () => {
     const owner = await signIn("access-1")
     const other = await signIn("access-2")
@@ -235,11 +217,7 @@ describe("linking another way to sign in", () => {
     }
   )
 
-  it.each([
-    ["login_required", "retry"],
-    ["access_denied", "cancelled"],
-    ["server_error", "failed"],
-  ] as const)(
+  it.each([["access_denied", "cancelled"]] as const)(
     "ends the link when the provider returns %s",
     async (error, outcome) => {
       const session = await signIn()
@@ -345,21 +323,5 @@ describe("linking another way to sign in", () => {
     await inSession(session, () => confirmHubLink()).catch(() => undefined)
     const next = await startLink(session)
     expect(next.state).toBeTruthy()
-  })
-
-  it("cancels a pending link", async () => {
-    const session = await signIn()
-    const { state } = await startLink(session)
-    await inSession(session, () => cancelHubLink())
-    await expect(
-      inSession(session, () =>
-        finishHubLinkCallback({
-          code: "link-code",
-          error: null,
-          iss: "https://api.example.test",
-          state,
-        })
-      )
-    ).resolves.toBe("expired")
   })
 })

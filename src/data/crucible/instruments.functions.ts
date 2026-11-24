@@ -137,7 +137,7 @@ export const instrumentDescriptiveUpdateInputSchema = z
   })
   .strict()
 
-export const instrumentLifecycleUpdateInputSchema = z
+const instrumentLifecycleUpdateInputSchema = z
   .object({
     instrumentMfid: canonicalInstrumentMfidSchema,
     scenario: fixtureScenarioSchema.optional(),
@@ -177,7 +177,7 @@ const removeInstrumentMemberInputSchema = z
   .object(instrumentMemberInputFields)
   .strict()
 
-export const instrumentCreateInputSchema = z
+const instrumentCreateInputSchema = z
   .object({
     instrument: z
       .object({

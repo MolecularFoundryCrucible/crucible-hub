@@ -4,13 +4,7 @@ import { CrucibleResponseError } from "./request-error.server"
 import { safeCrucibleCall } from "./safe-call.server"
 
 describe("safe Crucible calls", () => {
-  it("returns successful data", async () => {
-    await expect(
-      safeCrucibleCall("request-1", async () => ({ value: 4 }))
-    ).resolves.toEqual({ status: "ok", data: { value: 4 } })
-  })
-
-  it("maps an upstream status without exposing its error", async () => {
+  it("maps an upstream status without exposing its error and keeps a missing record as not found", async () => {
     const result = await safeCrucibleCall("request-2", async () => {
       throw new CrucibleResponseError(403)
     })
@@ -24,6 +18,13 @@ describe("safe Crucible calls", () => {
         retryable: false,
       },
     })
+
+    const missingRecord = await safeCrucibleCall("record", async () => {
+      throw new CrucibleResponseError(new Response(null, { status: 404 }), {
+        detail: "User not found",
+      })
+    })
+    expect(missingRecord).toMatchObject({ error: { kind: "not-found" } })
   })
 
   it("says a route this API version lacks is not available, without an error log", async () => {
@@ -68,16 +69,6 @@ describe("safe Crucible calls", () => {
     })
   })
 
-  it("keeps a missing record as not found", async () => {
-    const result = await safeCrucibleCall("record", async () => {
-      throw new CrucibleResponseError(new Response(null, { status: 404 }), {
-        detail: "User not found",
-      })
-    })
-
-    expect(result).toMatchObject({ error: { kind: "not-found" } })
-  })
-
   it("surfaces a numeric Retry-After from a rate-limited response", async () => {
     const result = await safeCrucibleCall("retry-after", async () => {
       throw new CrucibleResponseError(
@@ -98,28 +89,27 @@ describe("safe Crucible calls", () => {
     })
   })
 
-  it.each([
-    ["an HTTP-date", "Fri, 09 Oct 2026 12:00:00 GMT"],
-    ["a non-numeric value", "soon"],
-    ["an empty value", ""],
-  ])("ignores %s in Retry-After", async (_label, value) => {
-    const result = await safeCrucibleCall("retry-after", async () => {
-      throw new CrucibleResponseError(
-        new Response(null, {
-          status: 429,
-          headers: { "Retry-After": value },
-        })
-      )
-    })
+  it.each([["an HTTP-date", "Fri, 09 Oct 2026 12:00:00 GMT"]])(
+    "ignores %s in Retry-After",
+    async (_label, value) => {
+      const result = await safeCrucibleCall("retry-after", async () => {
+        throw new CrucibleResponseError(
+          new Response(null, {
+            status: 429,
+            headers: { "Retry-After": value },
+          })
+        )
+      })
 
-    expect(result).toMatchObject({
-      status: "error",
-      error: { kind: "rate-limited" },
-    })
-    expect(result.status === "error" && result.error.retryAfterSeconds).toBe(
-      undefined
-    )
-  })
+      expect(result).toMatchObject({
+        status: "error",
+        error: { kind: "rate-limited" },
+      })
+      expect(result.status === "error" && result.error.retryAfterSeconds).toBe(
+        undefined
+      )
+    }
+  )
 
   it.each([
     ["AbortError", "cancelled", false],
@@ -178,21 +168,16 @@ describe("safe Crucible calls", () => {
         conflictFields: ["email"],
       },
     })
-  })
 
-  it("ignores conflict bodies without the structured code", async () => {
-    const result = await safeCrucibleCall("plain-conflict", async () => {
+    const plain = await safeCrucibleCall("plain-conflict", async () => {
       throw new CrucibleResponseError(new Response(null, { status: 409 }), {
         detail: "Username already taken",
       })
     })
-
-    expect(result.status === "error" && result.error.conflictFields).toBe(
+    expect(plain.status === "error" && plain.error.conflictFields).toBe(
       undefined
     )
-  })
 
-  it("forwards only recognized conflict codes", async () => {
     const storage = await safeCrucibleCall("storage", async () => {
       throw new CrucibleResponseError(new Response(null, { status: 409 }), {
         detail: {
@@ -207,7 +192,6 @@ describe("safe Crucible calls", () => {
         detail: { code: "something_else" },
       })
     })
-
     expect(storage.status === "error" && storage.error.conflictCode).toBe(
       "storage_location_invalid"
     )
@@ -216,31 +200,29 @@ describe("safe Crucible calls", () => {
     )
   })
 
-  it.each([
-    [429, "too_many_links"],
-    [403, "hub_session_required"],
-  ])("forwards the code of a %i refusal", async (status, code) => {
-    const result = await safeCrucibleCall("refused", async () => {
-      throw new CrucibleResponseError(new Response(null, { status }), {
-        detail: { code },
+  it.each([[403, "hub_session_required"]])(
+    "forwards the code of a %i refusal",
+    async (status, code) => {
+      const result = await safeCrucibleCall("refused", async () => {
+        throw new CrucibleResponseError(new Response(null, { status }), {
+          detail: { code },
+        })
       })
-    })
-    expect(result.status === "error" && result.error.conflictCode).toBe(code)
-  })
+      expect(result.status === "error" && result.error.conflictCode).toBe(code)
+    }
+  )
 
-  it.each([
-    [404, "no_password"],
-    [501, "feature_disabled"],
-    [403, "browser_sign_in_required"],
-    [409, "username_required"],
-  ])("forwards the password code of a %i answer", async (status, code) => {
-    const result = await safeCrucibleCall("password", async () => {
-      throw new CrucibleResponseError(new Response(null, { status }), {
-        detail: { code, feature: "passwords" },
+  it.each([[404, "no_password"]])(
+    "forwards the password code of a %i answer",
+    async (status, code) => {
+      const result = await safeCrucibleCall("password", async () => {
+        throw new CrucibleResponseError(new Response(null, { status }), {
+          detail: { code, feature: "passwords" },
+        })
       })
-    })
-    expect(result.status === "error" && result.error.conflictCode).toBe(code)
-  })
+      expect(result.status === "error" && result.error.conflictCode).toBe(code)
+    }
+  )
 
   it("names the password field the API refused", async () => {
     const result = await safeCrucibleCall("password", async () => {

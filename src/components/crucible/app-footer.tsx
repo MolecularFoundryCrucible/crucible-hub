@@ -22,7 +22,7 @@ function buildReference(build: HubBuild) {
   if (!build.development) {
     return {
       href: `${REPOSITORY_URL}/tree/v${build.version}`,
-      label: `Version ${build.version}`,
+      label: `Version v${build.version}`,
       value: `v${build.version}`,
     }
   }

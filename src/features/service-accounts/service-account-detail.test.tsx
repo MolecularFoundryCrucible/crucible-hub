@@ -2,10 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { cleanup, render, screen, waitFor } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import {
-  RotateServiceAccountKeyAction,
-  ServiceAccountProfileCard,
-} from "./service-account-detail"
+import { RotateServiceAccountKeyAction } from "./service-account-detail"
 import { ServiceAccountSecurityCard } from "@/features/account-profile/security-card"
 import { getWorkspaceApiKeys } from "@/data/crucible/api-keys.functions"
 import { identityScope } from "@/data/crucible/query-keys"
@@ -65,26 +62,6 @@ function wrap(children: React.ReactNode) {
 
 describe("service account page", () => {
   afterEach(cleanup)
-
-  it("shows the same profile fields as a person", () => {
-    render(
-      wrap(
-        <ServiceAccountProfileCard
-          account={serviceAccount}
-          canChangePlatformRole
-          mode="api"
-          scope={scope}
-        />
-      )
-    )
-
-    expect(screen.getByText("Profile")).toBeTruthy()
-    expect(screen.getByText("Beamline Uploader")).toBeTruthy()
-    expect(screen.getByText("beamline-uploader")).toBeTruthy()
-    expect(screen.getByText("Platform role")).toBeTruthy()
-    expect(screen.getByText("Last active")).toBeTruthy()
-    expect(screen.getByText("Crucible ID")).toBeTruthy()
-  })
 
   it("opens Security on API keys with only keys and history", async () => {
     render(

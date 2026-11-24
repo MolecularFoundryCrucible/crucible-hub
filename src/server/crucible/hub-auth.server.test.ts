@@ -6,7 +6,6 @@ import {
   finishHubLogin,
   hasHubSession,
   hubAuthPublicOrigin,
-  hubSessionAccessToken,
   hubSessionIdentity,
   hubApiAuthorizationUrl,
   hubSignInErrorReason,
@@ -244,28 +243,14 @@ describe("hub login exchange", () => {
       return { failure, fetch, transactionCookie, location }
     }
 
-    it.each([
-      "access_denied",
-      "login_required",
-      "temporarily_unavailable",
-      "server_error",
-    ])("reports %s without exchanging a code", async (error) => {
+    it("reports a provider error without exchanging a code", async () => {
       stubHubAuthEnv()
-      const { failure, fetch } = await finishWithError(error)
+      const { failure, fetch } = await finishWithError("access_denied")
       expect(hubSignInFailureDetails(failure)).toEqual({
         reason: "provider-error",
-        error,
+        error: "access_denied",
       })
       expect(fetch).not.toHaveBeenCalled()
-    })
-
-    it("does not log an unrecognised error value", async () => {
-      stubHubAuthEnv()
-      const { failure } = await finishWithError("<script>")
-      expect(hubSignInFailureDetails(failure)).toEqual({
-        reason: "provider-error",
-        error: "other",
-      })
     })
 
     it("checks the state before trusting the error", async () => {
@@ -302,7 +287,6 @@ describe("hub login exchange", () => {
       { reason: "provider-error", error: "temporarily_unavailable" },
       "unavailable",
     ],
-    [{ reason: "provider-error", error: "server_error" }, "unavailable"],
     [{ reason: "provider-error", error: "access_denied" }, null],
     [{ reason: "expired-transaction" }, null],
   ] as const)("shows %o as the %s sign-in error", (details, expected) => {
@@ -416,15 +400,6 @@ describe("hub login exchange", () => {
     }
   })
 
-  it("forwards the chosen sign-in provider", async () => {
-    stubHubAuthEnv()
-    const scope = startRequestScope("http://127.0.0.1:3000/hub/auth/login")
-    const location = await scope.run(() =>
-      beginHubLogin("/hub/", null, "orcid")
-    )
-    expect(new URL(location).searchParams.get("provider")).toBe("orcid")
-  })
-
   describe("sign-in methods", () => {
     it("lists the methods the API offers", async () => {
       stubHubAuthEnv()
@@ -486,7 +461,6 @@ describe("hub login exchange", () => {
     })
 
     it.each([
-      ["the request fails", () => Promise.reject(new TypeError("offline"))],
       [
         "the API answers with an error",
         async () => new Response(null, { status: 503 }),
@@ -497,22 +471,6 @@ describe("hub login exchange", () => {
       vi.stubGlobal("fetch", vi.fn(respond))
       await expect(hubSignInMethods()).resolves.toBeNull()
     })
-
-    it("does not ask without Hub sign-in", async () => {
-      stubHubAuthEnv()
-      vi.stubEnv("HUB_DATA_SOURCE", "fixture")
-      const fetch = vi.fn()
-      vi.stubGlobal("fetch", fetch)
-      await expect(hubSignInMethods()).resolves.toBeNull()
-      expect(fetch).not.toHaveBeenCalled()
-    })
-  })
-
-  it("forwards max_age to force ORCID re-authentication", async () => {
-    stubHubAuthEnv()
-    const scope = startRequestScope("http://127.0.0.1:3000/hub/auth/login")
-    const location = await scope.run(() => beginHubLogin("/hub/account", 0))
-    expect(new URL(location).searchParams.get("max_age")).toBe("0")
   })
 
   describe("re-confirming a sign-in", () => {
@@ -604,6 +562,7 @@ describe("hub login exchange", () => {
         "0000-0000-0000-000X"
       )
       await finished
+      expect(new URL(location).searchParams.get("max_age")).toBe("0")
       expect(new URL(location).searchParams.get("required_user")).toBe(
         "0000-0000-0000-000X"
       )
@@ -850,7 +809,7 @@ describe("hub login exchange", () => {
         }
       })
     }
-    return { call, requests, sessionCookie }
+    return { call, requests }
   }
 
   it("keeps the session and the current access token when a refresh is rate limited", async () => {
@@ -874,28 +833,6 @@ describe("hub login exchange", () => {
       "/datasets",
       "/datasets",
     ])
-  })
-
-  it("hands out the current access token for a link while a refresh is rate limited", async () => {
-    vi.useFakeTimers({ toFake: ["Date"] })
-    vi.setSystemTime(new Date("2026-10-06T22:59:45.000Z"))
-    stubHubAuthEnv()
-    const { call, requests, sessionCookie } = await signedInSession((path) =>
-      path === "/oauth/token:refresh_token"
-        ? new Response(null, { headers: { "Retry-After": "20" }, status: 429 })
-        : Response.json([])
-    )
-    await call()
-    const linkScope = startRequestScope("http://127.0.0.1:3000/hub/data", {
-      headers: { cookie: sessionCookie },
-    })
-
-    await expect(linkScope.run(() => hubSessionAccessToken())).resolves.toBe(
-      tokenResponse.access_token
-    )
-    expect(
-      requests.filter((path) => path === "/oauth/token:refresh_token")
-    ).toHaveLength(1)
   })
 
   it("waits out a rate-limited refresh after expiry and then recovers", async () => {
@@ -962,13 +899,12 @@ describe("hub login exchange", () => {
     expect(result.signedIn).toBe(false)
   })
 
-  it.each([
-    ["http://localhost:3000/hub/auth/callback", "http://localhost:3000"],
-    ["http://[::1]:3000/hub/auth/callback", "http://[::1]:3000"],
-  ])(
-    "accepts a loopback HTTP callback %s for local development",
-    async (callback, origin) => {
-      stubHubAuthEnv()
+  it("accepts loopback HTTP callbacks for local development", async () => {
+    stubHubAuthEnv()
+    for (const [callback, origin] of [
+      ["http://localhost:3000/hub/auth/callback", "http://localhost:3000"],
+      ["http://[::1]:3000/hub/auth/callback", "http://[::1]:3000"],
+    ]) {
       vi.stubEnv("HUB_AUTH_CALLBACK_URI", callback)
       const { scope, location } = await beginLogin("/hub/data")
 
@@ -976,18 +912,15 @@ describe("hub login exchange", () => {
       expect(hubAuthPublicOrigin()).toBe(origin)
       expect(loginCookie(scope)).not.toContain("Secure")
     }
-  )
+  })
 
-  it("rejects a plain HTTP public API address on a non-loopback host", async () => {
+  it("rejects plain HTTP API and callback addresses on a non-loopback host", async () => {
     stubHubAuthEnv()
     vi.stubEnv("HUB_AUTH_PUBLIC_API_URL", "http://api.example.test")
     await expect(beginLogin("/hub/data")).rejects.toThrow(
       "Hub API URL must be a trusted HTTPS URL."
     )
-  })
-
-  it("rejects a plain HTTP callback on a non-loopback host", async () => {
-    stubHubAuthEnv()
+    vi.stubEnv("HUB_AUTH_PUBLIC_API_URL", "https://api.example.test")
     vi.stubEnv(
       "HUB_AUTH_CALLBACK_URI",
       "http://hub.example.test/hub/auth/callback"

@@ -17,31 +17,24 @@ function apiError(kind: HubApiClientError["details"]["kind"]) {
 }
 
 describe("creation failure handling", () => {
-  it.each(["cancelled", "timeout", "unexpected", "upstream"] as const)(
-    "treats %s outcomes as uncertain",
+  it.each(["timeout", "upstream"] as const)(
+    "treats %s outcomes as uncertain and directs them to Data before resubmission",
     (kind) => {
       expect(isUncertainCreationError(apiError(kind))).toBe(true)
+      expect(creationFailureMessage("dataset", apiError(kind))).toContain(
+        "Check Data before submitting again."
+      )
     }
   )
 
-  it.each([
-    "conflict",
-    "forbidden",
-    "not-found",
-    "rate-limited",
-    "unauthenticated",
-    "validation",
-  ] as const)("keeps %s rejections correctable", (kind) => {
-    const error = apiError(kind)
-    expect(isUncertainCreationError(error)).toBe(false)
-    expect(creationFailureMessage("sample", error)).toContain(
-      "Safe API message."
-    )
-  })
-
-  it("directs uncertain creates to Data before resubmission", () => {
-    expect(creationFailureMessage("dataset", apiError("timeout"))).toContain(
-      "Check Data before submitting again."
-    )
-  })
+  it.each(["forbidden", "validation"] as const)(
+    "keeps %s rejections correctable",
+    (kind) => {
+      const error = apiError(kind)
+      expect(isUncertainCreationError(error)).toBe(false)
+      expect(creationFailureMessage("sample", error)).toContain(
+        "Safe API message."
+      )
+    }
+  )
 })

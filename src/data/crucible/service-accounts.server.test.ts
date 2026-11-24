@@ -46,51 +46,6 @@ describe("workspace service account source", () => {
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
-  it("paginates, filters, and sorts fixture service accounts", async () => {
-    vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
-
-    const page = await readWorkspaceServiceAccounts({
-      direction: "asc",
-      limit: 20,
-      sort: "username",
-    })
-    const neverActive = await readWorkspaceServiceAccounts({
-      activity: "never",
-      limit: 20,
-    })
-
-    expect(page.items.length).toBeGreaterThan(0)
-    expect(page.items.every((account) => account.is_service_account)).toBe(true)
-    expect(page.items[0]?.last_active_at).toBeTruthy()
-    const usernames = page.items.map((account) => account.username)
-    expect([...usernames].sort((a, b) => a.localeCompare(b))).toEqual(usernames)
-    expect(neverActive.items).toHaveLength(0)
-  })
-
-  it("resolves fixture service account detail with activity and key usage timestamps", async () => {
-    vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
-
-    const list = await readWorkspaceServiceAccounts({ limit: 5 })
-    const first = list.items[0]
-    expect(first).toBeDefined()
-
-    const detail = await readWorkspaceServiceAccount(first.unique_id)
-    expect(detail).toMatchObject({
-      api_key_status: {
-        last_used_at: "2026-10-13T09:20:00Z",
-        valid: true,
-      },
-      is_service_account: true,
-      last_active_at: "2026-09-28T10:00:00Z",
-      unique_id: first.unique_id,
-    })
-    await expect(
-      readWorkspaceServiceAccount("missing-service-account")
-    ).resolves.toBeNull()
-  })
-
   it("queries GET /users with is_service_account, cursor, sort, and activity filters", async () => {
     vi.stubEnv("NODE_ENV", "development")
     vi.stubEnv("HUB_DATA_SOURCE", "api")

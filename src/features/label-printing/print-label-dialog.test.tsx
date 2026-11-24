@@ -100,7 +100,8 @@ describe("PrintLabelButton", () => {
     expect(screen.queryByRole("button", { name: "Print" })).toBeNull()
   })
 
-  it("prefills the label and picks the remembered online printer", async () => {
+  it("prefills the label, prints with the chosen online printer and remembers it", async () => {
+    vi.mocked(printWorkspaceResourceLabel).mockResolvedValue(printResult("ok"))
     renderButton()
 
     expect(screen.getByLabelText<HTMLInputElement>("Label name").value).toBe(
@@ -113,13 +114,6 @@ describe("PrintLabelButton", () => {
         name: "glovebox (offline)",
       }).disabled
     ).toBe(true)
-  })
-
-  it("prints the open resource and remembers the printer", async () => {
-    vi.mocked(printWorkspaceResourceLabel).mockResolvedValue(printResult("ok"))
-    renderButton()
-    const printer = screen.getByLabelText<HTMLSelectElement>("Printer")
-    await waitFor(() => expect(printer.value).toBe("spinbot"))
     fireEvent.change(printer, { target: { value: "bench-lab" } })
 
     fireEvent.click(

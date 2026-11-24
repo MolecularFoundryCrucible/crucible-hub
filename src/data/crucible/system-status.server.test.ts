@@ -3,7 +3,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { crucibleApiResponse } from "@/test/crucible-api-response"
 import {
   clearSystemStatusCache,
-  readFixtureSystemStatus,
   readSystemStatus,
 } from "./system-status.server"
 
@@ -18,29 +17,7 @@ describe("system-status server source", () => {
     vi.unstubAllGlobals()
   })
 
-  it("returns fixture system status in fixture mode", async () => {
-    vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
-
-    const status = await readSystemStatus()
-
-    expect(status.status).toBe("ok")
-    expect(status.api.status).toBe("ok")
-    expect(status.api.url).toBeUndefined()
-    expect(status.api.version).toBe("0.1.0-fixture")
-    expect(status.database.status).toBe("ok")
-    expect(status.database.schemaRevisions).toContain("20260401_01_fixture")
-  })
-
-  it("returns fixture details directly via readFixtureSystemStatus", () => {
-    const fixture = readFixtureSystemStatus()
-
-    expect(fixture.status).toBe("ok")
-    expect(fixture.api.status).toBe("ok")
-    expect(fixture.database.status).toBe("ok")
-  })
-
-  it("reads healthy system status from API endpoint", async () => {
+  it("reads healthy and 503 degraded system status from the API endpoint", async () => {
     vi.stubEnv("NODE_ENV", "development")
     vi.stubEnv("HUB_DATA_SOURCE", "api")
     vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
@@ -75,40 +52,35 @@ describe("system-status server source", () => {
     expect(status.database.status).toBe("ok")
     expect(status.database.latencyMs).toBe(4)
     expect(status.database.schemaRevisions).toEqual(["rev1", "rev2"])
-  })
 
-  it("handles 503 degraded API responses", async () => {
-    vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "api")
-    vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
-    vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
-
-    const fetchMock = vi.fn(async () => {
-      return Response.json(
-        {
-          status: "degraded",
-          build: {
-            api_version: "1.2.3",
-            git_commit: "abc1234",
-            branch: "main",
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json(
+          {
+            status: "degraded",
+            build: {
+              api_version: "1.2.3",
+              git_commit: "abc1234",
+              branch: "main",
+            },
+            database: {
+              status: "error",
+              latency_ms: null,
+              schema_revisions: [],
+            },
           },
-          database: {
-            status: "error",
-            latency_ms: null,
-            schema_revisions: [],
-          },
-        },
-        { status: 503 }
+          { status: 503 }
+        )
       )
-    })
-    vi.stubGlobal("fetch", fetchMock)
+    )
 
-    const status = await readSystemStatus(undefined, true)
+    const degraded = await readSystemStatus(undefined, true)
 
-    expect(status.status).toBe("degraded")
-    expect(status.api.status).toBe("degraded")
-    expect(status.api.url).toBe("https://api.example.test")
-    expect(status.database.status).toBe("error")
+    expect(degraded.status).toBe("degraded")
+    expect(degraded.api.status).toBe("degraded")
+    expect(degraded.api.url).toBe("https://api.example.test")
+    expect(degraded.database.status).toBe("error")
   })
 
   it("handles network unreachable errors safely", async () => {

@@ -10,7 +10,7 @@ import {
 const account = { ...demoWorkspace.account, username: "avery_chen" }
 
 describe("account profile names", () => {
-  it("rejects clearing a name the account already has", () => {
+  it("rejects clearing a name the account has but lets an unset one stay empty", () => {
     const result = accountProfileFormSchema(account).safeParse({
       ...accountProfileValues(account),
       first_name: "  ",
@@ -20,9 +20,7 @@ describe("account profile names", () => {
       message: "Enter a first name.",
       path: ["first_name"],
     })
-  })
 
-  it("allows a name that was never set to stay empty", () => {
     const unnamed = { ...account, first_name: "", last_name: "" }
     expect(
       accountProfileFormSchema(unnamed).safeParse(accountProfileValues(unnamed))

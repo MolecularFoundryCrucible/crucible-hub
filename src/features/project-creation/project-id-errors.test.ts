@@ -17,13 +17,10 @@ function apiError(
 }
 
 describe("reservedProjectIdMessage", () => {
-  it("explains a reserved project ID", () => {
+  it("explains a reserved project ID and leaves other errors alone", () => {
     expect(reservedProjectIdMessage(apiError("project_id_reserved"))).toBe(
       "This project ID is reserved on this server. Only an administrator in Administrator view can use it."
     )
-  })
-
-  it("leaves other errors alone", () => {
     expect(reservedProjectIdMessage(apiError("lead_must_be_caller"))).toBe(
       undefined
     )

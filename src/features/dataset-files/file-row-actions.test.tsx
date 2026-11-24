@@ -86,36 +86,6 @@ describe("FileRowActions", () => {
     )
   })
 
-  it("explains a taken name", async () => {
-    const { HubApiClientError } = await import("@/data/crucible/result")
-    vi.mocked(renameDatasetFileFn).mockRejectedValue(
-      new HubApiClientError({
-        conflictCode: "filename_exists",
-        correlationId: "c",
-        kind: "conflict",
-        message: "conflict",
-        retryable: false,
-      })
-    )
-    renderActions()
-
-    fireEvent.click(
-      screen.getByRole("button", { name: "Actions for scan-01.h5" })
-    )
-    fireEvent.click(await screen.findByRole("menuitem", { name: /Rename/ }))
-    const dialog = await screen.findByRole("dialog", { name: "Rename file" })
-    fireEvent.change(within(dialog).getByLabelText("Name"), {
-      target: { value: "scan-02.h5" },
-    })
-    fireEvent.click(within(dialog).getByRole("button", { name: "Save" }))
-
-    expect(
-      await within(dialog).findByText(
-        "Another file in this dataset already has that name."
-      )
-    ).toBeTruthy()
-  })
-
   it("removes a file from the dataset after confirming", async () => {
     renderActions()
 

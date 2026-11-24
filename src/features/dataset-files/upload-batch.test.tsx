@@ -59,11 +59,6 @@ function item(id: string, filename: string, size = 1): UploadItem {
 }
 
 describe("upload item issues", () => {
-  it("accepts a valid unique relative path", () => {
-    const items = [item("a", "runs/a.h5")]
-    expect(uploadItemIssues(items[0], items, new Map())).toEqual([])
-  })
-
   it("flags duplicates within the batch and in the dataset", () => {
     const items = [item("a", "a.h5"), item("b", "a.h5")]
     expect(
@@ -118,27 +113,6 @@ describe("upload item issues", () => {
         new Map([stored("a.h5", { etag: undefined })])
       )
     ).toBeUndefined()
-  })
-
-  it("ignores finished uploads", () => {
-    const done: UploadItem = {
-      ...item("a", "a.h5"),
-      state: {
-        file: {
-          dataset_id: 1,
-          dataset_mfid: "d",
-          filename: "a.h5",
-          mfid: "f",
-          sha256_hash: "",
-          size: 1,
-          storage_backend: "gcs",
-        },
-        status: "done",
-      },
-    }
-    expect(uploadItemIssues(done, [done], new Map([stored("a.h5")]))).toEqual(
-      []
-    )
   })
 })
 

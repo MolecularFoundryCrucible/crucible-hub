@@ -101,7 +101,7 @@ describe("scientific metadata editor", () => {
     })
   })
 
-  it("replaces the complete metadata object when a top-level field is removed", () => {
+  it("replaces the complete metadata object when a top-level field is removed or it is cleared", () => {
     expect(
       scientificMetadataWrite(sample.scientific_metadata, {
         complete: false,
@@ -114,16 +114,14 @@ describe("scientific metadata editor", () => {
         temperature_k: 298.15,
       },
     })
-  })
 
-  it("replaces the complete metadata object when it is cleared", () => {
     expect(scientificMetadataWrite(sample.scientific_metadata, {})).toEqual({
       kind: "replace",
       metadata: {},
     })
   })
 
-  it("updates only scientific metadata on rich resource detail", () => {
+  it("updates only scientific metadata on rich and instrument resource detail", () => {
     expect(
       mergeScientificMetadataUpdate(sample, {
         acquisition: { scans: [3], technique: "XAS" },
@@ -134,9 +132,7 @@ describe("scientific metadata editor", () => {
         acquisition: { scans: [3], technique: "XAS" },
       },
     })
-  })
 
-  it("updates scientific metadata on instrument resource detail", () => {
     const instrument = {
       ...sample,
       description: null,

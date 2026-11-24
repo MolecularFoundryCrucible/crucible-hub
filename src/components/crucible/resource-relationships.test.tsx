@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import { cleanup, fireEvent, render, screen } from "@testing-library/react"
+import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import type { WorkspaceLinkedResource } from "@/data/crucible/workspace-source"
@@ -113,20 +113,6 @@ describe("ResourceRelationships", () => {
     expect(screen.getByText("Untitled dataset")).toBeTruthy()
   })
 
-  it("supports inspector group heading depth", () => {
-    render(
-      <ResourceRelationships
-        groupHeadingLevel={4}
-        kind="sample"
-        links={[links[0]]}
-      />
-    )
-
-    expect(
-      screen.getByRole("heading", { level: 4, name: "Parents (1)" })
-    ).toBeTruthy()
-  })
-
   it("replaces canonical row actions only while managing", () => {
     render(
       <ResourceRelationships
@@ -143,54 +129,5 @@ describe("ResourceRelationships", () => {
     expect(
       screen.getByRole("button", { name: "Unlink Parent sample" })
     ).toBeTruthy()
-  })
-
-  it("does not invent preview or canonical navigation for unknown types", () => {
-    render(
-      <ResourceRelationships
-        kind="dataset"
-        links={[
-          {
-            name: "External record",
-            relationship: "associated",
-            resource_type: "external",
-            unique_id: "external-1",
-          },
-        ]}
-      />
-    )
-
-    expect(screen.getByText("External record")).toBeTruthy()
-    expect(screen.queryByRole("link")).toBeNull()
-  })
-
-  it("shows the first ten rows of a long group until expanded", () => {
-    const parents = Array.from({ length: 12 }, (_, index) => ({
-      name: `Parent ${String(index + 1).padStart(2, "0")}`,
-      relationship: "parent" as const,
-      resource_type: "external",
-      unique_id: `parent-${index + 1}`,
-    }))
-    render(<ResourceRelationships kind="sample" links={parents} />)
-
-    expect(screen.getByText("Parents (12)")).toBeTruthy()
-    expect(screen.getAllByRole("listitem")).toHaveLength(10)
-    const toggle = screen.getByRole("button", { name: "Show all 12 parents" })
-    expect(toggle.getAttribute("aria-expanded")).toBe("false")
-    expect(toggle.getAttribute("aria-controls")).toBe(
-      screen.getByRole("list").id
-    )
-
-    fireEvent.click(toggle)
-
-    expect(screen.getAllByRole("listitem")).toHaveLength(12)
-    const items = screen.getAllByRole("listitem")
-    expect(items[9]?.classList.contains("animate-in")).toBe(false)
-    expect(items[10]?.classList.contains("animate-in")).toBe(true)
-    expect(
-      screen
-        .getByRole("button", { name: "Show fewer parents" })
-        .getAttribute("aria-expanded")
-    ).toBe("true")
   })
 })

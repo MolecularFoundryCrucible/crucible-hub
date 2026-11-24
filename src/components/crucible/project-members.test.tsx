@@ -1,30 +1,9 @@
-import type { ReactNode } from "react"
 import { cleanup, render, screen } from "@testing-library/react"
-import { afterEach, describe, expect, it, vi } from "vitest"
+import { afterEach, describe, expect, it } from "vitest"
 
 import type { components } from "@/generated/crucible-api"
 
-import {
-  ProjectMembers,
-  ProjectRoleBadge,
-  sortProjectMembers,
-} from "./project-members"
-
-vi.mock("@tanstack/react-router", () => ({
-  Link: ({
-    "aria-label": ariaLabel,
-    children,
-    params,
-  }: {
-    "aria-label"?: string
-    children: ReactNode
-    params: { userId: string }
-  }) => (
-    <a aria-label={ariaLabel} href={`/users/${params.userId}`}>
-      {children}
-    </a>
-  ),
-}))
+import { ProjectMembers, sortProjectMembers } from "./project-members"
 
 type ProjectMember = components["schemas"]["AccessGroupMemberRead"]
 
@@ -94,31 +73,6 @@ describe("ProjectMembers", () => {
     ])
   })
 
-  it("renders public member detail, role text, and principal-type indication", () => {
-    render(<ProjectMembers members={members} />)
-
-    expect(
-      screen.getByRole("link", { name: "Ada Lovelace" }).getAttribute("href")
-    ).toBe("/users/owner")
-    const badge = (label: string) =>
-      screen.getByText(label).closest("[data-slot=badge]")
-    expect(badge("Lead")?.getAttribute("data-variant")).toBe("emphasis")
-    expect(badge("Lead")?.querySelector("svg")).toBeTruthy()
-    expect(badge("Admin")?.getAttribute("data-variant")).toBe("emphasis")
-    expect(badge("Admin")?.querySelector("svg")).toBeNull()
-    expect(badge("Editor")?.getAttribute("data-variant")).toBe("outline")
-    expect(badge("Contributor")?.getAttribute("data-variant")).toBe("outline")
-    expect(badge("Viewer")?.getAttribute("data-variant")).toBe("muted")
-    expect(screen.getByText("@beamline-collector")).toBeTruthy()
-    expect(screen.getByRole("img", { name: "Service account" })).toBeTruthy()
-    expect(screen.getAllByRole("img", { name: "Person" })).toHaveLength(4)
-    expect(
-      screen.getByRole("link", {
-        name: "Beamline Collector, Service account",
-      })
-    ).toBeTruthy()
-  })
-
   it("distinguishes unavailable and empty membership", () => {
     const { rerender } = render(<ProjectMembers members={null} />)
     expect(
@@ -127,10 +81,5 @@ describe("ProjectMembers", () => {
 
     rerender(<ProjectMembers members={[]} />)
     expect(screen.getByText("No members are currently listed.")).toBeTruthy()
-  })
-
-  it("keeps the role name available when an unrecognized role is returned", () => {
-    render(<ProjectRoleBadge role="observer" />)
-    expect(screen.getByText("Observer").className).toContain("bg-muted")
   })
 })

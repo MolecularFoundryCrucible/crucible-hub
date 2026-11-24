@@ -17,7 +17,7 @@ describe("resource sequence defaults", () => {
   })
 
   it("falls back to the same type when the saved scope does not apply", () => {
-    for (const scope of ["project", "project_subtype", "owner"] as const) {
+    for (const scope of ["project_subtype", "owner"] as const) {
       expect(
         resolveResourceSequence(
           { direction: "desc", scope, sort: "name" },

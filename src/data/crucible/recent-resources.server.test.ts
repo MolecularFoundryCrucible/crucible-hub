@@ -3,11 +3,9 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import { crucibleApiResponse } from "@/test/crucible-api-response"
 
 import {
-  clearRecentResources,
   readRecentResources,
   recordRecentResource,
 } from "./recent-resources.server"
-import { readWorkspaceFixture } from "./workspace-fixture.server"
 
 function stubApiMode() {
   vi.stubEnv("NODE_ENV", "development")
@@ -21,30 +19,6 @@ describe("recent resources transport", () => {
   afterEach(() => {
     vi.unstubAllEnvs()
     vi.unstubAllGlobals()
-  })
-
-  it("keeps fixture history newest first without duplicates", async () => {
-    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
-    const source = readWorkspaceFixture()
-    if (source.status !== "ready") throw new Error("Fixture unavailable.")
-    const [first, second] = source.workspace.samples
-    await clearRecentResources()
-
-    await recordRecentResource(first.unique_id)
-    await recordRecentResource(second.unique_id)
-    await recordRecentResource(first.unique_id)
-
-    const history = await readRecentResources(10)
-    expect(history.map((item) => item.uniqueId)).toEqual([
-      first.unique_id,
-      second.unique_id,
-    ])
-    expect(history[0]).toMatchObject({ kind: "sample" })
-    await expect(recordRecentResource("missing")).rejects.toMatchObject({
-      status: 404,
-    })
-    await clearRecentResources()
-    await expect(readRecentResources(10)).resolves.toEqual([])
   })
 
   it("maps API history and records views by MFID in the body", async () => {

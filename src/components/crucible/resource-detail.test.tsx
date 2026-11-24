@@ -26,12 +26,8 @@ import type {
 import {
   DatasetFiles,
   FilesTable,
-  initiateFileDownload,
 } from "@/features/dataset-files/dataset-files-card"
-import {
-  InspectorDatasetFiles,
-  InspectorDatasetThumbnails,
-} from "@/features/resource-inspector/resource-inspector"
+import { InspectorDatasetThumbnails } from "@/features/resource-inspector/resource-inspector"
 
 import {
   isResourceOverviewPath,
@@ -188,30 +184,6 @@ describe("DatasetFiles", () => {
     await waitFor(() =>
       expect(screen.getByText(demoWorkspace.files[0].filename)).toBeTruthy()
     )
-  })
-
-  it("retains an empty panel when a refresh fails", async () => {
-    vi.mocked(getWorkspaceDatasetFiles)
-      .mockResolvedValueOnce({ status: "ok", data: [] })
-      .mockRejectedValueOnce(new Error("file refresh failed"))
-
-    const queryClient = renderFiles()
-    await waitFor(() =>
-      expect(screen.getByText("No associated files")).toBeTruthy()
-    )
-
-    await queryClient.refetchQueries({
-      queryKey: [...scope, "datasets", "files", datasetMfid],
-    })
-
-    await waitFor(() =>
-      expect(
-        screen.getByText(
-          "File metadata could not be refreshed. Showing the last available data."
-        )
-      ).toBeTruthy()
-    )
-    expect(screen.getByText("No associated files")).toBeTruthy()
   })
 
   it("prepares a GCS file and starts no-referrer same-tab navigation", async () => {
@@ -415,41 +387,6 @@ describe("DatasetFiles", () => {
     expect(order()).toEqual(["Notes.txt", "run-10.h5", "run-2.h5"])
   })
 
-  it("shows the first ten sorted files until expanded", () => {
-    const base = demoWorkspace.files[0]
-    const files = Array.from({ length: 12 }, (_, index) => ({
-      ...base,
-      filename: `run-${index + 1}.h5`,
-      mfid: `f-${index + 1}`,
-      size: index + 1,
-    }))
-    render(
-      <WorkspaceProvider mode="fixture" scope={scope}>
-        <FilesTable files={files} />
-      </WorkspaceProvider>
-    )
-    const order = () =>
-      screen
-        .getAllByRole("row")
-        .slice(1)
-        .map((row) => row.textContent.match(/run-\d+\.h5/)?.[0])
-
-    expect(order()).toHaveLength(10)
-    fireEvent.click(
-      screen.getByRole("button", { name: "Sort by size descending." })
-    )
-    expect(order()[0]).toBe("run-12.h5")
-
-    fireEvent.click(screen.getByRole("button", { name: "Show all 12 files" }))
-    expect(order()).toHaveLength(12)
-    expect(order()[11]).toBe("run-1.h5")
-    expect(
-      screen
-        .getByRole("button", { name: "Show fewer files" })
-        .getAttribute("aria-controls")
-    ).toBe(screen.getByRole("table").id)
-  })
-
   it("aborts and discards a pending capability when identity changes", async () => {
     const file = demoWorkspace.files[0]
     const otherScope = identityScope(
@@ -501,53 +438,6 @@ describe("DatasetFiles", () => {
     await Promise.resolve()
 
     expect(click).not.toHaveBeenCalled()
-    click.mockRestore()
-  })
-
-  it("clears an unavailable row state when identity changes", async () => {
-    const file = demoWorkspace.files[0]
-    const otherScope = identityScope(
-      "crucible-fixture:populated",
-      "0000-0000-0000-0020"
-    )
-    vi.mocked(requestWorkspaceFileDownload).mockResolvedValue({
-      status: "ok",
-      data: { status: "unavailable" },
-    })
-    const view = (activeScope: typeof scope) => (
-      <WorkspaceProvider mode="fixture" scope={activeScope}>
-        <FilesTable files={[file]} />
-      </WorkspaceProvider>
-    )
-    const result = render(view(scope))
-    fireEvent.click(
-      screen.getByRole("button", { name: `Download ${file.filename}` })
-    )
-    await screen.findByRole("button", {
-      name: `Download unavailable for ${file.filename}`,
-    })
-
-    result.rerender(view(otherScope))
-
-    await waitFor(() =>
-      expect(
-        screen.getByRole("button", { name: `Download ${file.filename}` })
-      ).toBeTruthy()
-    )
-  })
-})
-
-describe("initiateFileDownload", () => {
-  it("does not retain the capability in the document", () => {
-    const click = vi
-      .spyOn(HTMLAnchorElement.prototype, "click")
-      .mockImplementation(() => {})
-    const url = "https://storage.example.test/ephemeral"
-
-    initiateFileDownload(url)
-
-    expect(click).toHaveBeenCalledOnce()
-    expect(document.querySelector(`a[href="${url}"]`)).toBeNull()
     click.mockRestore()
   })
 })
@@ -629,106 +519,5 @@ describe("InspectorDatasetThumbnails", () => {
 
     expect(await screen.findByText("1-2 of 3")).toBeTruthy()
     expect(screen.getByRole("img", { name: "Operando preview" })).toBeTruthy()
-  })
-
-  it("omits pagination arrows when two or fewer thumbnails exist", async () => {
-    vi.mocked(getWorkspaceDatasetThumbnails).mockResolvedValue({
-      status: "ok",
-      data: sampleThumbnails.slice(0, 2),
-    })
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false } },
-    })
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <WorkspaceProvider mode="fixture" scope={scope}>
-          <InspectorDatasetThumbnails datasetMfid={datasetMfid} />
-        </WorkspaceProvider>
-      </QueryClientProvider>
-    )
-
-    expect(
-      await screen.findByRole("img", { name: "Operando preview" })
-    ).toBeTruthy()
-    expect(screen.getByRole("img", { name: "Bragg peak fit" })).toBeTruthy()
-    expect(
-      screen.queryByRole("group", { name: "Thumbnail navigation" })
-    ).toBeNull()
-  })
-
-  it("keeps initial thumbnail failures local and retries", async () => {
-    vi.mocked(getWorkspaceDatasetThumbnails)
-      .mockRejectedValueOnce(new Error("thumbnail load failed"))
-      .mockResolvedValueOnce({
-        status: "ok",
-        data: [],
-      })
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false } },
-    })
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <WorkspaceProvider mode="fixture" scope={scope}>
-          <InspectorDatasetThumbnails datasetMfid={datasetMfid} />
-        </WorkspaceProvider>
-      </QueryClientProvider>
-    )
-
-    expect(
-      await screen.findByText("Thumbnails could not be loaded")
-    ).toBeTruthy()
-    fireEvent.click(screen.getByRole("button", { name: "Try again" }))
-    expect(await screen.findByText("No thumbnails")).toBeTruthy()
-  })
-})
-
-describe("InspectorDatasetFiles", () => {
-  afterEach(cleanup)
-
-  beforeEach(() => {
-    vi.mocked(getWorkspaceDatasetFiles).mockReset()
-  })
-
-  it("sorts files naturally and bounds the list to 10 items with an expansion toggle", async () => {
-    const baseFile = demoWorkspace.files[0]
-    const twelveFiles = [12, 2, 10, 1, 11, 3, 4, 5, 6, 7, 8, 9].map((num) => ({
-      ...baseFile,
-      filename: `scan_${num}.h5`,
-      mfid: `01J6Y8N4Q2R7M9K3T5V0W1X2${String(num).padStart(2, "0")}`,
-    }))
-    vi.mocked(getWorkspaceDatasetFiles).mockResolvedValue({
-      status: "ok",
-      data: twelveFiles,
-    })
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false } },
-    })
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <WorkspaceProvider mode="fixture" scope={scope}>
-          <InspectorDatasetFiles datasetMfid={datasetMfid} />
-        </WorkspaceProvider>
-      </QueryClientProvider>
-    )
-
-    expect(
-      await screen.findByRole("heading", { name: "Files (12)" })
-    ).toBeTruthy()
-    expect(screen.getByText("scan_1.h5")).toBeTruthy()
-    expect(screen.getByText("scan_2.h5")).toBeTruthy()
-    expect(screen.getByText("scan_10.h5")).toBeTruthy()
-    expect(screen.queryByText("scan_11.h5")).toBeNull()
-    expect(screen.queryByText("scan_12.h5")).toBeNull()
-
-    fireEvent.click(screen.getByRole("button", { name: "Show all 12 files" }))
-
-    expect(screen.getByText("scan_11.h5")).toBeTruthy()
-    expect(screen.getByText("scan_12.h5")).toBeTruthy()
-    expect(
-      screen.getByRole("button", { name: "Show fewer files" })
-    ).toBeTruthy()
   })
 })

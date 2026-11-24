@@ -14,7 +14,7 @@ import {
 import { fixtureScenarioSchema } from "./fixture-scenarios"
 import { queryCancellationMiddleware } from "./query-cancellation"
 
-export const RESOURCE_ACCESS_MFID_MAX_LENGTH = 255
+const RESOURCE_ACCESS_MFID_MAX_LENGTH = 255
 
 const canonicalResourceAccessMfidSchema = z
   .string()
@@ -32,7 +32,7 @@ const resourceAccessPermissionSchema = z.enum([
 
 const resourceAccessPrincipalKindSchema = z.enum(["users", "projects"])
 
-export const resourceAccessInputSchema = z
+const resourceAccessInputSchema = z
   .object({
     resourceMfid: canonicalResourceAccessMfidSchema,
     scenario: fixtureScenarioSchema.optional(),

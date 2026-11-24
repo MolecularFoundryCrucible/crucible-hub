@@ -780,11 +780,7 @@ function InspectorThumbnailRowsPending() {
   )
 }
 
-export function InspectorDatasetFiles({
-  datasetMfid,
-}: {
-  datasetMfid: string
-}) {
+function InspectorDatasetFiles({ datasetMfid }: { datasetMfid: string }) {
   const scope = useWorkspaceScope()
   const listId = useId()
   const [expanded, setExpanded] = useState(false)

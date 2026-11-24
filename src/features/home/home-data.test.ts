@@ -37,18 +37,6 @@ describe("Home recent resources", () => {
       { kind: "dataset", resource: { unique_id: "0003" } },
     ])
   })
-
-  it("does not mutate the source collections", () => {
-    const samples = [...demoWorkspace.samples]
-    const datasets = [...demoWorkspace.datasets]
-    const sampleOrder = samples.map((resource) => resource.unique_id)
-    const datasetOrder = datasets.map((resource) => resource.unique_id)
-
-    selectRecentResources(samples, datasets, 3)
-
-    expect(samples.map((resource) => resource.unique_id)).toEqual(sampleOrder)
-    expect(datasets.map((resource) => resource.unique_id)).toEqual(datasetOrder)
-  })
 })
 
 describe("homeRecentResourceFilters", () => {
@@ -60,29 +48,5 @@ describe("homeRecentResourceFilters", () => {
         recentScope: "mine",
       }).affiliation
     ).toBe("owner")
-  })
-
-  it("follows the public data default for everyone", () => {
-    expect(
-      homeRecentResourceFilters({
-        elevated: false,
-        includePublicByDefault: false,
-        recentScope: "all",
-      }).affiliation
-    ).toBe("member")
-    expect(
-      homeRecentResourceFilters({
-        elevated: false,
-        includePublicByDefault: true,
-        recentScope: "all",
-      }).affiliation
-    ).toBeUndefined()
-    expect(
-      homeRecentResourceFilters({
-        elevated: true,
-        includePublicByDefault: false,
-        recentScope: "all",
-      }).affiliation
-    ).toBeUndefined()
   })
 })

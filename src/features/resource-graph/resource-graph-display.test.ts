@@ -81,15 +81,6 @@ const ids = (result: { graph: WorkspaceResourceGraph }) =>
   result.graph.nodes.map((candidate) => candidate.unique_id)
 
 describe("filterResourceGraph", () => {
-  it("returns the same graph when nothing is filtered", () => {
-    const result = filterResourceGraph(graph, {
-      associations: true,
-      hidden: [],
-    })
-    expect(result.graph).toBe(graph)
-    expect(result.hiddenCount).toBe(0)
-  })
-
   it("hides datasets but always keeps the current resource", () => {
     const result = filterResourceGraph(graph, {
       associations: true,
@@ -130,7 +121,7 @@ describe("filterResourceGraph", () => {
 })
 
 describe("graph display search", () => {
-  it("reads hidden values in a stable order and ignores unknown ones", () => {
+  it("reads hidden values in a stable order, ignores unknown ones, and writes them back to the URL", () => {
     const display = resolveResourceGraphDisplay({
       hide: ["unspecified", "dataset"],
     })
@@ -139,9 +130,7 @@ describe("graph display search", () => {
     expect(
       activeGraphFilterCount({ ...display, associations: false, hidden: [] })
     ).toBe(1)
-  })
 
-  it("writes hidden values to the URL and clears them when empty", () => {
     expect(
       resourceGraphDisplaySearchPatch({ hidden: ["is_part_of", "sample"] })
     ).toEqual({ hide: ["sample", "is_part_of"] })

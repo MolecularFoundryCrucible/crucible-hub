@@ -27,7 +27,7 @@ describe("hub login rate limit", () => {
     vi.unstubAllGlobals()
   })
 
-  it("allows sign-ins under the limit and blocks beyond it per client", async () => {
+  it("allows sign-ins under the limit and blocks beyond it per client, behind proxies too", async () => {
     for (let index = 0; index < 30; index += 1) {
       await expect(attempt("10.0.0.1")).resolves.toBeUndefined()
     }
@@ -35,9 +35,7 @@ describe("hub login rate limit", () => {
       HubLoginRateLimitError
     )
     await expect(attempt("10.0.0.2")).resolves.toBeUndefined()
-  })
 
-  it("counts the client behind each trusted proxy separately", async () => {
     vi.stubEnv("HUB_TRUSTED_PROXY_HOPS", "2")
     for (let index = 0; index < 30; index += 1) {
       await expect(

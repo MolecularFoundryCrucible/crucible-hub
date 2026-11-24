@@ -71,7 +71,7 @@ const positions = new Map(
 )
 
 describe("presentResourceFlowNodes", () => {
-  it("keeps the array when nothing changed", () => {
+  it("keeps the array when nothing changed and replaces only the nodes whose presentation changed", () => {
     const nodes = reconcileResourceFlowNodes(
       [],
       graph,
@@ -80,16 +80,7 @@ describe("presentResourceFlowNodes", () => {
       new Set()
     )
     expect(presentResourceFlowNodes(nodes, graph, presentation())).toBe(nodes)
-  })
 
-  it("replaces only the nodes whose presentation changed", () => {
-    const nodes = reconcileResourceFlowNodes(
-      [],
-      graph,
-      positions,
-      presentation(),
-      new Set()
-    )
     const hovered = presentResourceFlowNodes(
       nodes,
       graph,

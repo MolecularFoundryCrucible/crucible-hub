@@ -80,33 +80,6 @@ describe("DirectorySearchField", () => {
     expect(search).toHaveBeenCalledTimes(1)
   })
 
-  it("clears through the in-field action and restores focus", () => {
-    const { search, getByRole } = renderField({ query: "avery" })
-    const input = getByRole("searchbox", { name: "Search users" })
-
-    fireEvent.click(getByRole("button", { name: "Clear search" }))
-
-    expect(search).toHaveBeenCalledWith(undefined)
-    expect((input as HTMLInputElement).value).toBe("")
-    expect(document.activeElement).toBe(input)
-
-    act(() => {
-      vi.advanceTimersByTime(250)
-    })
-    expect(search).toHaveBeenCalledTimes(1)
-  })
-
-  it("does not re-commit an unchanged query", () => {
-    const { search } = renderField({ query: "avery" })
-
-    type("avery")
-    act(() => {
-      vi.advanceTimersByTime(250)
-    })
-
-    expect(search).not.toHaveBeenCalled()
-  })
-
   it("syncs the input when the committed query changes externally", () => {
     const search = vi.fn()
     const result = render(

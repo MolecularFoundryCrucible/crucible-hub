@@ -10,16 +10,6 @@ describe("workspace person source", () => {
     vi.unstubAllGlobals()
   })
 
-  it("resolves fixture people by stable identity", async () => {
-    vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
-
-    await expect(
-      readWorkspacePerson("0000-0000-0000-0018")
-    ).resolves.toMatchObject({ username: "morgan.lee" })
-    await expect(readWorkspacePerson("missing-person")).resolves.toBeNull()
-  })
-
   it("returns only public-safe fields from the API", async () => {
     vi.stubEnv("NODE_ENV", "development")
     vi.stubEnv("HUB_DATA_SOURCE", "api")

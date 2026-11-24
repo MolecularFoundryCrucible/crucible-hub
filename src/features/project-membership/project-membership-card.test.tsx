@@ -380,7 +380,7 @@ describe("ProjectMembershipCard", () => {
     ).toEqual(["viewer", "contributor"])
   })
 
-  it("shows locked removal state for non-removable members in managing mode", () => {
+  it("shows locked removal state and no checkbox for non-removable members in managing mode", () => {
     const colleague = {
       first_name: "Jordan",
       is_service_account: false,
@@ -405,6 +405,17 @@ describe("ProjectMembershipCard", () => {
     ).toBeTruthy()
     expect(
       screen.getByRole("button", { name: "Remove Jordan Reyes" })
+    ).toBeTruthy()
+    expect(
+      screen.queryByRole("checkbox", {
+        name: "Select Ada Lovelace for removal",
+      })
+    ).toBeNull()
+    expect(
+      screen.queryByRole("checkbox", { name: "Select Morgan Lee for removal" })
+    ).toBeNull()
+    expect(
+      screen.getByRole("checkbox", { name: "Select Jordan Reyes for removal" })
     ).toBeTruthy()
   })
 
@@ -460,34 +471,6 @@ describe("ProjectMembershipCard", () => {
     expect(screen.queryByLabelText("Role for Jamie Patel")).toBeNull()
     expect(
       screen.getByRole("img", { name: "Your role cannot remove this member" })
-    ).toBeTruthy()
-  })
-
-  it("omits checkboxes from non-removable rows in managing mode", () => {
-    const colleague = {
-      first_name: "Jordan",
-      is_service_account: false,
-      last_name: "Reyes",
-      role: "viewer",
-      unique_id: "tim",
-      username: "jreyes",
-    }
-    renderCard({
-      project: { ...project, members: [owner, account, colleague] },
-    })
-
-    fireEvent.click(screen.getByRole("button", { name: "Edit members" }))
-
-    expect(
-      screen.queryByRole("checkbox", {
-        name: "Select Ada Lovelace for removal",
-      })
-    ).toBeNull()
-    expect(
-      screen.queryByRole("checkbox", { name: "Select Morgan Lee for removal" })
-    ).toBeNull()
-    expect(
-      screen.getByRole("checkbox", { name: "Select Jordan Reyes for removal" })
     ).toBeTruthy()
   })
 
@@ -613,42 +596,6 @@ describe("ProjectMembershipCard", () => {
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
   })
 
-  it("opens the removal dialog from the per-row remove control", async () => {
-    const colleague = {
-      first_name: "Jordan",
-      is_service_account: false,
-      last_name: "Reyes",
-      role: "viewer",
-      unique_id: "tim",
-      username: "jreyes",
-    }
-    vi.mocked(removeWorkspaceProjectMember).mockResolvedValue(
-      ok([owner, account])
-    )
-    renderCard({
-      project: { ...project, members: [owner, account, colleague] },
-    })
-
-    fireEvent.click(screen.getByRole("button", { name: "Edit members" }))
-    fireEvent.click(screen.getByRole("button", { name: "Remove Jordan Reyes" }))
-
-    const dialog = screen.getByRole("dialog", { name: "Remove member?" })
-    fireEvent.click(
-      within(dialog).getByRole("button", { name: "Remove member" })
-    )
-
-    await waitFor(() =>
-      expect(removeWorkspaceProjectMember).toHaveBeenCalledWith({
-        data: {
-          projectMfid: "project-mfid",
-          scenario: "populated",
-          userId: "tim",
-        },
-      })
-    )
-    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
-  })
-
   it("keeps the prior role visible until a role update succeeds", async () => {
     let resolveUpdate:
       ((result: HubResult<ProjectMember[]>) => void) | undefined
@@ -679,22 +626,6 @@ describe("ProjectMembershipCard", () => {
         userId: "account",
       },
     })
-  })
-
-  it("hides removal controls until role management is enabled", () => {
-    renderCard({
-      project: {
-        ...project,
-        capabilities: { ...project.capabilities, can_transfer: false },
-      },
-    })
-
-    expect(
-      screen.queryByRole("button", { name: "Remove Ada Lovelace" })
-    ).toBeNull()
-    expect(
-      screen.queryByRole("button", { name: "Remove Morgan Lee" })
-    ).toBeNull()
   })
 
   it("uses direct removal for confirmed voluntary leave", async () => {

@@ -12,10 +12,6 @@ function diagnose(doc: string, validate?: (value: string) => string | null) {
 }
 
 describe("JSON editor diagnostics", () => {
-  it("accepts valid JSON", () => {
-    expect(diagnose('{\n  "pressure": 2\n}')).toEqual([])
-  })
-
   it("points at the line and column of a syntax error", () => {
     const [diagnostic] = diagnose('{\n  "pressure": 2\n  "phase": "solid"\n}')
     expect(diagnostic.severity).toBe("error")

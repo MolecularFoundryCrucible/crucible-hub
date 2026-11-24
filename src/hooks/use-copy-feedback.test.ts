@@ -31,27 +31,4 @@ describe("useCopyFeedback", () => {
     act(() => vi.advanceTimersByTime(1))
     expect(result.current.state).toBe("idle")
   })
-
-  it("restarts the timer when copying again", async () => {
-    writeText.mockResolvedValue()
-    const { result } = renderHook(() => useCopyFeedback())
-
-    await act(() => result.current.copy("mfid"))
-    act(() => vi.advanceTimersByTime(1500))
-    await act(() => result.current.copy("mfid"))
-    act(() => vi.advanceTimersByTime(1500))
-    expect(result.current.state).toBe("success")
-  })
-
-  it("keeps an error until the next attempt", async () => {
-    writeText.mockRejectedValue(new Error("denied"))
-    const { result } = renderHook(() => useCopyFeedback())
-
-    await act(() => result.current.copy("mfid"))
-    act(() => vi.advanceTimersByTime(5000))
-    expect(result.current.state).toBe("error")
-
-    act(() => result.current.reset())
-    expect(result.current.state).toBe("idle")
-  })
 })

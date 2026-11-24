@@ -34,14 +34,11 @@ describe("searchFilterAvailability", () => {
 })
 
 describe("searchAffiliation", () => {
-  it("narrows to the caller's grants unless public data is included", () => {
+  it("narrows to the caller's grants unless public data is included, prefers ownership, and ignores filters the tab cannot use", () => {
     expect(searchAffiliation("all", {}, member)).toBe("member")
     expect(searchAffiliation("all", { publicData: "include" }, member)).toBe(
       undefined
     )
-  })
-
-  it("prefers ownership and ignores filters the tab cannot use", () => {
     expect(
       searchAffiliation("instrument", { affiliation: "owner" }, member)
     ).toBe("owner")

@@ -41,7 +41,7 @@ const projectMemberRoleFilterSchema = z.enum([
   "owner",
 ])
 
-export const projectListInputSchema = z.object({
+const projectListInputSchema = z.object({
   activeSince: dateOnlySchema.optional(),
   affiliation: ownershipAffiliationSchema.optional(),
   cursor: collectionCursorSchema,
@@ -80,7 +80,7 @@ const userProjectListInputSchema = z
   })
   .strict()
 
-export const projectDetailInputSchema = z.object({
+const projectDetailInputSchema = z.object({
   privilegeMode: privilegeModeSchema,
   projectMfid: z.string().trim().min(1).max(255),
   projection: z.enum(["overview", "summary"]),
@@ -131,7 +131,7 @@ export const updateProjectMemberRoleInputSchema = z
   })
   .strict()
 
-export const removeProjectMemberInputSchema = z
+const removeProjectMemberInputSchema = z
   .object(projectMemberInputFields)
   .strict()
 

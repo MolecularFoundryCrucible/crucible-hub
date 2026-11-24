@@ -59,23 +59,12 @@ function openDialog() {
   )
 }
 
-function selectValue(label: string) {
-  return screen.getByLabelText<HTMLSelectElement>(label).value
-}
-
 describe("ResourceSiblingConfigurationAction", () => {
   afterEach(cleanup)
 
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.create.mockResolvedValue({ items: [] })
-  })
-
-  it("starts from the default and offers both project and type", () => {
-    openDialog()
-    expect(selectValue("Include")).toBe("project_subtype")
-    expect(selectValue("Order by")).toBe("created")
-    expect(selectValue("Direction")).toBe("asc")
   })
 
   it("does not change the saved default unless ticked", async () => {

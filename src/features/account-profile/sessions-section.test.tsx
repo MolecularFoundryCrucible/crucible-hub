@@ -79,16 +79,12 @@ describe("SessionsSection", () => {
   })
   afterEach(cleanup)
 
-  it("lists sessions and marks this browser", async () => {
+  it("lists sessions and signs this browser out with the Hub's own sign-out", async () => {
     renderSection()
 
     const table = await screen.findByRole("table", { name: "Sessions" })
     expect(within(table).getByText("This browser")).toBeTruthy()
     expect(within(table).getByText("nano-crucible")).toBeTruthy()
-  })
-
-  it("signs this browser out with the Hub's own sign-out", async () => {
-    renderSection()
 
     fireEvent.click(
       await screen.findByRole("button", {

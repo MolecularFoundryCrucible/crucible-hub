@@ -37,7 +37,7 @@ const nullableTextSchema = (maxLength: number) =>
 
 const timestampSchema = z.string().datetime({ offset: true }).nullable()
 
-export const projectCreateInputSchema = z
+const projectCreateInputSchema = z
   .object({
     project: z
       .object({
@@ -67,7 +67,7 @@ export const sampleCreateInputSchema = z
   })
   .strict()
 
-export const datasetCreateInputSchema = z
+const datasetCreateInputSchema = z
   .object({
     dataset: z
       .object({
