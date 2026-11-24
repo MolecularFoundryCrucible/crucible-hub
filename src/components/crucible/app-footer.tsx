@@ -52,7 +52,7 @@ export function AppFooter({ build = hubBuild, className }: AppFooterProps) {
         <div className="flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 md:justify-start">
           <a
             aria-label="Crucible"
-            className="inline-flex items-center rounded-sm py-1 transition-opacity outline-none hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex items-center rounded-sm py-1 focus-ring transition-opacity hover:opacity-80"
             href="https://crucible.lbl.gov/"
             rel="noreferrer"
             target="_blank"
@@ -67,7 +67,7 @@ export function AppFooter({ build = hubBuild, className }: AppFooterProps) {
           className="flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1"
         >
           <a
-            className="inline-flex items-center gap-1.5 rounded-sm py-1 transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex items-center gap-1.5 rounded-sm py-1 focus-ring transition-colors hover:text-foreground"
             href="https://foundry.lbl.gov/"
             rel="noreferrer"
             target="_blank"
@@ -79,7 +79,7 @@ export function AppFooter({ build = hubBuild, className }: AppFooterProps) {
             •
           </span>
           <a
-            className="inline-flex items-center gap-1.5 rounded-sm py-1 transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex items-center gap-1.5 rounded-sm py-1 focus-ring transition-colors hover:text-foreground"
             href={discordInviteUrl}
             rel="noreferrer"
             target="_blank"
@@ -91,7 +91,7 @@ export function AppFooter({ build = hubBuild, className }: AppFooterProps) {
             •
           </span>
           <a
-            className="inline-flex items-center gap-1.5 rounded-sm py-1 transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex items-center gap-1.5 rounded-sm py-1 focus-ring transition-colors hover:text-foreground"
             href={`${REPOSITORY_URL}/issues`}
             rel="noreferrer"
             target="_blank"
@@ -110,7 +110,7 @@ export function AppFooter({ build = hubBuild, className }: AppFooterProps) {
               </span>
               <a
                 aria-label={reference.label}
-                className="inline-flex items-center rounded-sm py-1 tabular-nums transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                className="inline-flex items-center rounded-sm py-1 tabular-nums focus-ring transition-colors hover:text-foreground"
                 href={reference.href}
                 rel="noreferrer"
                 target="_blank"

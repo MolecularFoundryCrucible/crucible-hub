@@ -6,6 +6,7 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- Keyboard focus on footer, section navigation, list and text links now uses the same soft 3 px ring as buttons and inputs.
 - Screen readers and voice control name the account menu button after the signed-in person ("Avery Chen account menu"), and metadata group summaries read as their visible text, meeting WCAG 2.5.3 Label in Name.
 - A page that fails to load now shows its error inside the workspace, keeping navigation and the account menu, with a reference and a Try again button; only a failure of the workspace itself shows the full-page error.
 - The Hub runs on Node.js 26 LTS (image base `node:26.13.1-bookworm-slim`); building from source needs Node.js 26.13 and npm 11.20.

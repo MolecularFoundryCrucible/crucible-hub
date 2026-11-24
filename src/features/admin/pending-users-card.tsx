@@ -97,7 +97,7 @@ function PendingUserRow({
     <li className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3 first:pt-0 last:pb-0">
       <div className="flex min-w-0 flex-col gap-1">
         <Link
-          className="min-w-0 rounded-sm outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+          className="min-w-0 rounded-sm focus-ring hover:underline"
           params={{ userId: user.unique_id }}
           to="/users/$userId"
         >

@@ -514,6 +514,10 @@
   color: var(--muted-foreground);
 }
 
+@utility focus-ring {
+  @apply outline-hidden focus-visible:ring-3 focus-visible:ring-ring/50;
+}
+
 @utility selection-marker {
   position: relative;
 

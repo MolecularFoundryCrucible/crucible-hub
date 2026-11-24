@@ -131,7 +131,7 @@ export function SystemStatusPopover({
             : "API status"
         }
         className={cn(
-          "inline-flex cursor-pointer items-center gap-1.5 rounded-sm py-1 transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring",
+          "inline-flex cursor-pointer items-center gap-1.5 rounded-sm py-1 focus-ring transition-colors hover:text-foreground",
           className
         )}
       >
