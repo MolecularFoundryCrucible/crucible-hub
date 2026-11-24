@@ -269,6 +269,10 @@
   --container-directory-split: 56rem;
   --container-table-detail: 56rem;
   --container-identity-wide: 66rem;
+  /* Directory tables show card rows below these widths; wide tables (people,
+     deletion requests) carry more columns and switch later. */
+  --container-table: 26rem;
+  --container-table-wide: 38rem;
   --transition-duration-fast: var(--motion-fast);
   --transition-duration-standard: var(--motion-standard);
   --transition-duration-deliberate: var(--motion-deliberate);
@@ -1133,14 +1137,14 @@ body {
   min-width: 38rem;
 }
 
-@container (min-width: 26rem) and (max-width: 71.999rem) {
+@container (--theme(--container-table) <= width < 72rem) {
   .resource-collection-table.has-project .resource-collection-type,
   .resource-collection-table.has-project .resource-collection-type-column {
     display: none;
   }
 }
 
-@container (min-width: 26rem) and (max-width: 55.999rem) {
+@container (--theme(--container-table) <= width < 56rem) {
   .resource-collection-table:not(.has-project) .resource-collection-type,
   .resource-collection-table:not(.has-project)
     .resource-collection-type-column {
@@ -1148,14 +1152,14 @@ body {
   }
 }
 
-@container (min-width: 26rem) and (max-width: 61.999rem) {
+@container (--theme(--container-table) <= width < 62rem) {
   .resource-collection-table.has-project .resource-collection-created,
   .resource-collection-table.has-project .resource-collection-created-column {
     display: none;
   }
 }
 
-@container (min-width: 26rem) and (max-width: 45.999rem) {
+@container (--theme(--container-table) <= width < 46rem) {
   .resource-collection-table:not(.has-project) .resource-collection-created,
   .resource-collection-table:not(.has-project)
     .resource-collection-created-column {
@@ -1163,14 +1167,14 @@ body {
   }
 }
 
-@container (min-width: 26rem) and (max-width: 47.999rem) {
+@container (--theme(--container-table) <= width < 48rem) {
   .resource-collection-table.has-project .resource-collection-owner,
   .resource-collection-table.has-project .resource-collection-owner-column {
     display: none;
   }
 }
 
-@container (min-width: 26rem) and (max-width: 35.999rem) {
+@container (--theme(--container-table) <= width < 36rem) {
   .resource-collection-table:not(.has-project) .resource-collection-owner,
   .resource-collection-table:not(.has-project)
     .resource-collection-owner-column {
@@ -1178,14 +1182,14 @@ body {
   }
 }
 
-@container (min-width: 26rem) and (max-width: 35.999rem) {
+@container (--theme(--container-table) <= width < 36rem) {
   .resource-collection-table .resource-collection-project,
   .resource-collection-table .resource-collection-project-column {
     display: none;
   }
 }
 
-@container (min-width: 72rem) {
+@container (width >= 72rem) {
   .resource-collection-table.has-type.has-project
     .resource-collection-subtype-compact
     [data-resource-context] {
@@ -1193,7 +1197,7 @@ body {
   }
 }
 
-@container (min-width: 56rem) {
+@container (width >= 56rem) {
   .resource-collection-table.has-type:not(.has-project)
     .resource-collection-subtype-compact
     [data-resource-context] {
@@ -1201,55 +1205,55 @@ body {
   }
 }
 
-@container (min-width: 26rem) and (max-width: 53.999rem) {
+@container (--theme(--container-table) <= width < 54rem) {
   .resource-directory-project-table .resource-directory-role,
   .resource-directory-project-table .resource-directory-role-column {
     display: none;
   }
 }
 
-@container (min-width: 26rem) and (max-width: 45.999rem) {
+@container (--theme(--container-table) <= width < 46rem) {
   .resource-directory-project-table .resource-directory-created,
   .resource-directory-project-table .resource-directory-created-column {
     display: none;
   }
 }
 
-@container (min-width: 26rem) and (max-width: 35.999rem) {
+@container (--theme(--container-table) <= width < 36rem) {
   .resource-directory-project-table .resource-directory-person,
   .resource-directory-project-table .resource-directory-person-column {
     display: none;
   }
 }
 
-@container (min-width: 26rem) and (max-width: 61.999rem) {
+@container (--theme(--container-table) <= width < 62rem) {
   .resource-directory-instrument-table .resource-directory-created,
   .resource-directory-instrument-table .resource-directory-created-column {
     display: none;
   }
 }
 
-@container (min-width: 26rem) and (max-width: 47.999rem) {
+@container (--theme(--container-table) <= width < 48rem) {
   .resource-directory-instrument-table .resource-directory-person,
   .resource-directory-instrument-table .resource-directory-person-column {
     display: none;
   }
 }
 
-@container (min-width: 26rem) and (max-width: 33.999rem) {
+@container (--theme(--container-table) <= width < 34rem) {
   .resource-directory-instrument-table .resource-directory-location,
   .resource-directory-instrument-table .resource-directory-location-column {
     display: none;
   }
 }
 
-@container (min-width: 38rem) and (max-width: 59.999rem) {
+@container (--theme(--container-table-wide) <= width < 60rem) {
   .identity-directory-table .identity-directory-optional {
     display: none;
   }
 }
 
-@container (min-width: 38rem) and (max-width: 43.999rem) {
+@container (--theme(--container-table-wide) <= width < 44rem) {
   .identity-directory-table .identity-directory-role,
   .identity-directory-table .identity-directory-role-column,
   .identity-directory-table .identity-directory-key,
@@ -1258,7 +1262,7 @@ body {
   }
 }
 
-@container (min-width: 38rem) and (max-width: 59.999rem) {
+@container (--theme(--container-table-wide) <= width < 60rem) {
   .deletion-request-table.has-project:not(.has-selection)
     .deletion-request-project,
   .deletion-request-table.has-project:not(.has-selection)
@@ -1267,7 +1271,7 @@ body {
   }
 }
 
-@container (min-width: 38rem) and (max-width: 63.999rem) {
+@container (--theme(--container-table-wide) <= width < 64rem) {
   .deletion-request-table.has-project.has-selection .deletion-request-project,
   .deletion-request-table.has-project.has-selection
     .deletion-request-project-column {
@@ -1275,7 +1279,7 @@ body {
   }
 }
 
-@container (min-width: 38rem) and (max-width: 45.999rem) {
+@container (--theme(--container-table-wide) <= width < 46rem) {
   .deletion-request-table:not(.deletion-audit-table):not(.has-selection)
     .deletion-request-requester,
   .deletion-request-table:not(.deletion-audit-table):not(.has-selection)
@@ -1284,21 +1288,21 @@ body {
   }
 }
 
-@container (min-width: 38rem) and (max-width: 47.999rem) {
+@container (--theme(--container-table-wide) <= width < 48rem) {
   .deletion-request-table.has-selection .deletion-request-requester,
   .deletion-request-table.has-selection .deletion-request-requester-column {
     display: none;
   }
 }
 
-@container (min-width: 38rem) and (max-width: 49.999rem) {
+@container (--theme(--container-table-wide) <= width < 50rem) {
   .deletion-audit-table .deletion-request-project,
   .deletion-audit-table .deletion-request-project-column {
     display: none;
   }
 }
 
-@container (max-width: 25.999rem) {
+@container (width < --theme(--container-table)) {
   :is(.resource-collection-table, .resource-directory-table),
   :is(.resource-collection-table, .resource-directory-table) > tbody {
     display: block;
@@ -1408,7 +1412,7 @@ body {
   }
 }
 
-@container (max-width: 37.999rem) {
+@container (width < --theme(--container-table-wide)) {
   :is(.identity-directory-table, .deletion-request-table),
   :is(.identity-directory-table, .deletion-request-table) > tbody {
     display: block;
@@ -1526,14 +1530,14 @@ body {
   }
 }
 
-@container identity (min-width: 21.75rem) and (max-width: 24.499rem) {
+@container identity (21.75rem <= width < 24.5rem) {
   .content-grid-identity-qr .mfid-qr-trigger {
     width: var(--spacing-qr-compact);
     height: var(--spacing-qr-compact);
   }
 }
 
-@container identity (max-width: 21.749rem) {
+@container identity (width < 21.75rem) {
   .content-grid-identity {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -1581,7 +1585,7 @@ body {
   width: var(--spacing-column-badge);
 }
 
-@container (min-width: 64rem) {
+@container (width >= 64rem) {
   .w-column-secondary {
     width: var(--spacing-column-secondary-max);
   }

@@ -575,6 +575,53 @@ function scan(directory) {
   }
 }
 
+function topLevelBlocks(css) {
+  const blocks = []
+  let depth = 0
+  let start = 0
+  for (let index = 0; index < css.length; index++) {
+    if (css[index] === "{") depth++
+    else if (css[index] === "}" && --depth === 0) {
+      blocks.push(css.slice(start, index + 1).trim())
+      start = index + 1
+    } else if (css[index] === ";" && depth === 0) start = index + 1
+  }
+  return blocks
+}
+
+function scanStylesheets(directory) {
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    const path = join(directory, entry.name)
+    if (entry.isDirectory()) {
+      scanStylesheets(path)
+      continue
+    }
+    if (extname(path) !== ".css") continue
+    const localPath = relative(sourceRoot, path)
+    const css = readFileSync(path, "utf8").replace(/\/\*[\s\S]*?\*\//g, "")
+    for (const block of topLevelBlocks(css)) {
+      const prelude = block.slice(0, block.indexOf("{")).trim()
+      if (/^(?::root|\.dark|@theme|@layer base|@utility)\b/.test(prelude))
+        continue
+      if (/#[0-9a-f]{3,8}\b|\b(?:rgb|hsl|oklch)a?\(/i.test(block))
+        violations.push(
+          `${localPath}: raw color outside the theme (${prelude})`
+        )
+      for (const query of block.match(/@(?:container|media)[^{]*/g) ?? []) {
+        if (/\((?:min|max)-width:/.test(query))
+          violations.push(
+            `${localPath}: ${query.trim()} uses min-width or max-width (use range syntax)`
+          )
+        if (/^@media/.test(query) && /\d(?:rem|px|em)\b/.test(query))
+          violations.push(
+            `${localPath}: ${query.trim()} uses a raw window width (use --theme(--breakpoint-*))`
+          )
+      }
+    }
+  }
+}
+
 scan(sourceRoot)
+scanStylesheets(sourceRoot)
 if (violations.length > 0)
   throw new Error(`Design-token violations:\n${violations.join("\n")}`)
