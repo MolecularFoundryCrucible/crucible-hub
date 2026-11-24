@@ -74,7 +74,7 @@ Write each Markdown paragraph or list item on one unwrapped line. Use no emojis 
 | `npm run audit`                            | Fail on high or critical npm advisories                                                                           |
 | `npm run release`                          | Stamp `CHANGELOG.md`, commit, and tag `vX.Y.Z`                                                                    |
 
-CI runs `validate:static`, the npm audit, and the skill check in one job, and `test:e2e` in a parallel job, with no retries. Specs that change shared fixture state run in serial mode. Browser specs use [`tests/fixtures.ts`](tests/fixtures.ts), which fails a test on any uncaught page error.
+CI runs `validate:static`, the npm audit, and the skill check in one job, and `test:e2e` in a parallel job, with no retries, using the Chrome preinstalled on the GitHub runner instead of downloading a browser. Specs that change shared fixture state run in serial mode. Browser specs use [`tests/fixtures.ts`](tests/fixtures.ts), which fails a test on any uncaught page error.
 
 ## Visual and runtime review
 
