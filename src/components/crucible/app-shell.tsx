@@ -144,13 +144,18 @@ export function AppShell({
   scope?: IdentityScope
 }) {
   const presentation = useViewerPresentation()
-  const location = useRouterState({
-    select: (state) => state.location,
+  const pathname = useRouterState({
+    select: (state) => state.location.pathname,
   })
-  const pathname = location.pathname
+  const projectMfid = useRouterState({
+    select: (state) =>
+      activeProjectMfid(state.location.pathname, state.location.search),
+  })
+  const dataKindSearch = useRouterState({
+    select: (state) => (state.location.search as { kind?: string }).kind,
+  })
   const deletionRequestsActive = pathname === "/deletion-requests"
   const joinRequestsActive = pathname === "/join-requests"
-  const projectMfid = activeProjectMfid(pathname, location.search)
   const [shortcuts] = useState(createDialogHandle)
   const windowClass = useWindowClass()
   useEffect(() => {
@@ -194,7 +199,7 @@ export function AppShell({
     : pathname.startsWith("/samples/")
       ? "samples"
       : pathname === "/data"
-        ? (location.search as { kind?: string }).kind === "datasets"
+        ? dataKindSearch === "datasets"
           ? "datasets"
           : "samples"
         : null
