@@ -9,23 +9,15 @@ import {
 } from "@tanstack/react-router"
 import { z } from "zod"
 
+import {
+  invalidPreviewSearchValue,
+  previewMfidSchema,
+} from "@/data/crucible/resource-preview-search"
 import { useResourceSiblingCandidate } from "./resource-sibling-navigation"
 import { useWorkspaceScope } from "./workspace-provider"
 
-const previewMfidSchema = z
-  .string()
-  .min(1)
-  .max(255)
-  .regex(/^[a-zA-Z0-9_-]+$/)
-const invalidPreviewSearchValue = ""
 export const globalDataPreviewOrigin = "global-data"
 const deletionRequestsPreviewOrigin = "deletion-requests"
-export const resourcePreviewSearchSchema = z.object({
-  preview: previewMfidSchema.optional().catch(invalidPreviewSearchValue),
-})
-export const resourceDetailSearchSchema = resourcePreviewSearchSchema.extend({
-  fromProject: previewMfidSchema.optional().catch(undefined),
-})
 const trailSchema = z.object({
   hostKind: z
     .enum([

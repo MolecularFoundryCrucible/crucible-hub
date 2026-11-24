@@ -7,9 +7,9 @@ import {
   isPlainPreviewNavigation,
   resolveResourcePreview,
   resolveResourcePreviewTrail,
-  resourcePreviewSearchSchema,
   updateResourcePreviewTrail,
 } from "./resource-preview-navigation"
+import { resourcePreviewSearchSchema } from "@/data/crucible/resource-preview-search"
 
 const origin = "01J6Y8N4Q2R7M9K3T5V0W1X2Z5"
 

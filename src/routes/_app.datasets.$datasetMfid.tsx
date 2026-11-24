@@ -1,6 +1,6 @@
 import { createFileRoute, notFound, redirect } from "@tanstack/react-router"
 
-import { resourceDetailSearchSchema } from "@/components/crucible/resource-preview-navigation"
+import { resourceDetailSearchSchema } from "@/data/crucible/resource-preview-search"
 import { EntityWorkspacePending } from "@/components/crucible/resource-tab-state"
 import {
   isResourceOverviewPath,
