@@ -1,0 +1,572 @@
+import { useMemo } from "react"
+import {
+  useInfiniteQuery,
+  useQuery,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query"
+import { Link, getRouteApi } from "@tanstack/react-router"
+import { DirectorySearchField } from "@/components/crucible/directory-search-field"
+import { RefreshButton } from "@/components/crucible/refresh-button"
+import {
+  CollectionSection,
+  CollectionToolbar,
+} from "@/components/crucible/collection-browser"
+import { MfidText } from "@/components/crucible/mfid-text"
+import { PageHeader } from "@/components/crucible/page-header"
+import { PageLayout } from "@/components/crucible/page-layout"
+import {
+  PersonIdentity,
+  personDisplayName,
+} from "@/components/crucible/person-identity"
+import { PendingRegion } from "@/components/crucible/pending-region"
+import { PlatformRoleBadge } from "@/components/crucible/platform-role-badge"
+import { Badge } from "@/components/ui/badge"
+import { ResourceCreationLink } from "@/components/crucible/resource-creation-actions"
+import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-link"
+import { SelectableTextLink } from "@/components/crucible/selectable-text-link"
+import { SortableTableHead } from "@/components/crucible/sortable-table-head"
+import { TableSortControl } from "@/components/crucible/table-sort-control"
+import type { TableSortField } from "@/components/crucible/table-sort-control"
+import {
+  useAdministrationScope,
+  useWorkspacePrivilegeMode,
+  useWorkspaceMode,
+  useWorkspaceScope,
+} from "@/components/crucible/workspace-provider"
+import { CollectionPagination } from "@/components/crucible/collection-pagination"
+import { Card, CardContent } from "@/components/ui/card"
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@/components/ui/empty"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import {
+  CollectionLoadError,
+  CollectionTablePending,
+  CollectionUpdateError,
+  CollectionUpdateStatus,
+} from "@/components/crucible/collection-state"
+import { accountQueryOptions } from "@/data/crucible/account.queries"
+import { canOpenUserAdministration } from "@/data/crucible/administration"
+import { AdministrationUnavailable } from "@/components/crucible/administrator-view-required"
+import type { SortDirection } from "@/data/crucible/collection-query"
+import { crucibleKeys } from "@/data/crucible/query-keys"
+import {
+  cursorPageTotal,
+  flattenCursorPages,
+} from "@/data/crucible/cursor-pages"
+import {
+  userAdminPageLimit,
+  usersCursorQueryOptions,
+} from "@/data/crucible/users.queries"
+import type { WorkspaceAdminUser } from "@/data/crucible/workspace-source"
+import { PendingUsersCard } from "@/features/admin/pending-users-card"
+import { UserCreateDialog } from "@/features/admin/user-create-dialog"
+import { useEnteringClassName } from "@/hooks/use-entering-keys"
+import { formatUsername } from "@/lib/username"
+import { ActivityTime } from "@/components/crucible/activity-time"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
+import {
+  userActivityFilterOptions,
+  userActivityFilters,
+} from "@/data/crucible/user-activity"
+import type { UserSortField } from "@/features/admin/users-search"
+import { apiUserSort } from "@/features/admin/users-search"
+
+const route = getRouteApi("/_app/admin/users/")
+
+const sortFields = [
+  { field: "account", label: "Account", preferredDirection: "asc" },
+  { field: "unique_id", label: "Crucible ID", preferredDirection: "asc" },
+  { field: "email", label: "Email", preferredDirection: "asc" },
+  { field: "last_active", kind: "date", label: "Last active" },
+] as const satisfies readonly TableSortField<UserSortField>[]
+
+export function UsersAdminPage() {
+  const scope = useWorkspaceScope()
+  const administrationScope = useAdministrationScope()
+  const privilegeMode = useWorkspacePrivilegeMode()
+  const mode = useWorkspaceMode()
+  const queryClient = useQueryClient()
+  const { data: account } = useSuspenseQuery(accountQueryOptions(scope))
+  const search = route.useSearch()
+  const navigate = route.useNavigate()
+  const sort = search.sort ?? "account"
+  const direction = search.direction ?? "asc"
+  const result = useInfiniteQuery(
+    usersCursorQueryOptions(administrationScope, {
+      activity: search.activity,
+      cursor: search.cursor,
+      direction,
+      includeTotal: true,
+      is_service_account: false,
+      limit: userAdminPageLimit,
+      query: search.q,
+      sort: apiUserSort(sort),
+    })
+  )
+  const users = useMemo(
+    () => flattenCursorPages(result.data?.pages),
+    [result.data]
+  )
+  const total = cursorPageTotal(result.data?.pages)
+  const updating = result.isFetching && !result.isFetchingNextPage
+  const createOpen = search.create === true
+
+  if (!canOpenUserAdministration(account, privilegeMode)) {
+    return (
+      <AdministrationUnavailable
+        account={account}
+        description="Turn on administrator view to find, create, and manage Crucible users."
+        title="Users"
+      />
+    )
+  }
+
+  function handleCreated() {
+    if (mode !== "api") return
+    void queryClient.invalidateQueries({
+      queryKey: crucibleKeys.userAdminQueries(administrationScope),
+    })
+  }
+
+  function handleSortChange(
+    nextField: UserSortField,
+    nextDirection: SortDirection
+  ) {
+    void navigate({
+      replace: true,
+      search: {
+        ...search,
+        cursor: undefined,
+        direction: nextDirection,
+        sort: nextField,
+      },
+      state: {},
+      to: "/admin/users",
+    })
+  }
+
+  function setCreateOpen(open: boolean) {
+    void navigate({
+      replace: true,
+      search: {
+        activity: search.activity,
+        create: open ? true : undefined,
+        cursor: search.cursor,
+        direction: search.direction,
+        q: search.q,
+        sort: search.sort,
+      },
+      state: {},
+      to: "/admin/users",
+    })
+  }
+
+  return (
+    <PageLayout>
+      <UsersPageHeader canCreate />
+      <PendingUsersCard scope={administrationScope} />
+      <CollectionSection>
+        <CollectionToolbar
+          actions={
+            <RefreshButton
+              label="Refresh users"
+              onClick={() => void result.refetch()}
+              refreshing={updating}
+            />
+          }
+          filters={<UserActivityFilterField />}
+          primary={<UserSearchField />}
+        />
+        {result.isPending ? (
+          <CollectionTablePending label="users" presentation="users" />
+        ) : result.isError && !result.data ? (
+          <CollectionLoadError
+            label="Users"
+            retry={() => void result.refetch()}
+          />
+        ) : (
+          <>
+            {result.isError && !result.isFetchNextPageError ? (
+              <CollectionUpdateError
+                label="Users"
+                preserved
+                retry={() => void result.refetch()}
+              />
+            ) : null}
+            <UserCollection
+              direction={direction}
+              hasNextPage={Boolean(result.hasNextPage)}
+              isLoadingMore={result.isFetchingNextPage}
+              loadMoreError={result.isFetchNextPageError}
+              onSortChange={handleSortChange}
+              onLoadMore={() => void result.fetchNextPage()}
+              query={search.q}
+              sort={sort}
+              total={total}
+              updating={updating}
+              users={users}
+            />
+          </>
+        )}
+        <UserCreateDialog
+          onCreated={handleCreated}
+          onOpenChange={setCreateOpen}
+          open={createOpen}
+          scope={administrationScope}
+        />
+      </CollectionSection>
+    </PageLayout>
+  )
+}
+
+export function UsersPending() {
+  const scope = useWorkspaceScope()
+  const privilegeMode = useWorkspacePrivilegeMode()
+  const { data: account } = useQuery(accountQueryOptions(scope))
+  return (
+    <PageLayout>
+      <UsersPageHeader
+        canCreate={
+          account ? canOpenUserAdministration(account, privilegeMode) : false
+        }
+      />
+      <CollectionSection>
+        <CollectionToolbar
+          actions={
+            <RefreshButton
+              label="Refresh users"
+              onClick={() => undefined}
+              refreshing={false}
+            />
+          }
+          filters={<UserActivityFilterField />}
+          primary={<UserSearchField />}
+        />
+        <CollectionTablePending label="users" presentation="users" />
+      </CollectionSection>
+    </PageLayout>
+  )
+}
+
+function UsersPageHeader({ canCreate }: { canCreate: boolean }) {
+  const search = route.useSearch()
+  return (
+    <PageHeader
+      divider={false}
+      actions={
+        canCreate ? (
+          <ResourceCreationLink
+            kind="person"
+            label="Create user"
+            render={
+              <Link
+                search={{
+                  create: true,
+                  cursor: undefined,
+                  direction: search.direction,
+                  q: search.q,
+                  sort: search.sort,
+                }}
+                to="/admin/users"
+              />
+            }
+          />
+        ) : null
+      }
+      title="Users"
+    />
+  )
+}
+
+function UserSearchField() {
+  const search = route.useSearch()
+  const navigate = route.useNavigate()
+
+  return (
+    <DirectorySearchField
+      label="Search users"
+      onSearch={(query) => {
+        void navigate({
+          replace: true,
+          search: {
+            activity: search.activity,
+            cursor: undefined,
+            direction: search.direction,
+            q: query,
+            sort: search.sort,
+          },
+          state: {},
+          to: "/admin/users",
+        })
+      }}
+      placeholder="Search by name, username, or email"
+      query={search.q}
+    />
+  )
+}
+
+function UserCollection({
+  direction = "asc",
+  hasNextPage,
+  isLoadingMore,
+  loadMoreError,
+  onSortChange,
+  onLoadMore,
+  query,
+  sort,
+  total,
+  updating,
+  users,
+}: {
+  direction?: SortDirection
+  hasNextPage: boolean
+  isLoadingMore: boolean
+  loadMoreError: boolean
+  onSortChange: (field: UserSortField, direction: SortDirection) => void
+  onLoadMore: () => void
+  query?: string
+  sort?: UserSortField
+  total: number | null
+  updating: boolean
+  users: readonly WorkspaceAdminUser[]
+}) {
+  const enterClassName = useEnteringClassName(
+    users.map((item) => item.unique_id)
+  )
+  return (
+    <>
+      <CollectionUpdateStatus label="users" updating={updating} />
+      {users.length > 0 ? (
+        <PendingRegion pending={updating} render={<Card />}>
+          <CardContent className="px-0">
+            <Table
+              aria-label="Users directory"
+              before={
+                <TableSortControl
+                  direction={direction}
+                  fields={sortFields}
+                  onChange={onSortChange}
+                  sort={sort}
+                />
+              }
+              className="identity-directory-table identity-users-table table-fixed"
+            >
+              <colgroup>
+                <col className="identity-directory-account-column" />
+                <col className="identity-directory-mfid-column identity-directory-optional w-column-id @identity-wide:w-column-id-wide" />
+                <col className="identity-directory-email-column w-column-secondary" />
+                <col className="identity-directory-role-column" />
+                <col className="identity-directory-activity-column" />
+                <col className="identity-directory-action-column" />
+              </colgroup>
+              <TableHeader>
+                <TableRow>
+                  <SortableTableHead
+                    active={sort === "account"}
+                    direction={direction}
+                    field="account"
+                    label="Account"
+                    onChange={onSortChange}
+                    preferredDirection="asc"
+                  />
+                  <SortableTableHead
+                    active={sort === "unique_id"}
+                    className="identity-directory-mfid identity-directory-optional"
+                    direction={direction}
+                    field="unique_id"
+                    label="Crucible ID"
+                    onChange={onSortChange}
+                    preferredDirection="asc"
+                  />
+                  <SortableTableHead
+                    active={sort === "email"}
+                    direction={direction}
+                    field="email"
+                    label="Email"
+                    onChange={onSortChange}
+                    preferredDirection="asc"
+                  />
+                  <TableHead className="identity-directory-role">
+                    Platform role
+                  </TableHead>
+                  <SortableTableHead
+                    active={sort === "last_active"}
+                    direction={direction}
+                    field="last_active"
+                    kind="date"
+                    label="Last active"
+                    onChange={onSortChange}
+                    preferredDirection="desc"
+                  />
+                  <TableHead kind="action">
+                    <span className="sr-only">Open</span>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {users.map((user) => {
+                  return (
+                    <TableRow
+                      className={enterClassName(user.unique_id)}
+                      key={user.unique_id}
+                    >
+                      <TableCell className="identity-directory-account">
+                        <PersonIdentity
+                          className="min-w-0"
+                          nameContent={
+                            <span className="flex min-w-0 items-center gap-2">
+                              <SelectableTextLink
+                                className="block truncate"
+                                render={
+                                  <Link
+                                    params={{ userId: user.unique_id }}
+                                    to="/users/$userId"
+                                  />
+                                }
+                              >
+                                {personDisplayName(user)}
+                              </SelectableTextLink>
+                              {user.disabled_at ? (
+                                <Badge className="shrink-0" variant="muted">
+                                  Disabled
+                                </Badge>
+                              ) : null}
+                            </span>
+                          }
+                          person={user}
+                          presentation="avatar"
+                          size="sm"
+                        />
+                      </TableCell>
+                      <TableCell
+                        className="identity-directory-mfid identity-directory-optional"
+                        data-label="Crucible ID"
+                      >
+                        <MfidText
+                          className="block truncate"
+                          title={user.unique_id}
+                          value={user.unique_id}
+                        />
+                      </TableCell>
+                      <TableCell
+                        className="identity-directory-email"
+                        data-label="Email"
+                      >
+                        {user.email ? (
+                          <span className="block truncate text-body">
+                            {user.email}
+                          </span>
+                        ) : (
+                          <span className="text-body text-muted-foreground">
+                            None
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell
+                        className="identity-directory-role"
+                        data-label="Platform role"
+                      >
+                        {user.platform_role ? (
+                          <PlatformRoleBadge role={user.platform_role} />
+                        ) : (
+                          <span className="text-body text-muted-foreground">
+                            None
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell
+                        className="identity-directory-activity"
+                        data-label="Last active"
+                        kind="date"
+                      >
+                        <ActivityTime
+                          fallback="Never"
+                          value={user.last_active_at}
+                        />
+                      </TableCell>
+                      <TableCell
+                        kind="action"
+                        className="identity-directory-action"
+                      >
+                        <ResourceFullPageLink
+                          kind="user"
+                          mfid={user.unique_id}
+                          name={formatUsername(user.username, "raw")}
+                          presentation="table"
+                        />
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </PendingRegion>
+      ) : (
+        <PendingRegion
+          pending={updating}
+          render={<Empty className="min-h-state border" />}
+        >
+          <EmptyHeader>
+            <EmptyTitle>No users found</EmptyTitle>
+            {query ? (
+              <EmptyDescription>No users match this search.</EmptyDescription>
+            ) : null}
+          </EmptyHeader>
+        </PendingRegion>
+      )}
+      {users.length ? (
+        <CollectionPagination
+          disabled={updating}
+          hasNextPage={hasNextPage}
+          isError={loadMoreError}
+          isLoading={isLoadingMore}
+          label="users"
+          loaded={users.length}
+          onLoadMore={onLoadMore}
+          total={total}
+        />
+      ) : null}
+    </>
+  )
+}
+
+function UserActivityFilterField() {
+  const search = route.useSearch()
+  const navigate = route.useNavigate()
+  return (
+    <NativeSelect
+      aria-label="Activity"
+      onChange={(event) => {
+        const activity = userActivityFilters.find(
+          (filter) => filter === event.target.value
+        )
+        void navigate({
+          replace: true,
+          search: { ...search, activity, cursor: undefined },
+          state: {},
+          to: "/admin/users",
+        })
+      }}
+      value={search.activity ?? ""}
+    >
+      {userActivityFilterOptions.map((option) => (
+        <NativeSelectOption key={option.value} value={option.value}>
+          {option.label}
+        </NativeSelectOption>
+      ))}
+    </NativeSelect>
+  )
+}
