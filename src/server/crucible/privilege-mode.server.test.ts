@@ -1,9 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import {
-  clearLegacyPrivilegeModeCookie,
-  writeGlobalPrivilegeMode,
-} from "./privilege-mode.server"
+import { clearLegacyPrivilegeModeCookie } from "./privilege-mode-cookie.server"
+import { writeGlobalPrivilegeMode } from "./privilege-mode.server"
 import { startRequestScope } from "@/test/start-request"
 
 function runWithRequest(request: Request, fn: () => Promise<void>) {

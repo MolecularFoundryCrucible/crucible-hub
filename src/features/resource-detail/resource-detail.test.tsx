@@ -27,7 +27,7 @@ import {
   DatasetFiles,
   FilesTable,
 } from "@/features/dataset-files/dataset-files-card"
-import { InspectorDatasetThumbnails } from "@/features/resource-inspector/resource-inspector"
+import { InspectorDatasetThumbnails } from "@/features/resource-inspector/inspector-dataset-thumbnails"
 
 import {
   isResourceOverviewPath,

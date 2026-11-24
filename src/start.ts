@@ -9,6 +9,9 @@ import { setResponseHeader } from "@tanstack/react-start/server"
 const hubAuth = createServerOnlyFn(
   () => import("./server/crucible/hub-auth.server")
 )
+const hubAuthConfig = createServerOnlyFn(
+  () => import("./server/crucible/hub-auth-config.server")
+)
 
 const correlationMiddleware = createMiddleware().server(async ({ next }) => {
   const correlationId = crypto.randomUUID()
@@ -19,7 +22,7 @@ const csrfMiddleware = createCsrfMiddleware({
   filter: ({ request }) => !["GET", "HEAD", "OPTIONS"].includes(request.method),
   origin: async (origin, { request }) => {
     if (process.env.HUB_DATA_SOURCE === "hub-auth") {
-      const { hubAuthPublicOrigin } = await hubAuth()
+      const { hubAuthPublicOrigin } = await hubAuthConfig()
       return origin === hubAuthPublicOrigin()
     }
     return origin === new URL(request.url).origin

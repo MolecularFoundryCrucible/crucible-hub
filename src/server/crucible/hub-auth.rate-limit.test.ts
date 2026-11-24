@@ -1,9 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import {
-  enforceHubLoginRateLimit,
-  HubLoginRateLimitError,
-} from "./hub-auth.server"
+import { enforceHubLoginRateLimit } from "./hub-auth.server"
+import { HubLoginRateLimitError } from "./hub-auth-errors.server"
 import { startRequestScope } from "@/test/start-request"
 
 function attempt(ip: string): Promise<void> {

@@ -3,13 +3,9 @@ import { useViewerPresentation } from "@/hooks/use-viewer-presentation"
 import { useWindowClass } from "@/hooks/use-window-class"
 import { useQuery } from "@tanstack/react-query"
 import { Link, useRouterState } from "@tanstack/react-router"
-
 import { AppFooter } from "@/components/crucible/app-footer"
-import { BrandMark } from "@/components/crucible/brand-mark"
 import {
   AdministratorViewProvider,
-  AdministratorViewStatus,
-  useAdministratorViewControl,
   useOptionalAdministratorViewControl,
 } from "@/components/crucible/administrator-view-control"
 import {
@@ -18,73 +14,34 @@ import {
   useInspectorPane,
 } from "@/components/crucible/inspector-pane"
 import { PendingRegion } from "@/components/crucible/pending-region"
-import { Reveal } from "@/components/crucible/reveal"
-import { useEnteringKeys } from "@/hooks/use-entering-keys"
-import { enterMotionClassName } from "@/lib/motion"
 import {
   readDocumentCookies,
   writePresentationCookie,
 } from "@/lib/viewer-presentation"
 import { windowClassCookie } from "@/lib/window-class"
 import { CreateMenu } from "@/components/crucible/create-menu"
-import { GlobalSearch } from "@/components/crucible/global-search"
+import { KeyboardShortcuts } from "@/components/crucible/keyboard-shortcuts"
 import {
-  KeyboardShortcuts,
-  KeyboardShortcutsTrigger,
-} from "@/components/crucible/keyboard-shortcuts"
-import {
-  PersonIdentity,
-  personDisplayName,
-} from "@/components/crucible/person-identity"
-import {
-  AccountIcon,
-  AdministratorViewDisabledIcon,
-  AdministratorViewEnabledIcon,
-  CollapseSidebarIcon,
-  PreferencesIcon,
   CreateResourceIcon,
   DeletionRequestsIcon,
   JoinRequestsIcon,
-  ExpandSidebarIcon,
-  RecentResourcesIcon,
-  SignOutIcon,
-  ThemeIcon,
   WorkspaceIcon,
 } from "@/components/crucible/icons"
 import {
   DataCollectionIcon,
-  PrincipalTypeIcon,
   ResourceTypeIcon,
 } from "@/components/crucible/resource-type-icon"
 import { ResourceSiblingNavigationProvider } from "@/components/crucible/resource-sibling-navigation"
 import { SessionTabSync } from "@/components/crucible/session-tab-sync"
 import { TimeZoneSync } from "@/components/crucible/time-zone-sync"
-import { useAccountPreferencesEnabled } from "@/components/crucible/workspace-provider"
-import { PendingUsersBadge } from "@/components/crucible/pending-users-badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { createDialogHandle } from "@/components/ui/dialog"
-import type { DialogHandle } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuSubmitItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
-  SidebarHeader,
   SidebarInset,
   SidebarMenu,
   SidebarMenuAction,
@@ -99,36 +56,28 @@ import {
   SidebarRail,
   SidebarSeparator,
   SidebarTrigger,
-  useSidebar,
 } from "@/components/ui/sidebar"
-import { Switch } from "@/components/ui/switch"
 import type { Workspace } from "@/data/crucible/workspace-source"
 import type { WorkspacePrivilegeMode } from "@/data/crucible/privilege-mode"
-import {
-  canOpenPlatformAdministration,
-  canOpenServiceAccountAdministration,
-  canUseAdministratorView,
-} from "@/data/crucible/administration"
+import { canUseAdministratorView } from "@/data/crucible/administration"
 import { pendingDeletionRequestsCountQueryOptions } from "@/data/crucible/deletion-requests.queries"
 import { pendingJoinRequestsCountQueryOptions } from "@/data/crucible/join-requests.queries"
 import { identityScope } from "@/data/crucible/query-keys"
 import type { IdentityScope } from "@/data/crucible/query-keys"
-import {
-  projectQueryOptions,
-  projectSummaryQueryOptions,
-} from "@/data/crucible/projects.queries"
 import { DockedPreviewPane } from "@/features/resource-inspector/docked-preview-pane"
 import { switchDataKind } from "@/features/data/data-filter-state"
-import {
-  RecentlyViewedScope,
-  useRecentlyViewed,
-} from "@/features/recently-viewed/recently-viewed"
-import type { RecentlyViewedResource } from "@/features/recently-viewed/recently-viewed"
-import { useThemePreference } from "@/hooks/theme-preference"
+import { RecentlyViewedScope } from "@/features/recently-viewed/recently-viewed"
 import { useAccountPreferences } from "@/hooks/use-account-preferences"
-import { resourceDisplayName } from "@/lib/resource-name"
 
-const sidebarRecentLimit = 4
+import {
+  AccountControls,
+  SidebarBrand,
+  SidebarUtilities,
+  SidebarAdministratorViewControl,
+  SidebarAdministrationLinks,
+} from "./sidebar-sections"
+import { SidebarRecentResources } from "./sidebar-recent-resources"
+import { AppSearch, activeProjectMfid } from "./project-context-search"
 
 export function AppShell({
   account,
@@ -558,447 +507,6 @@ export function AppShell({
   )
 }
 
-function AccountControls({
-  account,
-  sessionAuth,
-}: {
-  account: Workspace["account"]
-  sessionAuth: boolean
-}) {
-  const preferencesEnabled = useAccountPreferencesEnabled()
-  return (
-    <div className="ml-auto flex items-center gap-2">
-      <AdministratorViewStatus />
-      <div className="border-l pl-3">
-        {sessionAuth ? (
-          <form action="/hub/auth/logout" id="hub-sign-out" method="post" />
-        ) : null}
-        <DropdownMenu>
-          <DropdownMenuTrigger render={<Button size="lg" variant="ghost" />}>
-            <span aria-hidden="true" className="contents">
-              <PersonIdentity
-                detailsClassName="hidden md:grid"
-                person={account}
-                presentation="avatar"
-                size="sm"
-              />
-            </span>
-            <span className="sr-only">
-              {personDisplayName(account)} account menu
-            </span>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="min-w-56">
-            <DropdownMenuGroup>
-              <DropdownMenuLabel>Account</DropdownMenuLabel>
-              <DropdownMenuItem render={<Link to="/account" />}>
-                <AccountIcon />
-                My profile
-              </DropdownMenuItem>
-              {preferencesEnabled ? (
-                <DropdownMenuItem render={<Link to="/preferences" />}>
-                  <PreferencesIcon />
-                  Preferences
-                </DropdownMenuItem>
-              ) : null}
-              {sessionAuth ? (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuSubmitItem
-                    form="hub-sign-out"
-                    variant="destructive"
-                  >
-                    <SignOutIcon aria-hidden="true" />
-                    Sign out
-                  </DropdownMenuSubmitItem>
-                </>
-              ) : null}
-            </DropdownMenuGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    </div>
-  )
-}
-
-function SidebarRecentResources() {
-  const items = useRecentlyViewed().slice(0, sidebarRecentLimit)
-  const entering = useEnteringKeys(
-    items.map((item) => `${item.kind}:${item.uniqueId}`)
-  )
-  const { isMobile, state } = useSidebar()
-
-  if (items.length === 0) return null
-
-  const collapsed = !isMobile && state === "collapsed"
-  if (collapsed) {
-    return (
-      <SidebarGroup>
-        <SidebarGroupContent>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <DropdownMenu>
-                <DropdownMenuTrigger
-                  render={
-                    <SidebarMenuButton
-                      aria-label="Recently viewed"
-                      tooltip="Recently viewed"
-                    />
-                  }
-                >
-                  <RecentResourcesIcon aria-hidden="true" />
-                  <span>Recent</span>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="start"
-                  className="w-(--sidebar-width)"
-                  side="right"
-                >
-                  <DropdownMenuGroup>
-                    <DropdownMenuLabel>Recently viewed</DropdownMenuLabel>
-                    {items.map((item) => (
-                      <DropdownMenuItem
-                        key={`${item.kind}:${item.uniqueId}`}
-                        render={recentResourceLink(item)}
-                      >
-                        <ResourceTypeIcon type={item.kind} />
-                        <span className="truncate">
-                          {resourceDisplayName(item.kind, item.name, {
-                            mfid: item.uniqueId,
-                          })}
-                        </span>
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuGroup>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
-    )
-  }
-
-  return (
-    <SidebarGroup>
-      <SidebarGroupLabel>Recent</SidebarGroupLabel>
-      <SidebarGroupContent>
-        <SidebarMenu>
-          {items.map((item) => (
-            <SidebarMenuItem
-              className={
-                entering.has(`${item.kind}:${item.uniqueId}`)
-                  ? enterMotionClassName
-                  : undefined
-              }
-              key={`${item.kind}:${item.uniqueId}`}
-            >
-              <SidebarMenuButton
-                render={recentResourceLink(item)}
-                tooltip={resourceDisplayName(item.kind, item.name, {
-                  mfid: item.uniqueId,
-                })}
-              >
-                <ResourceTypeIcon type={item.kind} />
-                <span>
-                  {resourceDisplayName(item.kind, item.name, {
-                    mfid: item.uniqueId,
-                  })}
-                </span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-      </SidebarGroupContent>
-    </SidebarGroup>
-  )
-}
-
-function recentResourceLink(item: RecentlyViewedResource) {
-  const ariaLabel = `Open ${item.kind}: ${resourceDisplayName(item.kind, item.name, { mfid: item.uniqueId })}`
-  if (item.kind === "project") {
-    return (
-      <Link
-        aria-label={ariaLabel}
-        params={{ projectMfid: item.uniqueId }}
-        search={{ preview: undefined }}
-        state={{}}
-        to="/projects/$projectMfid"
-      />
-    )
-  }
-  if (item.kind === "instrument") {
-    return (
-      <Link
-        aria-label={ariaLabel}
-        params={{ instrumentMfid: item.uniqueId }}
-        search={{}}
-        state={{}}
-        to="/instruments/$instrumentMfid"
-      />
-    )
-  }
-  if (item.kind === "sample") {
-    return (
-      <Link
-        aria-label={ariaLabel}
-        params={{ sampleMfid: item.uniqueId }}
-        to="/samples/$sampleMfid"
-      />
-    )
-  }
-  return (
-    <Link
-      aria-label={ariaLabel}
-      params={{ datasetMfid: item.uniqueId }}
-      to="/datasets/$datasetMfid"
-    />
-  )
-}
-
-function AppSearch({
-  preferFullProject,
-  projectMfid,
-  scope,
-}: {
-  preferFullProject: boolean
-  projectMfid?: string
-  scope?: IdentityScope
-}) {
-  if (!projectMfid || !scope) return <GlobalSearch scope={scope} />
-  return (
-    <ProjectContextSearch
-      preferFullProject={preferFullProject}
-      projectMfid={projectMfid}
-      scope={scope}
-    />
-  )
-}
-
-function ProjectContextSearch({
-  preferFullProject,
-  projectMfid,
-  scope,
-}: {
-  preferFullProject: boolean
-  projectMfid: string
-  scope: IdentityScope
-}) {
-  return preferFullProject ? (
-    <ProjectContextSearchOverview projectMfid={projectMfid} scope={scope} />
-  ) : (
-    <ProjectContextSearchSummary projectMfid={projectMfid} scope={scope} />
-  )
-}
-
-function ProjectContextSearchOverview({
-  projectMfid,
-  scope,
-}: {
-  projectMfid: string
-  scope: IdentityScope
-}) {
-  const { data: project } = useQuery(projectQueryOptions(scope, projectMfid))
-  return (
-    <ProjectSearchAction
-      project={project}
-      projectMfid={projectMfid}
-      scope={scope}
-    />
-  )
-}
-
-function ProjectContextSearchSummary({
-  projectMfid,
-  scope,
-}: {
-  projectMfid: string
-  scope: IdentityScope
-}) {
-  const { data: project } = useQuery(
-    projectSummaryQueryOptions(scope, projectMfid)
-  )
-  return (
-    <ProjectSearchAction
-      project={project}
-      projectMfid={projectMfid}
-      scope={scope}
-    />
-  )
-}
-
-function ProjectSearchAction({
-  project,
-  projectMfid,
-  scope,
-}: {
-  project?: { project_id: string; title?: string | null } | null
-  projectMfid: string
-  scope: IdentityScope
-}) {
-  return (
-    <GlobalSearch
-      projectMfid={projectMfid}
-      projectName={
-        project
-          ? resourceDisplayName("project", project.title, {
-              identifier: project.project_id,
-              mfid: projectMfid,
-            })
-          : undefined
-      }
-      scope={scope}
-    />
-  )
-}
-
-function activeProjectMfid(pathname: string, search: Record<string, unknown>) {
-  const routeProjectMfid = pathname.match(/^\/projects\/([^/]+)/)?.[1]
-  if (routeProjectMfid) return routeProjectMfid
-
-  const contextualProjectMfid =
-    pathname === "/search"
-      ? search.projectMfid
-      : /^\/(datasets|samples)\/[^/]+/.test(pathname)
-        ? search.fromProject
-        : undefined
-  return typeof contextualProjectMfid === "string"
-    ? contextualProjectMfid
-    : undefined
-}
-
-function SidebarBrand() {
-  return (
-    <SidebarHeader className="h-14 justify-center">
-      <SidebarMenu>
-        <SidebarMenuItem>
-          <SidebarMenuButton
-            size="lg"
-            tooltip="Crucible Hub"
-            render={<Link aria-label="Crucible Hub" to="/" />}
-          >
-            <BrandMark className="overflow-hidden rounded-md" />
-            <span className="truncate text-brand">Crucible Hub</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      </SidebarMenu>
-    </SidebarHeader>
-  )
-}
-
-function SidebarUtilities({ shortcuts }: { shortcuts: DialogHandle }) {
-  const { isMobile, state, toggleSidebar } = useSidebar()
-  const { setTheme, theme } = useThemePreference()
-  const expanded = state === "expanded"
-
-  return (
-    <SidebarFooter>
-      <SidebarMenu>
-        <SidebarMenuItem>
-          <KeyboardShortcutsTrigger handle={shortcuts} />
-        </SidebarMenuItem>
-        <SidebarMenuItem>
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={<SidebarMenuButton aria-label="Theme" tooltip="Theme" />}
-            >
-              <ThemeIcon aria-hidden="true" />
-              <span>Theme</span>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="start"
-              className="w-auto min-w-40"
-              side={isMobile ? "top" : "right"}
-            >
-              <DropdownMenuGroup>
-                <DropdownMenuLabel>Theme</DropdownMenuLabel>
-                <DropdownMenuRadioGroup
-                  onValueChange={(value) => {
-                    if (
-                      value === "system" ||
-                      value === "light" ||
-                      value === "dark"
-                    ) {
-                      setTheme(value)
-                    }
-                  }}
-                  value={theme}
-                >
-                  <DropdownMenuRadioItem value="system">
-                    System
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="light">
-                    Light
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="dark">
-                    Dark
-                  </DropdownMenuRadioItem>
-                </DropdownMenuRadioGroup>
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </SidebarMenuItem>
-        {isMobile ? null : (
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              onClick={toggleSidebar}
-              tooltip={expanded ? "Collapse navigation" : "Expand navigation"}
-            >
-              {expanded ? (
-                <CollapseSidebarIcon aria-hidden="true" />
-              ) : (
-                <ExpandSidebarIcon aria-hidden="true" />
-              )}
-              <span>
-                {expanded ? "Collapse navigation" : "Expand navigation"}
-              </span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        )}
-      </SidebarMenu>
-    </SidebarFooter>
-  )
-}
-
-function SidebarAdministratorViewControl() {
-  const { isMobile, state } = useSidebar()
-  const { active, pending, setActive } = useAdministratorViewControl()
-  const expanded = isMobile || state === "expanded"
-  const Icon = active
-    ? AdministratorViewEnabledIcon
-    : AdministratorViewDisabledIcon
-
-  if (!expanded) {
-    return (
-      <SidebarMenuButton
-        aria-label="Administrator view"
-        aria-busy={pending || undefined}
-        aria-pressed={active}
-        onClick={() => setActive(!active)}
-        tooltip={active ? "Administrator view on" : "Administrator view off"}
-        variant={active ? "warning" : "default"}
-      >
-        <Icon aria-hidden="true" />
-        <span>Administrator view</span>
-      </SidebarMenuButton>
-    )
-  }
-
-  return (
-    <label className="flex h-8 cursor-pointer items-center gap-2 rounded-md px-2 text-body">
-      <Icon aria-hidden="true" className="size-4 shrink-0" />
-      <span className="min-w-0 flex-1 truncate">Administrator view</span>
-      <Switch
-        aria-label="Administrator view"
-        aria-busy={pending || undefined}
-        checked={active}
-        onCheckedChange={setActive}
-        size="sm"
-        variant="warning"
-      />
-    </label>
-  )
-}
-
 function PreviewPaneInset({ children }: { children: React.ReactNode }) {
   const pane = useInspectorPane()
   return (
@@ -1018,84 +526,5 @@ function AppMain({ children }: { children: React.ReactNode }) {
     >
       {children}
     </PendingRegion>
-  )
-}
-
-/**
- * Administration links follow the requested mode, so they slide in or out with
- * the switch; they stay inert until the switch completes.
- */
-function SidebarAdministrationLinks({
-  account,
-  pathname,
-  privilegeMode,
-}: {
-  account: Workspace["account"]
-  pathname: string
-  privilegeMode: WorkspacePrivilegeMode
-}) {
-  const control = useOptionalAdministratorViewControl()
-  const mode: WorkspacePrivilegeMode = control
-    ? control.active
-      ? "elevated"
-      : "normal"
-    : privilegeMode
-  const pending = control?.pending
-  return (
-    <Reveal
-      open={
-        canOpenPlatformAdministration(account, mode) ||
-        canOpenServiceAccountAdministration(account, mode)
-      }
-      render={<li className="list-none" />}
-    >
-      <SidebarMenu inert={pending || undefined}>
-        {canOpenPlatformAdministration(account, mode) ? (
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              isActive={pathname.startsWith("/admin/users")}
-              tooltip="Users"
-              render={
-                <Link
-                  aria-current={
-                    pathname.startsWith("/admin/users") ? "page" : undefined
-                  }
-                  preload={false}
-                  to="/admin/users"
-                />
-              }
-            >
-              <PrincipalTypeIcon type="user" />
-              <span>Users</span>
-            </SidebarMenuButton>
-            <PendingUsersBadge
-              enabled={privilegeMode === "elevated" && !pending}
-            />
-          </SidebarMenuItem>
-        ) : null}
-        {canOpenServiceAccountAdministration(account, mode) ? (
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              isActive={pathname.startsWith("/admin/service-accounts")}
-              tooltip="Service accounts"
-              render={
-                <Link
-                  aria-current={
-                    pathname.startsWith("/admin/service-accounts")
-                      ? "page"
-                      : undefined
-                  }
-                  preload={false}
-                  to="/admin/service-accounts"
-                />
-              }
-            >
-              <PrincipalTypeIcon type="service_account" />
-              <span>Service accounts</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        ) : null}
-      </SidebarMenu>
-    </Reveal>
   )
 }

@@ -1,61 +1,33 @@
 import {
-  PendingName,
   CollectionUpdateStatus,
   PanelState,
   PanelUpdateError,
 } from "@/components/crucible/collection-state"
-import { useEffect, useId, useMemo, useRef, useState } from "react"
-import type { MouseEventHandler, ReactNode } from "react"
+import { useEffect, useRef, useState } from "react"
+import type { MouseEventHandler } from "react"
 import { useQuery } from "@tanstack/react-query"
-
 import { Disclosure, DisclosureSummary } from "@/components/crucible/disclosure"
 import {
   BackPreviewIcon,
   CloseInspectorIcon,
   DisclosureIcon,
-  NextSiblingIcon,
-  PreviousSiblingIcon,
 } from "@/components/crucible/icons"
-import { DatasetThumbnailImage } from "@/components/crucible/dataset-thumbnail"
-import { IdentityFieldIcon } from "@/components/crucible/identity-field-icon"
 import { useInspectorPane } from "@/components/crucible/inspector-pane"
-import {
-  COLLAPSED_LIST_LIMIT,
-  ListExpansionToggle,
-  revealedRowClassName,
-} from "@/components/crucible/list-expansion-toggle"
-import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { MfidValue } from "@/components/crucible/mfid-value"
-import { personIsServiceAccount } from "@/components/crucible/person-identity"
-import { PersonLink } from "@/components/crucible/person-link"
 import { PendingRegion } from "@/components/crucible/pending-region"
-import { ResourceIdentity } from "@/components/crucible/resource-identity"
-import { ResourceIdentityLink } from "@/components/crucible/resource-identity-link"
-import {
-  ResourceList,
-  ResourceListItem,
-  ResourceListItemContent,
-} from "@/components/crucible/resource-list"
 import { ResourceRelationships } from "@/components/crucible/resource-relationships"
 import { ResourceFullPageLink } from "@/components/crucible/resource-full-page-link"
 import { ResourcePreviewLink } from "@/components/crucible/resource-preview-navigation"
 import type { ResourcePreviewNavigation } from "@/components/crucible/resource-preview-navigation"
 import { ResourceDeletionRequestBadge } from "@/components/crucible/resource-deletion-request-badge"
-import { StatusBadge } from "@/components/crucible/status-badge"
 import { ResourceTypeIcon } from "@/components/crucible/resource-type-icon"
 import { ScientificMetadata } from "@/components/crucible/scientific-metadata"
-import {
-  SummaryFieldIcon,
-  SummaryFieldItem,
-} from "@/components/crucible/summary-field-icon"
-import { VisibilityBadge } from "@/components/crucible/visibility-badge"
 import {
   useWorkspaceMode,
   useWorkspaceScope,
 } from "@/components/crucible/workspace-provider"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { TruncatedText } from "@/components/ui/truncation-tooltip"
-import { ButtonGroup } from "@/components/ui/button-group"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Sheet,
@@ -66,12 +38,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
-import {
-  datasetFilesQueryOptions,
-  datasetThumbnailsQueryOptions,
-  resourceQueryOptions,
-} from "@/data/crucible/resources.queries"
+import { resourceQueryOptions } from "@/data/crucible/resources.queries"
 import { HubApiClientError } from "@/data/crucible/result"
 import type {
   WorkspaceResourceDetail,
@@ -87,19 +54,21 @@ import {
   InspectorInstrumentOverview,
   InspectorProjectOverview,
 } from "@/features/resource-inspector/inspector-overview"
-import { FileDownloadAction } from "@/features/dataset-files/dataset-files-card"
 import { ResourceDeletionRequestCard } from "@/features/resource-deletion/resource-deletion-request"
 import { PrintLabelButton } from "@/features/label-printing/print-label-dialog"
-import { formatBytes } from "@/lib/format"
 import { windowClassAtLeast } from "@/lib/window-class"
 import { resourceDisplayName } from "@/lib/resource-name"
 import { cn } from "@/lib/utils"
 
-const INSPECTOR_THUMBNAIL_PAGE_SIZE = 2
-const fileNameCollator = new Intl.Collator(undefined, {
-  numeric: true,
-  sensitivity: "base",
-})
+import {
+  InspectorDatasetThumbnails,
+  InspectorThumbnailsPending,
+} from "./inspector-dataset-thumbnails"
+import {
+  InspectorDatasetFiles,
+  InspectorFilesPending,
+} from "./inspector-dataset-files"
+import { InspectorContext } from "./inspector-context"
 
 export function ResourceInspector({
   navigation,
@@ -630,537 +599,6 @@ function InspectorBodyPending({
       ) : null}
     </div>
   )
-}
-
-export function InspectorDatasetThumbnails({
-  datasetMfid,
-}: {
-  datasetMfid: string
-}) {
-  const scope = useWorkspaceScope()
-  const [hydrated, setHydrated] = useState(false)
-  const [pageStart, setPageStart] = useState(0)
-  const thumbnailsResult = useQuery({
-    ...datasetThumbnailsQueryOptions(scope, datasetMfid),
-    enabled: hydrated,
-  })
-  const thumbnails = thumbnailsResult.data
-
-  useEffect(() => setHydrated(true), [])
-  useEffect(() => setPageStart(0), [datasetMfid])
-
-  const total = thumbnails?.length ?? 0
-  const hasMultiplePages = total > INSPECTOR_THUMBNAIL_PAGE_SIZE
-  const maxPageStart =
-    total > 0
-      ? Math.floor((total - 1) / INSPECTOR_THUMBNAIL_PAGE_SIZE) *
-        INSPECTOR_THUMBNAIL_PAGE_SIZE
-      : 0
-  const activeStart = Math.min(pageStart, maxPageStart)
-  const visibleThumbnails =
-    thumbnails?.slice(
-      activeStart,
-      activeStart + INSPECTOR_THUMBNAIL_PAGE_SIZE
-    ) ?? []
-  const rangeStart = activeStart + 1
-  const rangeEnd = activeStart + visibleThumbnails.length
-  const rangeLabel =
-    rangeStart === rangeEnd
-      ? `${rangeStart} of ${total}`
-      : `${rangeStart}-${rangeEnd} of ${total}`
-  const canShowPrevious = activeStart > 0
-  const canShowNext = activeStart + INSPECTOR_THUMBNAIL_PAGE_SIZE < total
-
-  return (
-    <section
-      aria-labelledby="inspector-thumbnails-heading"
-      className="border-t pt-4"
-    >
-      <div className="mb-3 flex min-w-0 items-center justify-between gap-2">
-        <h3 className="text-title-section" id="inspector-thumbnails-heading">
-          Thumbnails
-        </h3>
-        {hasMultiplePages ? (
-          <div className="flex shrink-0 items-center gap-2">
-            <span className="text-supporting text-muted-foreground tabular-nums">
-              {rangeLabel}
-            </span>
-            <ButtonGroup aria-label="Thumbnail navigation">
-              <Button
-                aria-label="Previous thumbnails"
-                disabled={!canShowPrevious}
-                onClick={() =>
-                  setPageStart(
-                    Math.max(0, activeStart - INSPECTOR_THUMBNAIL_PAGE_SIZE)
-                  )
-                }
-                size="icon-sm"
-                type="button"
-                variant="ghost"
-              >
-                <PreviousSiblingIcon aria-hidden="true" />
-              </Button>
-              <Button
-                aria-label="Next thumbnails"
-                disabled={!canShowNext}
-                onClick={() =>
-                  setPageStart(
-                    Math.min(
-                      maxPageStart,
-                      activeStart + INSPECTOR_THUMBNAIL_PAGE_SIZE
-                    )
-                  )
-                }
-                size="icon-sm"
-                type="button"
-                variant="ghost"
-              >
-                <NextSiblingIcon aria-hidden="true" />
-              </Button>
-            </ButtonGroup>
-          </div>
-        ) : null}
-      </div>
-      {!hydrated || thumbnailsResult.isPending ? (
-        <InspectorThumbnailRowsPending />
-      ) : thumbnails !== undefined ? (
-        <div aria-busy={thumbnailsResult.isFetching} className="grid gap-3">
-          {thumbnailsResult.isError ? (
-            <PanelUpdateError
-              description="Thumbnails could not be refreshed. Showing the last available data."
-              retry={() => void thumbnailsResult.refetch()}
-            />
-          ) : null}
-          {thumbnails.length ? (
-            <ul className="grid gap-3 @fields:grid-cols-2">
-              {visibleThumbnails.map((thumbnail) => (
-                <li className="min-w-0" key={thumbnail.id}>
-                  <div className="overflow-hidden rounded-lg border bg-muted/20">
-                    <DatasetThumbnailImage
-                      alt={thumbnail.thumbnail_name}
-                      className="aspect-video w-full bg-card object-contain"
-                      loading="lazy"
-                      thumbnail={thumbnail}
-                      title={thumbnail.thumbnail_name}
-                    />
-                  </div>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-body text-muted-foreground">No thumbnails</p>
-          )}
-        </div>
-      ) : (
-        <PanelState
-          retry={() => void thumbnailsResult.refetch()}
-          role="alert"
-          title="Thumbnails could not be loaded"
-        />
-      )}
-    </section>
-  )
-}
-
-function InspectorThumbnailsPending() {
-  return (
-    <section className="border-t pt-4">
-      <h3 className="mb-3 text-title-section">Thumbnails</h3>
-      <InspectorThumbnailRowsPending />
-    </section>
-  )
-}
-
-function InspectorThumbnailRowsPending() {
-  return (
-    <div className="grid gap-3 @fields:grid-cols-2">
-      {Array.from({ length: INSPECTOR_THUMBNAIL_PAGE_SIZE }, (_, index) => (
-        <Skeleton className="aspect-video w-full rounded-lg" key={index} />
-      ))}
-    </div>
-  )
-}
-
-function InspectorDatasetFiles({ datasetMfid }: { datasetMfid: string }) {
-  const scope = useWorkspaceScope()
-  const listId = useId()
-  const [expanded, setExpanded] = useState(false)
-  const filesResult = useQuery(datasetFilesQueryOptions(scope, datasetMfid))
-  const files = filesResult.data
-  const identity = JSON.stringify(scope)
-  const scenario = fixtureScenarioFromScope(scope)
-
-  useEffect(() => setExpanded(false), [datasetMfid])
-
-  const sortedFiles = useMemo(
-    () =>
-      files
-        ? [...files].sort((left, right) =>
-            fileNameCollator.compare(left.filename, right.filename)
-          )
-        : undefined,
-    [files]
-  )
-  const visibleFiles = expanded
-    ? sortedFiles
-    : sortedFiles?.slice(0, COLLAPSED_LIST_LIMIT)
-
-  return (
-    <section
-      aria-labelledby="inspector-files-heading"
-      className="border-t pt-4"
-    >
-      <h3 className="mb-3 text-title-section" id="inspector-files-heading">
-        Files{files?.length ? ` (${files.length})` : ""}
-      </h3>
-      {filesResult.isPending ? (
-        <InspectorFileRowsPending />
-      ) : sortedFiles !== undefined && visibleFiles !== undefined ? (
-        <div aria-busy={filesResult.isFetching} className="grid gap-3">
-          {filesResult.isError ? (
-            <PanelUpdateError
-              description="Files could not be refreshed. Showing the last available data."
-              retry={() => void filesResult.refetch()}
-            />
-          ) : null}
-          {sortedFiles.length ? (
-            <div>
-              <ResourceList id={listId}>
-                {visibleFiles.map((file, index) => (
-                  <ResourceListItem
-                    className={revealedRowClassName(index)}
-                    key={file.mfid}
-                  >
-                    <ResourceListItemContent className="px-0">
-                      <ResourceIdentity
-                        className="min-w-0 flex-1"
-                        context={`${file.storage_backend} · ${formatBytes(file.size)}`}
-                        kind="file"
-                        name={file.filename}
-                        presentation="collection"
-                      />
-                      <FileDownloadAction
-                        file={file}
-                        identity={identity}
-                        scenario={scenario}
-                      />
-                    </ResourceListItemContent>
-                  </ResourceListItem>
-                ))}
-              </ResourceList>
-              {sortedFiles.length > COLLAPSED_LIST_LIMIT ? (
-                <div className="mt-1 -ml-1.5 flex">
-                  <ListExpansionToggle
-                    controls={listId}
-                    expanded={expanded}
-                    noun="files"
-                    onExpandedChange={setExpanded}
-                    total={sortedFiles.length}
-                  />
-                </div>
-              ) : null}
-            </div>
-          ) : (
-            <p className="text-body text-muted-foreground">No files</p>
-          )}
-        </div>
-      ) : (
-        <PanelState
-          retry={() => void filesResult.refetch()}
-          role="alert"
-          title="Files could not be loaded"
-        />
-      )}
-    </section>
-  )
-}
-
-function InspectorFilesPending() {
-  return (
-    <section className="border-t pt-4">
-      <h3 className="mb-3 text-title-section">Files</h3>
-      <InspectorFileRowsPending />
-    </section>
-  )
-}
-
-function InspectorFileRowsPending() {
-  return (
-    <div className="grid gap-3">
-      {Array.from({ length: 2 }, (_, index) => (
-        <div className="flex items-center gap-2" key={index}>
-          <div className="min-w-0 flex-1">
-            <PendingName />
-          </div>
-          <Skeleton className="size-8 shrink-0" />
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function InspectorContext({ resource }: { resource: WorkspaceResourceDetail }) {
-  const fields = inspectorContextFields(resource)
-
-  return (
-    <section aria-labelledby="inspector-context-heading">
-      <h3 className="mb-3 text-title-section" id="inspector-context-heading">
-        Context
-      </h3>
-      <dl className="grid min-w-0 grid-cols-2 gap-3">
-        {fields.map((field) => (
-          <SummaryFieldItem
-            className={cn(
-              field.fullWidth && "col-span-2",
-              field.colStart1 && "col-start-1"
-            )}
-            icon={field.icon}
-            key={field.label}
-            label={field.label}
-          >
-            {field.value || "-"}
-          </SummaryFieldItem>
-        ))}
-      </dl>
-    </section>
-  )
-}
-
-type InspectorContextField = {
-  colStart1?: boolean
-  fullWidth?: boolean
-  icon?: ReactNode
-  label: string
-  value: ReactNode
-}
-
-function inspectorContextFields(
-  resource: WorkspaceResourceDetail
-): readonly InspectorContextField[] {
-  const ownerIcon = (
-    <IdentityFieldIcon
-      accountType={
-        resource.owner && personIsServiceAccount(resource.owner)
-          ? "service-account"
-          : "person"
-      }
-      type="owner"
-    />
-  )
-  const owner = resource.owner ? (
-    <PersonLink nameStyle="abbreviated" person={resource.owner} />
-  ) : null
-  const createdField: InspectorContextField = {
-    colStart1: true,
-    icon: <IdentityFieldIcon type="created" />,
-    label: "Created",
-    value: <LocalDateTime fallback="-" value={resource.creation_time} />,
-  }
-  const updatedField: InspectorContextField = {
-    icon: <IdentityFieldIcon type="updated" />,
-    label: "Updated",
-    value: <LocalDateTime fallback="-" value={resource.modification_time} />,
-  }
-
-  switch (resource.kind) {
-    case "dataset": {
-      const projectName = resource.project
-        ? resourceDisplayName("project", resource.project.title, {
-            identifier: resource.project.project_id,
-            mfid: resource.project.unique_id,
-          })
-        : null
-      const instrumentName = resource.instrument
-        ? resourceDisplayName(
-            "instrument",
-            resource.instrument.instrument_name,
-            {
-              identifier: resource.instrument.instrument_id,
-              mfid: resource.instrument.unique_id,
-            }
-          )
-        : null
-      return [
-        {
-          icon: <SummaryFieldIcon type="measurement" />,
-          label: "Measurement",
-          value: resource.measurement,
-        },
-        {
-          icon: <SummaryFieldIcon type="project" />,
-          label: "Project",
-          value: resource.project ? (
-            <ResourceIdentityLink
-              context={resource.project.project_id}
-              kind="project"
-              mfid={resource.project.unique_id}
-              name={projectName ?? ""}
-              navigation="preview"
-            >
-              <TruncatedText
-                className="line-clamp-2 text-label group-hover/resource:underline"
-                label={projectName}
-              >
-                {projectName}
-              </TruncatedText>
-            </ResourceIdentityLink>
-          ) : (
-            resource.project_id
-          ),
-        },
-        {
-          icon: <SummaryFieldIcon type="instrument" />,
-          label: "Instrument",
-          value: resource.instrument ? (
-            <ResourceIdentityLink
-              context={resource.instrument.instrument_id}
-              kind="instrument"
-              mfid={resource.instrument.unique_id}
-              name={instrumentName ?? ""}
-              navigation="preview"
-            >
-              <TruncatedText
-                className="line-clamp-2 text-label group-hover/resource:underline"
-                label={instrumentName}
-              >
-                {instrumentName}
-              </TruncatedText>
-            </ResourceIdentityLink>
-          ) : (
-            resource.instrument_id
-          ),
-        },
-        {
-          icon: <SummaryFieldIcon type="timestamp" />,
-          label: "Timestamp",
-          value: <LocalDateTime fallback="-" value={resource.timestamp} />,
-        },
-        { icon: ownerIcon, label: "Owner", value: owner },
-        {
-          label: "Visibility",
-          value: <VisibilityBadge isPublic={resource.public} />,
-        },
-        createdField,
-        updatedField,
-      ]
-    }
-    case "sample": {
-      const projectName = resource.project
-        ? resourceDisplayName("project", resource.project.title, {
-            identifier: resource.project.project_id,
-            mfid: resource.project.unique_id,
-          })
-        : null
-      return [
-        {
-          fullWidth: true,
-          icon: <SummaryFieldIcon type="description" />,
-          label: "Description",
-          value: resource.description,
-        },
-        {
-          icon: <SummaryFieldIcon type="type" />,
-          label: "Sample type",
-          value: resource.sample_type,
-        },
-        {
-          icon: <SummaryFieldIcon type="project" />,
-          label: "Project",
-          value: resource.project ? (
-            <ResourceIdentityLink
-              context={resource.project.project_id}
-              kind="project"
-              mfid={resource.project.unique_id}
-              name={projectName ?? ""}
-              navigation="preview"
-            >
-              <TruncatedText
-                className="line-clamp-2 text-label group-hover/resource:underline"
-                label={projectName}
-              >
-                {projectName}
-              </TruncatedText>
-            </ResourceIdentityLink>
-          ) : (
-            resource.project_id
-          ),
-        },
-        {
-          icon: <SummaryFieldIcon type="timestamp" />,
-          label: "Timestamp",
-          value: <LocalDateTime fallback="-" value={resource.timestamp} />,
-        },
-        { icon: ownerIcon, label: "Owner", value: owner },
-        {
-          label: "Visibility",
-          value: <VisibilityBadge isPublic={resource.public} />,
-        },
-        createdField,
-        updatedField,
-      ]
-    }
-    case "project":
-      return [
-        {
-          icon: <SummaryFieldIcon type="project" />,
-          label: "Project ID",
-          value: resource.project_id,
-        },
-        {
-          icon: <SummaryFieldIcon type="organization" />,
-          label: "Organization",
-          value: resource.organization,
-        },
-        {
-          icon: <SummaryFieldIcon type="status" />,
-          label: "Status",
-          value: resource.status ? (
-            <StatusBadge status={resource.status} />
-          ) : null,
-        },
-        { icon: ownerIcon, label: "Lead", value: owner },
-        createdField,
-        updatedField,
-      ]
-    case "instrument":
-      return [
-        {
-          icon: <SummaryFieldIcon type="instrument" />,
-          label: "Instrument ID",
-          value: resource.instrument_id,
-        },
-        {
-          icon: <SummaryFieldIcon type="type" />,
-          label: "Type",
-          value: resource.instrument_type,
-        },
-        {
-          icon: <SummaryFieldIcon type="status" />,
-          label: "Status",
-          value: resource.status ? (
-            <StatusBadge status={resource.status} />
-          ) : null,
-        },
-        {
-          icon: <SummaryFieldIcon type="location" />,
-          label: "Location",
-          value: resource.location,
-        },
-        {
-          icon: <SummaryFieldIcon type="manufacturer" />,
-          label: "Manufacturer",
-          value: resource.manufacturer,
-        },
-        {
-          icon: <SummaryFieldIcon type="model" />,
-          label: "Model",
-          value: resource.model,
-        },
-        { icon: ownerIcon, label: "Manager", value: owner },
-        createdField,
-        updatedField,
-      ]
-  }
 }
 
 function MetadataDisclosure({

@@ -17,12 +17,12 @@ import {
   hubApiAuthorizationUrl,
   hasHubSession,
   logoutHubSession,
-  productionHubAuthReady,
   sessionApiFetch,
   sharedRequestPrivilegeMode,
   updateSharedPrivilegeMode,
   withHubAuthRequest,
 } from "./hub-auth.server"
+import { productionHubAuthReady } from "./hub-auth-config.server"
 import {
   createHubLink,
   finishHubLinkCallback,

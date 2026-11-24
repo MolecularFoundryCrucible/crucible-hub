@@ -3,8 +3,8 @@ import { createFileRoute } from "@tanstack/react-router"
 import {
   beginHubLogin,
   enforceHubLoginRateLimit,
-  HubLoginRateLimitError,
 } from "@/server/crucible/hub-auth.server"
+import { HubLoginRateLimitError } from "@/server/crucible/hub-auth-errors.server"
 
 export const Route = createFileRoute("/auth/login")({
   server: {

@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router"
 
-import { hubAuthPublicOrigin } from "@/server/crucible/hub-auth.server"
+import { hubAuthPublicOrigin } from "@/server/crucible/hub-auth-config.server"
 import { finishHubLinkCallback } from "@/server/crucible/hub-link.server"
 import type { HubLinkCallbackOutcome } from "@/server/crucible/hub-link.server"
 
