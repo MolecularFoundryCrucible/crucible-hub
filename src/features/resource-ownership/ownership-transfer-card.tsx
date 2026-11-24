@@ -1,3 +1,4 @@
+import { InlineError } from "@/components/crucible/form-error"
 import { useId, useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { resourceDetailDisplayName } from "@/lib/resource-name"
@@ -164,9 +165,7 @@ export function OwnershipTransferCard({
         title="Transfer ownership"
       >
         {error && !chooserOpen && !preview ? (
-          <p className="text-body text-destructive" role="alert">
-            {error}
-          </p>
+          <InlineError>{error}</InlineError>
         ) : null}
       </ManagementAction>
       <Dialog onOpenChange={closeChooser} open={chooserOpen}>
@@ -189,11 +188,7 @@ export function OwnershipTransferCard({
             scope={scope}
             value={undefined}
           />
-          {error && chooserOpen ? (
-            <p className="text-body text-destructive" role="alert">
-              {error}
-            </p>
-          ) : null}
+          {error && chooserOpen ? <InlineError>{error}</InlineError> : null}
         </DialogContent>
       </Dialog>
       <ConfirmationDialog

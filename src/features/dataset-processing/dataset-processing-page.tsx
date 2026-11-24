@@ -1,13 +1,14 @@
+import {
+  TablePending,
+  PanelState,
+  PanelUpdateError,
+} from "@/components/crucible/collection-state"
+import { InlineError } from "@/components/crucible/form-error"
 import { useEffect, useMemo, useState } from "react"
-import type { ReactNode } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import type { UseQueryResult } from "@tanstack/react-query"
 import { lazyNamed } from "@/lib/lazy-named"
 
-import {
-  PanelState,
-  PanelUpdateError,
-} from "@/components/crucible/collection-state"
 import { AddFilesIcon, RequestIngestionIcon } from "@/components/crucible/icons"
 import {
   AUTO_INGESTOR,
@@ -36,7 +37,6 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Skeleton } from "@/components/ui/skeleton"
 import {
   Dialog,
   DialogContent,
@@ -61,7 +61,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import type { TableColumnKind } from "@/components/ui/table"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import { crucibleKeys } from "@/data/crucible/query-keys"
 import { requestWorkspaceIngestion } from "@/data/crucible/resources.functions"
@@ -86,7 +85,6 @@ import {
 } from "@/features/dataset-files/dataset-files-card"
 import { useExitSafeMount } from "@/hooks/use-exit-safe"
 import { formatBytes } from "@/lib/format"
-import { cn } from "@/lib/utils"
 
 import { PostprocessingCard } from "./postprocessing-card"
 
@@ -183,28 +181,25 @@ function FilesAndIngestionCard({
             Files
           </h3>
           {filesResult.isPending || requestsResult.isPending ? (
-            <ProcessingTablePending
-              kinds={[
-                "text",
-                "text",
-                "numeric",
-                "text",
-                "text",
-                "date",
-                "action",
-              ]}
+            <TablePending
               className="table-fixed"
-              mdOnly={[4, 5]}
-              wideOnly={[1, 2]}
               colgroup={<ProcessingFilesColumns />}
               columns={[
-                "File",
-                "Storage",
-                "Size",
-                "Status",
-                "Ingestor",
-                "Updated",
-                "",
+                { label: "File" },
+                { className: "hidden @4xl:table-cell", label: "Storage" },
+                {
+                  className: "hidden @4xl:table-cell",
+                  kind: "numeric",
+                  label: "Size",
+                },
+                { label: "Status" },
+                { className: "hidden @3xl:table-cell", label: "Ingestor" },
+                {
+                  className: "hidden @3xl:table-cell",
+                  kind: "date",
+                  label: "Updated",
+                },
+                { kind: "action", label: "File action" },
               ]}
               label="file processing information"
             />
@@ -269,17 +264,16 @@ function FilesAndIngestionCard({
             ) : null}
           </div>
           {requestsResult.isPending ? (
-            <ProcessingTablePending
+            <TablePending
               columns={[
-                "Request",
-                "File MFID",
-                "Status",
-                "Ingestor",
-                "Created",
-                "Completed",
+                { label: "Request" },
+                { className: "hidden @3xl:table-cell", label: "File MFID" },
+                { label: "Status" },
+                { className: "hidden @3xl:table-cell", label: "Ingestor" },
+                { label: "Created" },
+                { className: "hidden @3xl:table-cell", label: "Completed" },
               ]}
               label="ingestion request history"
-              mdOnly={[1, 3, 5]}
             />
           ) : requests !== undefined ? (
             requests.length ? (
@@ -338,73 +332,6 @@ function ProcessingFilesColumns() {
       <col className="hidden @3xl:table-column @3xl:w-column-date" />
       <col className="w-column-action" />
     </colgroup>
-  )
-}
-
-function ProcessingTablePending({
-  className,
-  colgroup,
-  columns,
-  kinds = [],
-  label,
-  mdOnly = [],
-  wideOnly = [],
-}: {
-  className?: string
-  colgroup?: ReactNode
-  columns: readonly string[]
-  kinds?: readonly TableColumnKind[]
-  label: string
-  mdOnly?: readonly number[]
-  wideOnly?: readonly number[]
-}) {
-  return (
-    <div aria-label={`Loading ${label}`} role="status">
-      <Table aria-label={label} className={className}>
-        {colgroup}
-        <TableHeader>
-          <TableRow>
-            {columns.map((column, index) => (
-              <TableHead
-                className={cn(
-                  mdOnly.includes(index) && "hidden @3xl:table-cell",
-                  wideOnly.includes(index) && "hidden @4xl:table-cell"
-                )}
-                kind={kinds[index]}
-                key={`${column}-${index}`}
-              >
-                {column || <span className="sr-only">File action</span>}
-              </TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {Array.from({ length: 3 }, (_, row) => (
-            <TableRow key={row}>
-              {columns.map((column, columnIndex) => (
-                <TableCell
-                  className={cn(
-                    mdOnly.includes(columnIndex) && "hidden @3xl:table-cell",
-                    wideOnly.includes(columnIndex) && "hidden @4xl:table-cell"
-                  )}
-                  key={`${column}-${columnIndex}`}
-                  kind={kinds[columnIndex]}
-                >
-                  <Skeleton
-                    className={
-                      kinds[columnIndex] === "numeric" ||
-                      kinds[columnIndex] === "action"
-                        ? "ml-auto h-4 w-20"
-                        : "h-4 w-24 max-w-full"
-                    }
-                  />
-                </TableCell>
-              ))}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
   )
 }
 
@@ -763,11 +690,7 @@ function IngestionRequestDialog({
               </div>
             </FieldSet>
           </FieldGroup>
-          {error ? (
-            <p className="text-body text-destructive" role="alert">
-              {error}
-            </p>
-          ) : null}
+          {error ? <InlineError>{error}</InlineError> : null}
           <DialogFooter>
             <Button
               disabled={mutation.isPending}

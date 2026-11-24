@@ -1,3 +1,4 @@
+import { InlineError } from "./form-error"
 import type { ReactNode } from "react"
 
 import {
@@ -172,11 +173,7 @@ export function AccessGrantRow({
           ) : null}
         </div>
       </div>
-      {error ? (
-        <p className="text-body text-destructive" role="alert">
-          {error}
-        </p>
-      ) : null}
+      {error ? <InlineError>{error}</InlineError> : null}
     </li>
   )
 }

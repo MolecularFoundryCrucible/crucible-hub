@@ -1,3 +1,4 @@
+import { InlineError } from "@/components/crucible/form-error"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 
@@ -100,9 +101,9 @@ export function RequestToJoinProject({
           </Button>
         ) : null}
         {error ? (
-          <span className="text-supporting text-destructive" role="alert">
+          <InlineError render={<span />} size="supporting">
             {error}
-          </span>
+          </InlineError>
         ) : null}
       </span>
     )

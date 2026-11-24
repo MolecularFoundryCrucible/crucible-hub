@@ -1,3 +1,4 @@
+import { InlineError } from "./form-error"
 import { useId, useState } from "react"
 
 import type { accessRoles } from "@/components/crucible/access-role-badge"
@@ -275,11 +276,7 @@ export function AddMembersDialog({
               })}
             </ul>
           ) : null}
-          {commitError ? (
-            <p className="text-body text-destructive" role="alert">
-              {commitError}
-            </p>
-          ) : null}
+          {commitError ? <InlineError>{commitError}</InlineError> : null}
         </FieldGroup>
         <DialogFooter>
           <Button

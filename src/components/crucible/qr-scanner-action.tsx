@@ -1,3 +1,4 @@
+import { InlineError } from "./form-error"
 import { useCallback, useRef, useState } from "react"
 import { useNavigate } from "@tanstack/react-router"
 
@@ -118,11 +119,7 @@ export function QrScannerAction() {
               required
               value={manualValue}
             />
-            {manualError ? (
-              <p className="text-body text-destructive" role="alert">
-                {manualError}
-              </p>
-            ) : null}
+            {manualError ? <InlineError>{manualError}</InlineError> : null}
             <div className="flex flex-col gap-2 @fields:flex-row">
               <Button type="submit">Open resource</Button>
               <Button

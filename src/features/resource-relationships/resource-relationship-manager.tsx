@@ -1,3 +1,4 @@
+import { InlineError } from "@/components/crucible/form-error"
 import { useId, useMemo, useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { resourceDetailDisplayName } from "@/lib/resource-name"
@@ -423,15 +424,9 @@ function AddRelationshipDialog({
               />
             </p>
           ) : null}
-          {mutationError ? (
-            <p className="text-body text-destructive" role="alert">
-              {mutationError}
-            </p>
-          ) : null}
+          {mutationError ? <InlineError>{mutationError}</InlineError> : null}
           {validationError ? (
-            <p className="text-body text-destructive" role="alert">
-              {validationError}
-            </p>
+            <InlineError>{validationError}</InlineError>
           ) : null}
         </FieldGroup>
         <DialogFooter>

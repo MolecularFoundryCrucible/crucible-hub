@@ -1,3 +1,4 @@
+import { InlineError } from "@/components/crucible/form-error"
 import { useId, useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import type { QueryKey } from "@tanstack/react-query"
@@ -393,9 +394,9 @@ export function PasswordLinkDialog({
               {copyState === "success" ? "Link copied" : null}
             </span>
             {copyState === "error" ? (
-              <p className="text-body text-destructive" role="alert">
+              <InlineError>
                 The link could not be copied. Select and copy it manually.
-              </p>
+              </InlineError>
             ) : null}
           </div>
         ) : null}

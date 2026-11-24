@@ -1,3 +1,4 @@
+import { InlineError } from "@/components/crucible/form-error"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useMemo, useState } from "react"
 
@@ -318,11 +319,7 @@ function RunPipelineDialog({
             </FieldGroup>
           </fieldset>
         </form>
-        {error ? (
-          <p className="text-body text-destructive" role="alert">
-            {error}
-          </p>
-        ) : null}
+        {error ? <InlineError>{error}</InlineError> : null}
         <DialogFooter>
           <Button
             disabled={mutation.isPending}

@@ -1,3 +1,4 @@
+import { InlineError } from "@/components/crucible/form-error"
 import { useExitSafeMount } from "@/hooks/use-exit-safe"
 import { useId, useState } from "react"
 import { useMutation, useQuery } from "@tanstack/react-query"
@@ -173,12 +174,12 @@ function PrintLabelDialogContent({
             <FieldLabel htmlFor={printerId}>Printer</FieldLabel>
             {printers.isError ? (
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-body text-destructive" role="alert">
+                <InlineError>
                   {hubErrorMessage(
                     printers.error,
                     "Printers could not be loaded."
                   )}
-                </p>
+                </InlineError>
                 <Button
                   onClick={() => void printers.refetch()}
                   size="sm"
@@ -236,11 +237,7 @@ function PrintLabelDialogContent({
             </dd>
           </dl>
         </FieldGroup>
-        {error ? (
-          <p className="text-body text-destructive" role="alert">
-            {error}
-          </p>
-        ) : null}
+        {error ? <InlineError>{error}</InlineError> : null}
         <DialogFooter>
           <Button
             disabled={pending}

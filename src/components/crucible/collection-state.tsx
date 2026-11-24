@@ -311,6 +311,82 @@ const pendingColumns: Record<
   ],
 }
 
+export function PendingName() {
+  return (
+    <div className="flex min-w-0 items-start gap-2">
+      <Skeleton className="mt-0.5 size-4 shrink-0" />
+      <div className="flex min-w-0 flex-1 flex-col gap-2">
+        <Skeleton className="h-4 w-2/3" />
+        <Skeleton className="h-3 w-1/3" />
+      </div>
+    </div>
+  )
+}
+
+export type PendingTableColumn = {
+  className?: string
+  kind?: TableColumnKind
+  label: string
+}
+
+export function TablePending({
+  className,
+  colgroup,
+  columns,
+  label,
+}: {
+  className?: string
+  colgroup?: ReactNode
+  columns: readonly PendingTableColumn[]
+  label: string
+}) {
+  return (
+    <div aria-label={`Loading ${label}`} role="status">
+      <Table aria-label={label} className={className}>
+        {colgroup}
+        <TableHeader>
+          <TableRow>
+            {columns.map((column) => (
+              <TableHead
+                className={column.className}
+                key={column.label}
+                kind={column.kind}
+              >
+                {column.kind === "action" ? (
+                  <span className="sr-only">{column.label}</span>
+                ) : (
+                  column.label
+                )}
+              </TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {rowPlaceholders.slice(0, 3).map((placeholder) => (
+            <TableRow key={placeholder}>
+              {columns.map((column) => (
+                <TableCell
+                  className={column.className}
+                  key={column.label}
+                  kind={column.kind}
+                >
+                  <Skeleton
+                    className={
+                      column.kind === "numeric" || column.kind === "action"
+                        ? "ml-auto h-4 w-20"
+                        : "h-4 w-24 max-w-full"
+                    }
+                  />
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  )
+}
+
 export function CollectionTablePending({
   framed = true,
   label,
@@ -380,13 +456,7 @@ export function CollectionTablePending({
                 kind={column.kind}
               >
                 {column.name ? (
-                  <div className="flex min-w-0 items-start gap-2">
-                    <Skeleton className="mt-0.5 size-4 shrink-0" />
-                    <div className="flex min-w-0 flex-1 flex-col gap-2">
-                      <Skeleton className="h-4 w-2/3" />
-                      <Skeleton className="h-3 w-1/3" />
-                    </div>
-                  </div>
+                  <PendingName />
                 ) : column.label === "Open" ? (
                   <Skeleton className="ml-auto size-7" />
                 ) : (

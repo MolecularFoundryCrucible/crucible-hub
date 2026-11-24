@@ -1,3 +1,4 @@
+import { InlineError } from "./form-error"
 import { useState } from "react"
 import { useIsFetching, useQueryClient } from "@tanstack/react-query"
 import type { QueryKey } from "@tanstack/react-query"
@@ -78,12 +79,9 @@ export function EntityRefreshAction({
         </TooltipContent>
       </Tooltip>
       {failed ? (
-        <p
-          className="basis-full text-right text-supporting text-destructive"
-          role="alert"
-        >
+        <InlineError className="basis-full text-right" size="supporting">
           {subject} could not be refreshed. Existing details are still shown.
-        </p>
+        </InlineError>
       ) : null}
     </div>
   )

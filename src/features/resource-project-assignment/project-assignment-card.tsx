@@ -1,3 +1,4 @@
+import { InlineError } from "@/components/crucible/form-error"
 import { useId, useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useExitSafeValue } from "@/hooks/use-exit-safe"
@@ -207,9 +208,7 @@ export function ProjectAssignmentCard({
         title="Transfer project"
       >
         {error && !chooserOpen && !preview ? (
-          <p className="text-body text-destructive" role="alert">
-            {error}
-          </p>
+          <InlineError>{error}</InlineError>
         ) : null}
       </ManagementAction>
       <Dialog onOpenChange={closeChooser} open={chooserOpen}>
@@ -232,11 +231,7 @@ export function ProjectAssignmentCard({
             scope={scope}
             value={undefined}
           />
-          {error && chooserOpen ? (
-            <p className="text-body text-destructive" role="alert">
-              {error}
-            </p>
-          ) : null}
+          {error && chooserOpen ? <InlineError>{error}</InlineError> : null}
         </DialogContent>
       </Dialog>
       <ConfirmationDialog

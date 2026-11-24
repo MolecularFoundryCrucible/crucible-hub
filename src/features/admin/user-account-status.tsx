@@ -1,3 +1,4 @@
+import { InlineError } from "@/components/crucible/form-error"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
 
@@ -116,11 +117,7 @@ export function DisabledAccountBanner({
           <span className="text-supporting text-muted-foreground">
             Disabled <ActivityTime fallback="" value={user.disabled_at} />
           </span>
-          {error ? (
-            <p className="text-body text-destructive" role="alert">
-              {error}
-            </p>
-          ) : null}
+          {error ? <InlineError>{error}</InlineError> : null}
         </div>
         {canSwitchAccount(user) ? (
           <Button

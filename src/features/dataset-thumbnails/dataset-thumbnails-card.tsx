@@ -1,3 +1,4 @@
+import { InlineError } from "@/components/crucible/form-error"
 import { useEffect, useRef, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
@@ -384,11 +385,7 @@ function ThumbnailEditor({
         </ul>
       )}
 
-      {error ? (
-        <p className="text-body text-destructive" role="alert">
-          {error}
-        </p>
-      ) : null}
+      {error ? <InlineError>{error}</InlineError> : null}
 
       <ConfirmationDialog
         kind="alert"

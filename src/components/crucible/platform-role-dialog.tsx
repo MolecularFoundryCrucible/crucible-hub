@@ -1,3 +1,4 @@
+import { InlineError } from "./form-error"
 import { useEffect, useState } from "react"
 
 import { PendingIcon } from "@/components/crucible/pending-icon"
@@ -132,11 +133,7 @@ export function PlatformRoleDialog({
             </p>
           ) : null}
         </FieldGroup>
-        {error ? (
-          <p className="text-body text-destructive" role="alert">
-            {error}
-          </p>
-        ) : null}
+        {error ? <InlineError>{error}</InlineError> : null}
         <DialogFooter>
           <Button
             disabled={pending}

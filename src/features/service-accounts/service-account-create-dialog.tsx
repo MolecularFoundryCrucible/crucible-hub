@@ -1,3 +1,4 @@
+import { InlineError } from "@/components/crucible/form-error"
 import { useState } from "react"
 import { useStore } from "@tanstack/react-form"
 import { useMutation } from "@tanstack/react-query"
@@ -172,11 +173,7 @@ export function ServiceAccountCreateDialog({
               </form.Field>
             </FieldGroup>
           </fieldset>
-          {error ? (
-            <p className="mt-4 text-body text-destructive" role="alert">
-              {error}
-            </p>
-          ) : null}
+          {error ? <InlineError className="mt-4">{error}</InlineError> : null}
         </form>
         <form.Subscribe
           selector={(state) => usernameConflict.isTaken(state.values.username)}

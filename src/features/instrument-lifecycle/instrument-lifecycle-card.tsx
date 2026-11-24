@@ -1,3 +1,4 @@
+import { InlineError } from "@/components/crucible/form-error"
 import { useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
@@ -208,9 +209,7 @@ export function InstrumentLifecycleCard({
           )}
         </div>
         {error && !dialogOpen && !confirmingDecommission ? (
-          <p className="text-body text-destructive" role="alert">
-            {error}
-          </p>
+          <InlineError>{error}</InlineError>
         ) : null}
       </ManagementAction>
 
@@ -273,11 +272,7 @@ export function InstrumentLifecycleCard({
                   </FieldDescription>
                 ) : null}
               </Field>
-              {error ? (
-                <p className="text-body text-destructive" role="alert">
-                  {error}
-                </p>
-              ) : null}
+              {error ? <InlineError>{error}</InlineError> : null}
             </FieldGroup>
             <DialogFooter>
               <Button

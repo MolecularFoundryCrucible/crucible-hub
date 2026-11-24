@@ -1,3 +1,4 @@
+import { InlineError } from "@/components/crucible/form-error"
 import { entryActions } from "@/data/crucible/entry-capabilities"
 import { useState } from "react"
 import { resourceDetailDisplayName } from "@/lib/resource-name"
@@ -521,9 +522,7 @@ export function ResourceAccessCard({
             </p>
           )}
           {error?.surface === "direct" && !addOpen ? (
-            <p className="mt-3 text-body text-destructive" role="alert">
-              {error.message}
-            </p>
+            <InlineError className="mt-3">{error.message}</InlineError>
           ) : null}
           {canGrant ? (
             <AccessGrantListActions
@@ -558,9 +557,7 @@ export function ResourceAccessCard({
               </Button>
             ) : null}
             {error?.surface === "public" ? (
-              <p className="basis-full text-body text-destructive" role="alert">
-                {error.message}
-              </p>
+              <InlineError className="basis-full">{error.message}</InlineError>
             ) : null}
           </div>
         </CardContent>
