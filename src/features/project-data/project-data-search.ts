@@ -1,7 +1,7 @@
 import { publicDataSearchSchema } from "@/data/crucible/public-data"
 import { z } from "zod"
 import { collectionBrowseSearchFields } from "@/data/crucible/collection-browse"
-import { resourcePreviewSearchSchema } from "@/components/crucible/resource-preview-navigation"
+import { resourcePreviewSearchSchema } from "@/data/crucible/resource-preview-search"
 import {
   collectionCursorSchema,
   resourceSortSchema,

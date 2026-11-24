@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { resourcePreviewSearchSchema } from "@/components/crucible/resource-preview-navigation"
+import { resourcePreviewSearchSchema } from "@/data/crucible/resource-preview-search"
 import type { WorkspacePrivilegeMode } from "@/data/crucible/privilege-mode"
 import type { WorkspaceDeletionRequestSort } from "@/data/crucible/workspace-source"
 
