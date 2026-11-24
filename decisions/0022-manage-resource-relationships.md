@@ -26,7 +26,7 @@ The server confirms the exact source and target representation after each add or
 
 ## API prerequisites
 
-Before production exposure, the API must define a relationship-specific capability, error semantics for authorization, missing resources, invalid or duplicate pairs, self-links, and cycles, target validation rules, and typed authoritative responses for add and unlink operations. The API must also document direction and whether the operation replaces or appends relationships. Until those details are published in the API-owned contract, Hub may display the decision and use local fixtures or development-only adapters, but must not expose an assumed production mutation.
+Confirmed against the Crucible API 4.0.0 and 4.1.0 source on 2026-11-24. Link and unlink take explicit parent and child (or dataset and sample) paths, add one link per pair, and return a typed link or a message. Linking an existing pair succeeds and changes its type only when one is given. The API rejects self-links (`422 self_link`), lineage cycles (`409 lineage_cycle`), resources with an active deletion request (`409 pending_deletion`), missing resources or links (`404`), and missing permission (`403`). Linking within one project needs create on the source and read on the target; otherwise edit on both. Two gaps remain in the [API handoff](../docs/crucible-api-handoff.md): these outcomes are not in the published OpenAPI contract, and there is no relationship-specific capability, so Hub guides controls with the source's `can_edit` and the API authorizes every request.
 
 ## Validation
 
