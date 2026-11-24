@@ -12,6 +12,7 @@ const windowLayoutFiles = new Set([
   "components/crucible/administrator-view-control.tsx",
   "components/crucible/app-footer.tsx",
   "features/app-shell/app-shell.tsx",
+  "features/app-shell/sidebar-sections.tsx",
   "components/crucible/back-to-top.tsx",
   "components/crucible/create-menu.tsx",
   "components/crucible/global-search.tsx",

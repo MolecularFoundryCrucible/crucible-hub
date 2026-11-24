@@ -1,9 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router"
 
-import {
-  hubAuthPublicOrigin,
-  logoutHubSession,
-} from "@/server/crucible/hub-auth.server"
+import { hubAuthPublicOrigin } from "@/server/crucible/hub-auth-config.server"
+import { logoutHubSession } from "@/server/crucible/hub-auth.server"
 
 export const Route = createFileRoute("/auth/logout")({
   server: {

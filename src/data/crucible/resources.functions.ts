@@ -6,25 +6,33 @@ import { safeCrucibleCall } from "@/server/crucible/safe-call.server"
 
 import {
   createWorkspaceFileDownload,
-  deleteWorkspaceResource,
-  mutateWorkspaceDatasetThumbnails,
-  mutateWorkspaceRelationship,
   requestWorkspaceFileIngestion,
-  requestWorkspaceResourceDeletion,
-  setWorkspaceDatasetInstrument,
-  patchWorkspaceDatasetDescription,
-  patchWorkspaceSampleDescription,
-  reassignWorkspaceResourceProject,
   readWorkspaceDatasetFiles,
   readWorkspaceDatasetIngestionRequests,
+  readWorkspaceIngestionClasses,
+} from "./dataset-files.server"
+import {
+  deleteWorkspaceResource,
+  requestWorkspaceResourceDeletion,
+} from "./resource-deletion.server"
+import {
+  mutateWorkspaceDatasetThumbnails,
   readWorkspaceDatasetThumbnailPreviews,
   readWorkspaceDatasetThumbnails,
-  readWorkspaceIngestionClasses,
-  readWorkspaceResource,
-  readWorkspaceResourceGraph,
+} from "./dataset-thumbnails.server"
+import { mutateWorkspaceRelationship } from "./resource-relationships.server"
+import {
+  setWorkspaceDatasetInstrument,
+  reassignWorkspaceResourceProject,
   transferWorkspaceResourceOwnership,
+} from "./resource-assignments.server"
+import {
+  patchWorkspaceDatasetDescription,
+  patchWorkspaceSampleDescription,
+  readWorkspaceResource,
   writeWorkspaceResourceMetadata,
 } from "./resources.server"
+import { readWorkspaceResourceGraph } from "./resource-graph.server"
 import { fixtureScenarioSchema } from "./fixture-scenarios"
 import { privilegeModeSchema } from "./privilege-mode"
 import { queryCancellationMiddleware } from "./query-cancellation"

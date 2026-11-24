@@ -2,7 +2,6 @@ import "@tanstack/react-start/server-only"
 
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto"
 import { AsyncLocalStorage } from "node:async_hooks"
-
 import {
   deleteCookie,
   getCookie,
@@ -12,16 +11,8 @@ import {
   setCookie,
 } from "@tanstack/react-start/server"
 import { z } from "zod"
-
-import {
-  clientAddress,
-  readSecretSetting,
-  serverApiUrlAllowed,
-} from "./deployment-settings.server"
-import {
-  clearLegacyPrivilegeModeCookie,
-  writeGlobalPrivilegeMode,
-} from "./privilege-mode.server"
+import { clientAddress } from "./deployment-settings.server"
+import { clearLegacyPrivilegeModeCookie } from "./privilege-mode-cookie.server"
 import {
   cancelTransaction,
   closeSession,
@@ -35,7 +26,6 @@ import {
   sessionPrivilegeMode,
   sharedSessionsConfigured,
   sharedSessionsRequested,
-  sharedSessionStoreKind,
   touchSession,
 } from "./hub-session-store.server"
 import type { SharedSession } from "./hub-session-store.server"
@@ -46,8 +36,22 @@ import {
 import { readRetryAfterSeconds } from "@/lib/retry-after"
 import { backgroundRequestHeader } from "@/data/crucible/background-request"
 
+import {
+  TokenRequestError,
+  HubAccountMismatchError,
+  HubLoginUnavailableError,
+  HubStaleSignInError,
+  HubSignInRefusedError,
+  HubLoginRateLimitError,
+} from "./hub-auth-errors.server"
+import {
+  configuredCallbackUri,
+  hubAuthPublicOrigin,
+  cookieOptions,
+  hubAuthConfig,
+} from "./hub-auth-config.server"
+
 const clientId = "crucible-hub"
-const localCallbackUri = "http://127.0.0.1:3000/hub/auth/callback"
 const sessionCookie = "crucible_hub_session"
 const transactionCookie = "crucible_hub_login"
 const transactionLifetime = 10 * 60 * 1000
@@ -117,25 +121,18 @@ type Transaction = {
   consumed: boolean
   cancelled: boolean
 }
+
 type Session = {
   tokens: Tokens
   expiresAt: number
   idleExpiresAt: number
   refreshRetryAt?: number
 }
+
 type Store = {
   transactions: Map<string, Transaction>
   sessions: Map<string, Session>
   refreshes: Map<string, Promise<Tokens | null>>
-}
-
-class TokenRequestError extends Error {
-  constructor(
-    readonly status: number,
-    readonly retryAfterSeconds?: number
-  ) {
-    super("The Crucible sign-in request failed.")
-  }
 }
 
 const transientRefreshDelay = 5000
@@ -170,99 +167,6 @@ function refreshUnavailable(retryAfterMs: number) {
   )
 }
 
-class HubAccountMismatchError extends Error {
-  constructor() {
-    super("A different account returned from re-confirming a sign-in.")
-  }
-}
-
-class HubLoginUnavailableError extends Error {
-  constructor(
-    readonly reason:
-      | "cancelled-transaction"
-      | "expired-transaction"
-      | "missing-login-cookie"
-      | "reused-transaction"
-      | "unknown-transaction"
-  ) {
-    super("The sign-in request has expired.")
-  }
-}
-
-class HubStaleSignInError extends Error {
-  constructor() {
-    super("Re-confirming a sign-in did not return a recent sign-in.")
-  }
-}
-
-const providerErrors = new Set([
-  "access_denied",
-  "login_required",
-  "temporarily_unavailable",
-  "server_error",
-])
-
-class HubSignInRefusedError extends Error {
-  readonly error: string
-
-  constructor(error: string) {
-    super("The sign-in provider returned an error.")
-    this.error = providerErrors.has(error) ? error : "other"
-  }
-}
-
-export function hubSignInFailureDetails(error: unknown) {
-  if (error instanceof HubAccountMismatchError) {
-    return { reason: "account-mismatch" }
-  }
-  if (error instanceof HubStaleSignInError) {
-    return { reason: "stale-sign-in" }
-  }
-  if (error instanceof HubSignInRefusedError) {
-    return { reason: "provider-error", error: error.error }
-  }
-  if (error instanceof HubLoginUnavailableError) {
-    return { reason: error.reason }
-  }
-  if (error instanceof TokenRequestError) {
-    return { reason: "token-exchange-rejected", status: error.status }
-  }
-  if (error instanceof z.ZodError) {
-    return { reason: "invalid-token-response" }
-  }
-  if (error instanceof Error) {
-    const knownReasons: Record<string, string> = {
-      "Invalid sign-in response.": "invalid-callback-response",
-      "The sign-in request could not be verified.": "state-mismatch",
-      "Hub sign-in is not configured.": "configuration",
-      "Hub sign-in callback is not configured correctly.": "configuration",
-      "Hub API URL must be a trusted HTTPS URL.": "configuration",
-    }
-    return {
-      reason:
-        knownReasons[error.message] ??
-        (error.name === "TypeError" ? "api-connection" : "unexpected"),
-    }
-  }
-  return { reason: "unexpected" }
-}
-
-export type HubSignInErrorReason =
-  "account-mismatch" | "stale-sign-in" | "unavailable"
-
-export function hubSignInErrorReason(
-  details: ReturnType<typeof hubSignInFailureDetails>
-): HubSignInErrorReason | null {
-  if (details.reason === "account-mismatch") return "account-mismatch"
-  if (details.reason === "stale-sign-in") return "stale-sign-in"
-  if (details.reason !== "provider-error") return null
-  if (details.error === "login_required") return "account-mismatch"
-  return details.error === "temporarily_unavailable" ||
-    details.error === "server_error"
-    ? "unavailable"
-    : null
-}
-
 const storeKey = Symbol.for("crucible.hub.auth.local-store")
 const globals = globalThis as typeof globalThis & { [storeKey]?: Store }
 const store = (globals[storeKey] ??= {
@@ -270,6 +174,7 @@ const store = (globals[storeKey] ??= {
   sessions: new Map(),
   refreshes: new Map(),
 })
+
 const requestSession = new AsyncLocalStorage<{
   session: SharedSession | null
 }>()
@@ -279,13 +184,6 @@ const loginRateWindow = 10 * 60 * 1000
 const maxPendingTransactions = 500
 const maxTrackedLoginClients = 1000
 const loginAttempts = new Map<string, number[]>()
-
-export class HubLoginRateLimitError extends Error {
-  constructor() {
-    super("Too many sign-in requests. Try again shortly.")
-    this.name = "HubLoginRateLimitError"
-  }
-}
 
 function pruneExpiredLocalTransactions() {
   const now = Date.now()
@@ -317,16 +215,6 @@ export function enforceHubLoginRateLimit() {
   }
   attempts.push(now)
   loginAttempts.set(ip, attempts)
-}
-
-export function productionHubAuthReady() {
-  if (process.env.NODE_ENV !== "production") return true
-  if (process.env.HUB_AUTH_PRODUCTION_ENABLED !== "true") return false
-  return (
-    process.env.HUB_AUTH_SESSION_MODE === "postgres" &&
-    sharedSessionsConfigured() &&
-    sharedSessionStoreKind() === "postgres"
-  )
 }
 
 function localSession(id: string, touch = false) {
@@ -419,106 +307,14 @@ export async function updateSharedPrivilegeMode(mode: "normal" | "elevated") {
   throw new Error("The Hub session changed. Try again.")
 }
 
+async function resetPrivilegeMode() {
+  if (!(await updateSharedPrivilegeMode("normal"))) {
+    clearLegacyPrivilegeModeCookie()
+  }
+}
+
 function randomValue() {
   return randomBytes(32).toString("base64url")
-}
-
-const loopbackHosts = new Set(["127.0.0.1", "localhost", "[::1]"])
-
-function isHttpsOrLoopback(url: URL) {
-  return (
-    url.protocol === "https:" ||
-    (url.protocol === "http:" && loopbackHosts.has(url.hostname))
-  )
-}
-
-function configuredCallbackUri() {
-  const value = process.env.HUB_AUTH_CALLBACK_URI ?? localCallbackUri
-  const url = new URL(value)
-  if (
-    !isHttpsOrLoopback(url) ||
-    url.pathname !== "/hub/auth/callback" ||
-    url.search ||
-    url.hash ||
-    url.username ||
-    url.password
-  ) {
-    throw new Error("Hub sign-in callback is not configured correctly.")
-  }
-  return url.toString()
-}
-
-export function hubAuthPublicOrigin() {
-  return new URL(configuredCallbackUri()).origin
-}
-
-export function hubSignInOrigin() {
-  if (process.env.HUB_DATA_SOURCE !== "hub-auth") return null
-  return hubAuthPublicOrigin()
-}
-
-const signInMethodsSchema = z
-  .array(
-    z.object({
-      key: z.string().min(1).max(64),
-      display_name: z.string().min(1).max(80),
-      is_orcid: z.boolean(),
-      kind: z.enum(["oidc", "password"]).catch("oidc").default("oidc"),
-      registration_url: z
-        .string()
-        .max(2048)
-        .refine(isWebUrl)
-        .nullish()
-        .catch(null)
-        .transform((value) => value ?? null),
-    })
-  )
-  .max(10)
-
-function isWebUrl(value: string) {
-  try {
-    return ["http:", "https:"].includes(new URL(value).protocol)
-  } catch {
-    return false
-  }
-}
-
-export type HubSignInMethod = z.infer<typeof signInMethodsSchema>[number]
-
-export async function hubSignInMethods(): Promise<HubSignInMethod[] | null> {
-  if (process.env.HUB_DATA_SOURCE !== "hub-auth") return null
-  try {
-    const { baseUrl } = config()
-    const response = await fetch(`${baseUrl}/auth/methods`, {
-      cache: "no-store",
-      signal: AbortSignal.timeout(5000),
-    })
-    if (!response.ok) return null
-    return signInMethodsSchema.parse(await response.json())
-  } catch {
-    return null
-  }
-}
-
-function serverApiUrl(value: string) {
-  if (!serverApiUrlAllowed(value)) {
-    throw new Error("Hub API URL must be a trusted HTTPS URL.")
-  }
-  return new URL(value).toString().replace(/\/$/, "")
-}
-
-function publicApiUrl(value: string) {
-  const url = new URL(value)
-  if (
-    !isHttpsOrLoopback(url) ||
-    url.username ||
-    url.password ||
-    url.search ||
-    url.hash
-  ) {
-    throw new Error("Hub API URL must be a trusted HTTPS URL.")
-  }
-  return url.toString().replace(/\/$/, "")
 }
 
 function safeReturnTo(value: string | null) {
@@ -545,43 +341,12 @@ function sessionCookieOptions() {
   return { ...cookieOptions("/hub"), maxAge: sessionAbsoluteLifetime / 1000 }
 }
 
-function cookieOptions(path: string) {
-  return {
-    httpOnly: true,
-    path,
-    sameSite: "lax" as const,
-    secure: new URL(configuredCallbackUri()).protocol === "https:",
-  }
-}
-
-function config() {
-  const baseUrl = process.env.CRUCIBLE_API_BASE_URL
-  const publicBaseUrl = process.env.HUB_AUTH_PUBLIC_API_URL ?? baseUrl
-  const secret = readSecretSetting("HUB_AUTH_CLIENT_SECRET")
-  const callbackUri = configuredCallbackUri()
-  if (
-    process.env.HUB_DATA_SOURCE !== "hub-auth" ||
-    !productionHubAuthReady() ||
-    !baseUrl ||
-    !publicBaseUrl ||
-    !secret
-  ) {
-    throw new Error("Hub sign-in is not configured.")
-  }
-  return {
-    baseUrl: serverApiUrl(baseUrl),
-    publicBaseUrl: publicApiUrl(publicBaseUrl),
-    callbackUri,
-    secret,
-  }
-}
-
 function basicAuthorization(secret: string) {
   return `Basic ${Buffer.from(`${clientId}:${secret}`).toString("base64")}`
 }
 
 async function tokenRequest(grant: TokenGrant): Promise<Tokens> {
-  const { baseUrl, secret } = config()
+  const { baseUrl, secret } = hubAuthConfig()
   const sentAt = Date.now()
   const response = await fetch(`${baseUrl}/oauth/token`, {
     method: "POST",
@@ -640,7 +405,7 @@ export async function beginHubLogin(
   maxAge: number | null = null,
   provider: string | null = null
 ) {
-  const { publicBaseUrl, callbackUri } = config()
+  const { publicBaseUrl, callbackUri } = hubAuthConfig()
   if (!sharedMode()) {
     pruneExpiredLocalTransactions()
     for (const id of store.sessions.keys()) localSession(id)
@@ -695,7 +460,7 @@ export async function finishHubLogin(
   providerError: string | null,
   issuer: string | null
 ) {
-  const { callbackUri } = config()
+  const { callbackUri } = hubAuthConfig()
   const transactionId = getCookie(transactionCookie)
   deleteCookie(transactionCookie, cookieOptions("/hub/auth"))
   if (!transactionId) throw new HubLoginUnavailableError("missing-login-cookie")
@@ -817,7 +582,7 @@ export async function finishHubLogin(
       !transaction.expectedAccount ||
       previous?.tokens.user_unique_id !== tokens.user_unique_id
     ) {
-      await writeGlobalPrivilegeMode("normal")
+      await resetPrivilegeMode()
     }
     setCookie(sessionCookie, sessionId, sessionCookieOptions())
     return transaction.returnTo
@@ -1127,7 +892,7 @@ export async function hubClientPost(
   body: object,
   signal?: AbortSignal
 ) {
-  const { baseUrl, secret } = config()
+  const { baseUrl, secret } = hubAuthConfig()
   const timeout = AbortSignal.timeout(15000)
   return fetch(`${baseUrl}${path}`, {
     method: "POST",
@@ -1146,7 +911,7 @@ export function hubLinkCallbackUri() {
 }
 
 export function hubApiAuthorizationUrl(value: string) {
-  const { publicBaseUrl } = config()
+  const { publicBaseUrl } = hubAuthConfig()
   const url = new URL(value)
   if (
     !url.href.startsWith(`${publicBaseUrl}/`) ||
@@ -1160,7 +925,7 @@ export function hubApiAuthorizationUrl(value: string) {
 
 async function revokeRefreshToken(refreshToken: string) {
   try {
-    const { baseUrl, secret } = config()
+    const { baseUrl, secret } = hubAuthConfig()
     const response = await fetch(`${baseUrl}/oauth/revoke`, {
       method: "POST",
       headers: {
@@ -1226,6 +991,6 @@ export async function logoutHubSession() {
     : undefined
   if (sessionId) store.sessions.delete(sessionId)
   deleteCookie(sessionCookie, cookieOptions("/hub"))
-  await writeGlobalPrivilegeMode("normal")
+  await resetPrivilegeMode()
   return refreshToken ? revokeRefreshToken(refreshToken) : true
 }

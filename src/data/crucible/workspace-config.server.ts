@@ -2,9 +2,9 @@ import "@tanstack/react-start/server-only"
 
 import {
   hasHubSession,
-  productionHubAuthReady,
   sessionApiFetch,
 } from "@/server/crucible/hub-auth.server"
+import { productionHubAuthReady } from "@/server/crucible/hub-auth-config.server"
 import {
   readSecretSetting,
   serverApiUrlAllowed,

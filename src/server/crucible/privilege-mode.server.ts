@@ -1,33 +1,18 @@
 import "@tanstack/react-start/server-only"
 
-import {
-  deleteCookie,
-  getCookie,
-  setCookie,
-} from "@tanstack/react-start/server"
-
+import { getCookie, setCookie } from "@tanstack/react-start/server"
 import type { WorkspacePrivilegeMode } from "@/data/crucible/privilege-mode"
 import {
-  hubAuthPublicOrigin,
   sharedRequestPrivilegeMode,
   updateSharedPrivilegeMode,
 } from "./hub-auth.server"
 import { CrucibleResponseError } from "./request-error.server"
 
-const privilegeModeCookie = "crucible_hub_administrator_view"
-
-function cookieOptions() {
-  return {
-    httpOnly: true,
-    path: "/",
-    sameSite: "lax" as const,
-    secure: new URL(hubAuthPublicOrigin()).protocol === "https:",
-  }
-}
-
-export function clearLegacyPrivilegeModeCookie() {
-  deleteCookie(privilegeModeCookie, cookieOptions())
-}
+import {
+  privilegeModeCookie,
+  privilegeModeCookieOptions,
+  clearLegacyPrivilegeModeCookie,
+} from "./privilege-mode-cookie.server"
 
 export function readGlobalPrivilegeMode(): WorkspacePrivilegeMode {
   const shared = sharedRequestPrivilegeMode()
@@ -46,7 +31,7 @@ export async function writeGlobalPrivilegeMode(mode: WorkspacePrivilegeMode) {
     return
   }
 
-  setCookie(privilegeModeCookie, mode, cookieOptions())
+  setCookie(privilegeModeCookie, mode, privilegeModeCookieOptions())
 }
 
 export function requireAdministratorView() {

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router"
 
 import { fixtureScenarioSchema } from "@/data/crucible/fixture-scenarios"
-import { createWorkspaceFileDownload } from "@/data/crucible/resources.server"
+import { createWorkspaceFileDownload } from "@/data/crucible/dataset-files.server"
 import { safeCrucibleCall } from "@/server/crucible/safe-call.server"
 
 const fileMfidPattern = /^[a-zA-Z0-9_-]{1,255}$/
