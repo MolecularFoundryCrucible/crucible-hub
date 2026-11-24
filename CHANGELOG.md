@@ -6,6 +6,7 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- The test suite is roughly halved and follows the testing rules in `CONTRIBUTING.md`; the two browser suites merge into one run on the production build with `npm run test:e2e`, which replaces `test:browser` and `test:production`. The footer version link now names its visible text ("Version v1.8.2") for voice control.
 - Keyboard focus on footer, section navigation, list and text links now uses the same soft 3 px ring as buttons and inputs.
 - Screen readers and voice control name the account menu button after the signed-in person ("Avery Chen account menu"), and metadata group summaries read as their visible text, meeting WCAG 2.5.3 Label in Name.
 - A page that fails to load now shows its error inside the workspace, keeping navigation and the account menu, with a reference and a Try again button; only a failure of the workspace itself shows the full-page error.

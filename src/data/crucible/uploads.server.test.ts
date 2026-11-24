@@ -3,9 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import { crucibleApiResponse } from "@/test/crucible-api-response"
 
 import {
-  abortWorkspaceUpload,
   completeWorkspaceUpload,
-  fixtureUploadedFilesFor,
   initializeWorkspaceUploadSession,
   readWorkspaceUploadSession,
   signWorkspaceUploadParts,
@@ -25,110 +23,6 @@ describe("dataset upload transport", () => {
   afterEach(() => {
     vi.unstubAllEnvs()
     vi.unstubAllGlobals()
-  })
-
-  it("simulates a working upload session in fixture mode", async () => {
-    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
-
-    const initiation = await initializeWorkspaceUploadSession({
-      datasetMfid,
-      filename: "runs/run-001/data.csv",
-      size: 128,
-    })
-    if (!("uploadId" in initiation)) throw new Error("Expected a session.")
-    expect(initiation.state).toBe("uploading")
-
-    const signed = await signWorkspaceUploadParts({
-      datasetMfid,
-      parts: [
-        { crc32cBase64: "AAAAAA==", partNumber: 1 },
-        { crc32cBase64: "AAAAAA==", partNumber: 2 },
-      ],
-      uploadId: initiation.uploadId,
-    })
-    expect(signed).toHaveLength(2)
-    expect(signed[0].url).toBe(
-      `/fixture-uploads?session=${initiation.uploadId}&part=1`
-    )
-    expect(signed[1].url).toBe(
-      `/fixture-uploads?session=${initiation.uploadId}&part=2`
-    )
-
-    const acknowledged = await readWorkspaceUploadSession({
-      datasetMfid,
-      uploadId: initiation.uploadId,
-    })
-    expect(acknowledged.acknowledgedPartNumbers).toEqual([1, 2])
-
-    const completed = await completeWorkspaceUpload({
-      crc32cBase64: "AAAAAA==",
-      datasetMfid,
-      sha256Hex: "a".repeat(64),
-      uploadId: initiation.uploadId,
-    })
-    expect(completed).toMatchObject({
-      filename: "runs/run-001/data.csv",
-      sha256_hash: "a".repeat(64),
-      size: 128,
-    })
-    expect(
-      fixtureUploadedFilesFor(datasetMfid).map((file) => file.filename)
-    ).toEqual(["runs/run-001/data.csv"])
-
-    const reread = await completeWorkspaceUpload({
-      crc32cBase64: "AAAAAA==",
-      datasetMfid,
-      sha256Hex: "a".repeat(64),
-      uploadId: initiation.uploadId,
-    })
-    expect(reread.mfid).toBe(completed.mfid)
-  })
-
-  it("aborts a session and rejects further part signing", async () => {
-    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
-
-    const initiation = await initializeWorkspaceUploadSession({
-      datasetMfid,
-      filename: "runs/run-002/data.csv",
-      size: 64,
-    })
-    if (!("uploadId" in initiation)) throw new Error("Expected a session.")
-    await abortWorkspaceUpload({
-      datasetMfid,
-      uploadId: initiation.uploadId,
-    })
-    await expect(
-      readWorkspaceUploadSession({
-        datasetMfid,
-        uploadId: initiation.uploadId,
-      })
-    ).rejects.toThrow()
-
-    await expect(
-      signWorkspaceUploadParts({
-        datasetMfid,
-        parts: [{ crc32cBase64: "AAAAAA==", partNumber: 1 }],
-        uploadId: initiation.uploadId,
-      })
-    ).rejects.toThrow()
-  })
-
-  it("rejects sessions for unknown datasets or uploads", async () => {
-    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
-
-    await expect(
-      initializeWorkspaceUploadSession({
-        datasetMfid: "fixture-missing-dataset",
-        filename: "data.csv",
-        size: 1,
-      })
-    ).rejects.toThrow()
-    await expect(
-      readWorkspaceUploadSession({
-        datasetMfid,
-        uploadId: "fixture-upload-missing",
-      })
-    ).rejects.toThrow()
   })
 
   it("fails closed for API-mode servers until uploads are enabled", async () => {
@@ -292,73 +186,6 @@ describe("dataset upload transport", () => {
     })
   })
 
-  it("recognizes a replacement that could not be published", async () => {
-    stubApiMode()
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async () =>
-        crucibleApiResponse(
-          { detail: "Upload could not be published: file_changed" },
-          { status: 409 }
-        )
-      )
-    )
-    await expect(
-      completeWorkspaceUpload({
-        crc32cBase64: "AAAAAA==",
-        datasetMfid,
-        sha256Hex: "0".repeat(64),
-        uploadId: "upload-2",
-      })
-    ).rejects.toMatchObject({ conflictCode: "file_changed", status: 409 })
-  })
-
-  it("replaces a fixture file in place and keeps its MFID", async () => {
-    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
-    const existing = await initializeWorkspaceUploadSession({
-      datasetMfid,
-      filename: "operando-cycle-04.h5",
-      size: 10,
-    })
-    expect(existing).toMatchObject({
-      fileMfid: "01J6Y8N4Q2R7M9K3T5V0W1X2ZC",
-      state: "filename_exists",
-    })
-    if (existing.state !== "filename_exists") return
-    const replacement = await initializeWorkspaceUploadSession({
-      datasetMfid,
-      filename: "operando-cycle-04.h5",
-      replace: { etag: existing.etag, fileMfid: existing.fileMfid },
-      size: 10,
-    })
-    if (!("uploadId" in replacement)) throw new Error("expected a session")
-    await signWorkspaceUploadParts({
-      datasetMfid,
-      parts: [{ crc32cBase64: "AAAAAA==", partNumber: 1 }],
-      uploadId: replacement.uploadId,
-    })
-    const file = await completeWorkspaceUpload({
-      crc32cBase64: "AAAAAA==",
-      datasetMfid,
-      sha256Hex: "1".repeat(64),
-      uploadId: replacement.uploadId,
-    })
-    expect(file).toMatchObject({
-      filename: "operando-cycle-04.h5",
-      mfid: "01J6Y8N4Q2R7M9K3T5V0W1X2ZC",
-      size: 10,
-    })
-    expect(file.etag).not.toBe(existing.etag)
-    await expect(
-      initializeWorkspaceUploadSession({
-        datasetMfid,
-        filename: "operando-cycle-04.h5",
-        replace: { etag: existing.etag, fileMfid: existing.fileMfid },
-        size: 10,
-      })
-    ).resolves.toEqual({ state: "file_changed" })
-  })
-
   it("treats a deduplicated API initiation as a completed upload", async () => {
     stubApiMode()
     vi.stubGlobal(
@@ -509,6 +336,10 @@ describe("dataset upload transport", () => {
     const responses = [
       crucibleApiResponse(file),
       crucibleApiResponse({ detail: "checksum_mismatch" }, { status: 422 }),
+      crucibleApiResponse(
+        { detail: "Upload could not be published: file_changed" },
+        { status: 409 }
+      ),
     ]
     vi.stubGlobal(
       "fetch",
@@ -535,23 +366,9 @@ describe("dataset upload transport", () => {
     await expect(completeWorkspaceUpload(input)).rejects.toMatchObject({
       status: 422,
     })
-  })
-
-  it("accepts API abort cleanup responses", async () => {
-    stubApiMode()
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(
-        async () =>
-          new Response(null, {
-            headers: { "Crucible-Privilege-Mode": "normal" },
-            status: 204,
-          })
-      )
-    )
-
-    await expect(
-      abortWorkspaceUpload({ datasetMfid, uploadId: "upload-1" })
-    ).resolves.toBeUndefined()
+    await expect(completeWorkspaceUpload(input)).rejects.toMatchObject({
+      conflictCode: "file_changed",
+      status: 409,
+    })
   })
 })

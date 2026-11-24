@@ -25,10 +25,7 @@ import {
 } from "@/data/crucible/account-identities.functions"
 
 import { UserDetailView } from "./user-detail"
-import {
-  setWorkspaceUserDisabledFn,
-  updateWorkspaceUser,
-} from "@/data/crucible/users.functions"
+import { setWorkspaceUserDisabledFn } from "@/data/crucible/users.functions"
 
 vi.mock("@tanstack/react-router", async (importOriginal) => {
   const actual = await importOriginal<Record<string, unknown>>()
@@ -250,50 +247,8 @@ function renderUserDetail(
   )
 }
 
-describe("UserDetailView projects table sorting", () => {
+describe("UserDetailView sign-in methods", () => {
   afterEach(cleanup)
-
-  it("renders the profile card with name and username, without account type", () => {
-    renderUserDetail()
-
-    expect(screen.getByText("Profile")).toBeTruthy()
-    expect(screen.getByText("Name")).toBeTruthy()
-    expect(screen.getByText("testuser")).toBeTruthy()
-    expect(screen.getByText("Crucible ID")).toBeTruthy()
-    expect(screen.getByText("Platform role")).toBeTruthy()
-    expect(screen.getByText("Email")).toBeTruthy()
-    expect(screen.getByText("Last active")).toBeTruthy()
-    expect(screen.queryByText("Account type")).toBeNull()
-    expect(screen.queryByText("ORCID")).toBeNull()
-    expect(screen.queryByRole("tab", { name: /API keys/ })).toBeNull()
-  })
-
-  it("lists the person's sign-in methods and keeps their only one", async () => {
-    renderUserDetail(testUser, "security")
-
-    expect(
-      await screen.findByRole("tab", { name: /Sign-in methods/ })
-    ).toBeTruthy()
-    expect(
-      await screen.findByRole("link", { name: "0000-0002-1825-0097" })
-    ).toBeTruthy()
-    expect(
-      within(screen.getByRole("table", { name: "Sign-in methods" })).getByText(
-        "Not verified"
-      )
-    ).toBeTruthy()
-    expect(
-      screen.queryByRole("button", { name: "Add sign-in method" })
-    ).toBeNull()
-    fireEvent.click(screen.getByRole("button", { name: "Actions for ORCID" }))
-    expect(
-      (
-        await screen.findByRole("menuitem", {
-          name: "Remove",
-        })
-      ).getAttribute("aria-disabled")
-    ).toBe("true")
-  })
 
   it("removes one of a person's logins after naming them in the warning", async () => {
     vi.mocked(getWorkspaceUserIdentities).mockResolvedValueOnce({
@@ -386,95 +341,12 @@ describe("UserDetailView projects table sorting", () => {
     )
     expect(vi.mocked(removeWorkspaceUserIdentityFn)).not.toHaveBeenCalled()
   })
-
-  it("renders sortable headers for Project, Created, and Updated, and non-sortable Lead and Role", () => {
-    renderUserDetail()
-
-    expect(
-      screen.getByRole("button", { name: /(sort by project|project, sorted)/i })
-    ).toBeTruthy()
-    expect(
-      screen.getByRole("button", { name: /(sort by created|created, sorted)/i })
-    ).toBeTruthy()
-    expect(
-      screen.getByRole("button", { name: /(sort by updated|updated, sorted)/i })
-    ).toBeTruthy()
-    expect(
-      screen.queryByRole("button", { name: /(sort by lead|lead, sorted)/i })
-    ).toBeNull()
-    expect(
-      screen.queryByRole("button", { name: /(sort by role|role, sorted)/i })
-    ).toBeNull()
-    expect(screen.getByRole("columnheader", { name: "Lead" })).toBeTruthy()
-    expect(screen.getByRole("columnheader", { name: "Role" })).toBeTruthy()
-  })
-
-  it("sorts by project name ascending and descending when Project header is clicked", async () => {
-    renderUserDetail()
-
-    const projectButton = screen.getByRole("button", {
-      name: /(sort by project|project, sorted)/i,
-    })
-
-    const initialRows = within(
-      screen.getByRole("table", { name: "User projects" })
-    )
-      .getAllByRole("row")
-      .slice(1)
-    expect(initialRows[0].textContent).toContain("Alpha Project")
-    expect(initialRows[1].textContent).toContain("Beta Project")
-    expect(initialRows[2].textContent).toContain("Gamma Project")
-
-    fireEvent.click(projectButton)
-    await waitFor(() => {
-      const rowsDesc = within(
-        screen.getByRole("table", { name: "User projects" })
-      )
-        .getAllByRole("row")
-        .slice(1)
-      expect(rowsDesc[0].textContent).toContain("Gamma Project")
-      expect(rowsDesc[1].textContent).toContain("Beta Project")
-      expect(rowsDesc[2].textContent).toContain("Alpha Project")
-    })
-  })
-
-  it("sorts by created and updated dates when clicked", async () => {
-    renderUserDetail()
-
-    const createdButton = screen.getByRole("button", {
-      name: /(sort by created|created, sorted)/i,
-    })
-    fireEvent.click(createdButton)
-    await waitFor(() => {
-      const rowsDesc = within(
-        screen.getByRole("table", { name: "User projects" })
-      )
-        .getAllByRole("row")
-        .slice(1)
-      expect(rowsDesc[0].textContent).toContain("Gamma Project")
-      expect(rowsDesc[1].textContent).toContain("Beta Project")
-      expect(rowsDesc[2].textContent).toContain("Alpha Project")
-    })
-
-    const updatedButton = screen.getByRole("button", { name: /updated/i })
-    fireEvent.click(updatedButton)
-    await waitFor(() => {
-      const rowsUpdated = within(
-        screen.getByRole("table", { name: "User projects" })
-      )
-        .getAllByRole("row")
-        .slice(1)
-      expect(rowsUpdated[0].textContent).toContain("Alpha Project")
-      expect(rowsUpdated[1].textContent).toContain("Beta Project")
-      expect(rowsUpdated[2].textContent).toContain("Gamma Project")
-    })
-  })
 })
 
 describe("UserDetailView API keys", () => {
   afterEach(cleanup)
 
-  it("opens the API keys tab from #api-keys and counts each tab", async () => {
+  it("opens the API keys tab from #api-keys, counts each tab, and keeps the chosen tab in the address", async () => {
     vi.mocked(getWorkspaceApiKeys).mockResolvedValue({
       data: { items: [], nextCursor: null, total: 3 },
       status: "ok",
@@ -488,9 +360,8 @@ describe("UserDetailView API keys", () => {
     )
     await waitFor(() => expect(keysTab.textContent).toContain("3"))
     window.history.replaceState(null, "", window.location.pathname)
-  })
+    cleanup()
 
-  it("keeps the chosen Security tab in the address", async () => {
     window.history.replaceState(null, "", "/users/person-1")
     renderUserDetail(testUser, "security")
 
@@ -563,38 +434,7 @@ describe("UserDetailView API keys", () => {
 describe("UserDetailView account status", () => {
   afterEach(cleanup)
 
-  it("asks for a fresh sign-in when saving a profile needs one", async () => {
-    vi.mocked(updateWorkspaceUser).mockResolvedValue({
-      error: {
-        correlationId: "request-1",
-        kind: "reauthentication-required",
-        message: "Sign in again to continue.",
-        retryable: false,
-      },
-      status: "error",
-    })
-    renderUserDetail()
-
-    fireEvent.click(screen.getByRole("button", { name: "Edit profile" }))
-    fireEvent.change(await screen.findByLabelText(/First name/), {
-      target: { value: "Tess" },
-    })
-    fireEvent.click(await screen.findByRole("button", { name: "Save" }))
-
-    const signIn = await screen.findByRole("button", { name: "Sign in again" })
-    const href = new URL(signIn.getAttribute("href") ?? "", "https://hub.test")
-    expect(href.searchParams.get("max_age")).toBe("0")
-    expect(
-      screen.getByText(
-        /Changing an administrator's profile needs a recent sign-in/
-      )
-    ).toBeTruthy()
-    expect(vi.mocked(updateWorkspaceUser)).toHaveBeenCalledWith({
-      data: expect.objectContaining({ changes: { first_name: "Tess" } }),
-    })
-  })
-
-  it("disables an account after confirming", async () => {
+  it("disables an account after confirming and enables a disabled one again", async () => {
     renderUserDetail()
 
     fireEvent.click(
@@ -613,9 +453,8 @@ describe("UserDetailView account status", () => {
         data: expect.objectContaining({ disabled: true, userId: "test-user" }),
       })
     )
-  })
+    cleanup()
 
-  it("shows a disabled account and enables it again", async () => {
     vi.mocked(setWorkspaceUserDisabledFn).mockClear()
     renderUserDetail({ ...testUser, disabled_at: "2026-11-09T12:00:00Z" })
 

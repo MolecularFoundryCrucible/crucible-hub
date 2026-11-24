@@ -10,7 +10,7 @@ import { timeZoneCookie } from "./time-zone"
 import { windowClassCookie } from "./window-class"
 
 describe("parseViewerPresentation", () => {
-  it("reads valid presentation cookies", () => {
+  it("reads valid presentation cookies and falls back to defaults", () => {
     expect(
       parseViewerPresentation({
         [inspectorCookie]: "collapsed",
@@ -26,9 +26,6 @@ describe("parseViewerPresentation", () => {
       timeZone: "America/Los_Angeles",
       windowClass: "medium",
     })
-  })
-
-  it("falls back to defaults for missing or invalid values", () => {
     expect(
       parseViewerPresentation({
         [inspectorCookie]: "sideways",

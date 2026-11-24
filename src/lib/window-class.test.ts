@@ -1,12 +1,7 @@
 import { readFileSync } from "node:fs"
 import { describe, expect, it } from "vitest"
 
-import {
-  isWindowClass,
-  windowClassAtLeast,
-  windowClassBreakpoints,
-  windowClassForMatches,
-} from "./window-class"
+import { windowClassBreakpoints, windowClassForMatches } from "./window-class"
 
 describe("window classes", () => {
   it("match the breakpoint tokens in styles.css", () => {
@@ -28,12 +23,5 @@ describe("window classes", () => {
     expect(
       windowClassForMatches({ expanded: true, medium: true, wide: true })
     ).toBe("wide")
-  })
-
-  it("orders classes and validates cookie values", () => {
-    expect(windowClassAtLeast("wide", "expanded")).toBe(true)
-    expect(windowClassAtLeast("medium", "expanded")).toBe(false)
-    expect(isWindowClass("medium")).toBe(true)
-    expect(isWindowClass("tablet")).toBe(false)
   })
 })

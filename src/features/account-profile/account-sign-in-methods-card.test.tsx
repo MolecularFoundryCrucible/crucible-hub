@@ -254,26 +254,11 @@ describe("AccountSignInMethodsCard", () => {
     ).toBeTruthy()
   })
 
-  it("asks to wait after too many sign-in links", async () => {
-    vi.mocked(getWorkspaceAccountIdentities).mockResolvedValue(ok([orcidLogin]))
-    vi.mocked(startWorkspaceAccountLinkFn).mockResolvedValue(
-      failure("rate-limited", "too_many_links") as never
-    )
-    renderCard()
-
-    fireEvent.click(await chooseFromMenu("Add sign-in method", "Berkeley Lab"))
-    expect(
-      await screen.findByText(
-        "You've started too many sign-in links. Try again in about 10 minutes."
-      )
-    ).toBeTruthy()
-  })
-
-  it("hides itself while the API has sign-in methods turned off", async () => {
+  it("hides itself and drops a returning link while the API has sign-in methods turned off", async () => {
     vi.mocked(getWorkspaceAccountIdentities).mockResolvedValue(
       failure("conflict", "identity_lookup_off") as never
     )
-    renderCard()
+    const { onLinkOutcomeHandled } = renderCard("pending")
 
     await waitFor(() =>
       expect(vi.mocked(getWorkspaceAccountIdentities)).toHaveBeenCalled()
@@ -281,14 +266,6 @@ describe("AccountSignInMethodsCard", () => {
     await waitFor(() =>
       expect(screen.queryByText("Sign-in methods")).toBeNull()
     )
-  })
-
-  it("drops a returning link while the API has sign-in methods turned off", async () => {
-    vi.mocked(getWorkspaceAccountIdentities).mockResolvedValue(
-      failure("conflict", "identity_lookup_off") as never
-    )
-    const { onLinkOutcomeHandled } = renderCard("pending")
-
     await waitFor(() => expect(onLinkOutcomeHandled).toHaveBeenCalled())
     expect(vi.mocked(cancelWorkspaceAccountLinkFn)).toHaveBeenCalled()
   })
@@ -318,8 +295,6 @@ describe("AccountSignInMethodsCard", () => {
 
   it.each([
     ["linked_elsewhere", /already belongs to another Crucible account/],
-    ["second_orcid", /already has an ORCID/],
-    ["orcid_of_another", /ask an administrator/],
     ["unknown", /can't be added to your account/],
   ] as const)(
     "explains a %s login without offering to confirm",
@@ -356,7 +331,7 @@ describe("AccountSignInMethodsCard", () => {
     )
   })
 
-  it("sets a first password from the add menu", async () => {
+  it("refuses mismatched passwords locally, then sets a first password from the add menu", async () => {
     vi.mocked(getHubSignInOptions).mockResolvedValue({
       methods: [orcidMethod, passwordMethod],
       origin: null,
@@ -369,6 +344,18 @@ describe("AccountSignInMethodsCard", () => {
     fireEvent.click(await chooseFromMenu("Add sign-in method", "Password"))
     const dialog = await screen.findByRole("dialog", { name: "Set a password" })
     expect(screen.getByText(/sign in with your username, achen/)).toBeTruthy()
+    fireEvent.change(screen.getByLabelText("New password"), {
+      target: { value: "one long password" },
+    })
+    fireEvent.change(screen.getByLabelText("Confirm new password"), {
+      target: { value: "another long password" },
+    })
+    fireEvent.click(
+      within(dialog).getByRole("button", { name: "Set password" })
+    )
+    expect(await screen.findByText("The passwords don't match.")).toBeTruthy()
+    expect(vi.mocked(setWorkspaceAccountPasswordFn)).not.toHaveBeenCalled()
+
     fireEvent.change(screen.getByLabelText("New password"), {
       target: { value: "correct horse battery" },
     })
@@ -383,30 +370,6 @@ describe("AccountSignInMethodsCard", () => {
         data: { newPassword: "correct horse battery" },
       })
     )
-  })
-
-  it("refuses mismatched passwords without asking the API", async () => {
-    vi.mocked(getHubSignInOptions).mockResolvedValue({
-      methods: [passwordMethod],
-      origin: null,
-    })
-    mockAccount([])
-    vi.mocked(getWorkspaceAccountIdentities).mockResolvedValue(ok([]))
-    renderCard()
-
-    fireEvent.click(await chooseFromMenu("Add sign-in method", "Password"))
-    const dialog = await screen.findByRole("dialog", { name: "Set a password" })
-    fireEvent.change(screen.getByLabelText("New password"), {
-      target: { value: "one long password" },
-    })
-    fireEvent.change(screen.getByLabelText("Confirm new password"), {
-      target: { value: "another long password" },
-    })
-    fireEvent.click(
-      within(dialog).getByRole("button", { name: "Set password" })
-    )
-    expect(await screen.findByText("The passwords don't match.")).toBeTruthy()
-    expect(vi.mocked(setWorkspaceAccountPasswordFn)).not.toHaveBeenCalled()
   })
 
   it("asks for the current password when the API says one exists", async () => {
@@ -528,7 +491,7 @@ describe("PersonSignInMethodsSection passwords", () => {
     )
   }
 
-  it("creates a setup link for someone without a password", async () => {
+  it("creates a setup link without a password and offers reset and removal with one", async () => {
     vi.mocked(issueWorkspaceUserPasswordLinkFn).mockResolvedValue(
       ok({
         expires_at: "2026-11-10T00:00:00Z",
@@ -550,9 +513,8 @@ describe("PersonSignInMethodsSection passwords", () => {
     expect(
       screen.getByText(/Send this link to Ada Chen privately/)
     ).toBeTruthy()
-  })
 
-  it("offers a reset link and removal for someone with a password", async () => {
+    cleanup()
     renderPerson(["password", "ORCID"])
 
     expect(

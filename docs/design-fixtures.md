@@ -33,4 +33,4 @@ Dense fixtures apply instrument and project scope before cursor slicing and mode
 - Fixture routes are unlinked and `noindex`.
 - Fixtures are on outside production. In production they fail closed unless `HUB_ENABLE_FIXTURES=true`, which allows only `populated` and is never a real deployment setting.
 - API calls are server-only, so browser tests substitute the server adapter rather than intercepting browser requests.
-- `npm run test:browser` and `npm run test:production` run the Playwright suites against fixtures without storing screenshots.
+- `npm run test:e2e` runs the Playwright suite against fixtures on the production build without storing screenshots.

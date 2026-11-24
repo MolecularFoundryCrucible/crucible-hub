@@ -96,7 +96,7 @@ const dataset: Extract<WorkspaceResourceDetail, { kind: "dataset" }> = {
 }
 
 describe("resource summary editing", () => {
-  it("submits only normalized changed sample fields", () => {
+  it("submits only normalized changed sample and dataset fields, clearing empty optional ones", () => {
     expect(
       sampleSummaryChanges(sample, {
         description: "  Updated description  ",
@@ -108,29 +108,7 @@ describe("resource summary editing", () => {
       description: "Updated description",
       sample_type: null,
     })
-  })
 
-  it("leaves richer sample detail intact after a confirmed update", () => {
-    expect(
-      mergeSampleSummaryUpdate(sample, {
-        description: null,
-        modification_time: "2026-09-05T12:00:00Z",
-        sample_name: "Updated sample",
-        sample_type: null,
-        timestamp: "2026-09-05T11:00:00Z",
-        unique_id: "sample-mfid",
-      })
-    ).toEqual({
-      ...sample,
-      description: null,
-      modification_time: "2026-09-05T12:00:00Z",
-      name: "Updated sample",
-      sample_type: null,
-      timestamp: "2026-09-05T11:00:00Z",
-    })
-  })
-
-  it("submits only normalized changed dataset fields", () => {
     expect(
       datasetSummaryChanges(dataset, {
         data_format: " HDF5 ",
@@ -144,9 +122,7 @@ describe("resource summary editing", () => {
       dataset_name: "Updated dataset",
       measurement: "Updated measurement",
     })
-  })
 
-  it("normalizes empty optional dataset fields to null", () => {
     expect(
       datasetSummaryChanges(dataset, {
         data_format: " ",
@@ -164,7 +140,25 @@ describe("resource summary editing", () => {
     })
   })
 
-  it("leaves richer dataset detail intact after a confirmed update", () => {
+  it("leaves richer sample and dataset detail intact after a confirmed update", () => {
+    expect(
+      mergeSampleSummaryUpdate(sample, {
+        description: null,
+        modification_time: "2026-09-05T12:00:00Z",
+        sample_name: "Updated sample",
+        sample_type: null,
+        timestamp: "2026-09-05T11:00:00Z",
+        unique_id: "sample-mfid",
+      })
+    ).toEqual({
+      ...sample,
+      description: null,
+      modification_time: "2026-09-05T12:00:00Z",
+      name: "Updated sample",
+      sample_type: null,
+      timestamp: "2026-09-05T11:00:00Z",
+    })
+
     expect(
       mergeDatasetSummaryUpdate(dataset, {
         data_format: "NeXus",

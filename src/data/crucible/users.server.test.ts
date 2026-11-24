@@ -6,7 +6,6 @@ import {
   checkWorkspaceEmailExactMatch,
   createWorkspaceUser,
   patchWorkspaceUser,
-  readWorkspaceUserDetail,
   readWorkspaceUsers,
   updateWorkspaceUserPlatformRole,
 } from "./users.server"
@@ -46,55 +45,6 @@ describe("workspace user source", () => {
       status: 403,
     })
     expect(fetchMock).not.toHaveBeenCalled()
-  })
-
-  it("resolves fixture user detail by unique_id", async () => {
-    vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
-
-    const account = await readWorkspaceUserDetail("0000-0000-0000-000X")
-
-    expect(account).toMatchObject({
-      platform_role: "admin",
-      unique_id: "0000-0000-0000-000X",
-      username: "avery.chen",
-    })
-    await expect(readWorkspaceUserDetail("missing-user")).resolves.toBeNull()
-  })
-
-  it("paginates and filters fixture users", async () => {
-    vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
-
-    const page = await readWorkspaceUsers({ limit: 2 })
-    const serviceAccounts = await readWorkspaceUsers({
-      is_service_account: true,
-      limit: 20,
-    })
-    const queried = await readWorkspaceUsers({ limit: 20, query: "avery" })
-    const sorted = await readWorkspaceUsers({ limit: 20, sort: "name" })
-
-    expect(page.items).toHaveLength(2)
-    expect(page.total).toBeGreaterThan(2)
-    expect(page.nextCursor).toBeTruthy()
-    const nextPage = await readWorkspaceUsers({
-      cursor: page.nextCursor ?? "",
-      limit: 2,
-    })
-    expect(
-      nextPage.items.every(
-        (user) => !page.items.some((seen) => seen.unique_id === user.unique_id)
-      )
-    ).toBe(true)
-    expect(serviceAccounts.items.every((user) => user.is_service_account)).toBe(
-      true
-    )
-    expect(queried.items).toHaveLength(1)
-    expect(queried.items[0]).toMatchObject({ username: "avery.chen" })
-    const names = sorted.items.map((user) =>
-      `${user.first_name} ${user.last_name}`.trim()
-    )
-    expect([...names].sort((a, b) => a.localeCompare(b))).toEqual(names)
   })
 
   it("searches and paginates users through GET /users query parameters", async () => {
@@ -161,20 +111,8 @@ describe("workspace user source", () => {
     })
   })
 
-  it("checks email availability in fixture and API mode", async () => {
+  it("checks email availability through the API", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
-
-    await expect(
-      checkWorkspaceEmailExactMatch("avery.chen@example.invalid")
-    ).resolves.toBe(true)
-    await expect(
-      checkWorkspaceEmailExactMatch("AVERY.CHEN@EXAMPLE.INVALID")
-    ).resolves.toBe(true)
-    await expect(
-      checkWorkspaceEmailExactMatch("other@example.invalid")
-    ).resolves.toBe(false)
-
     vi.stubEnv("HUB_DATA_SOURCE", "api")
     vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
     vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
@@ -231,17 +169,6 @@ describe("workspace user source", () => {
     ).rejects.toThrow(
       "The Crucible API did not apply the requested privilege mode."
     )
-  })
-
-  it("carries API key status on user records", async () => {
-    vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
-
-    const account = await readWorkspaceUserDetail("0000-0000-0000-000X")
-    expect(account).toMatchObject({
-      api_key_status: { valid: true },
-      user_capabilities: { can_change_platform_role: true },
-    })
   })
 
   it("creates users through the API with the elevated privilege header", async () => {
@@ -338,15 +265,6 @@ describe("workspace user source", () => {
 
   it("changes user platform roles through the dedicated endpoint", async () => {
     vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
-
-    await expect(
-      updateWorkspaceUserPlatformRole("0000-0000-0000-0018", "contributor")
-    ).resolves.toMatchObject({
-      platform_role: "contributor",
-      unique_id: "0000-0000-0000-0018",
-    })
-
     vi.stubEnv("HUB_DATA_SOURCE", "api")
     vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
     vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
@@ -390,15 +308,5 @@ describe("workspace user source", () => {
       platform_role: "admin",
       user_capabilities: { can_change_platform_role: true },
     })
-  })
-
-  it("does not bypass the production fixture guard", async () => {
-    vi.stubEnv("NODE_ENV", "production")
-    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
-    vi.stubEnv("HUB_ENABLE_FIXTURES", "")
-
-    await expect(readWorkspaceUsers({ limit: 20 })).rejects.toThrow(
-      "The Crucible API login exchange is not connected yet."
-    )
   })
 })

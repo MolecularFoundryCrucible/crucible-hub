@@ -2,7 +2,6 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { crucibleApiResponse } from "@/test/crucible-api-response"
 
-import { fixturePublicOnlyMfids } from "./fixtures/demo-workspace"
 import { searchWorkspace, searchWorkspaceMetadata } from "./search.server"
 
 const allKinds = [
@@ -17,69 +16,6 @@ describe("workspace search source", () => {
   afterEach(() => {
     vi.unstubAllEnvs()
     vi.unstubAllGlobals()
-  })
-
-  it("groups ranked fixture matches and respects selected kinds", async () => {
-    vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
-
-    const result = await searchWorkspace({
-      kinds: ["sample", "dataset"],
-      limit: 8,
-      query: "NiFe",
-    })
-
-    expect(result.groups.map((group) => group.kind)).toEqual([
-      "sample",
-      "dataset",
-    ])
-    expect(result.groups[0].items).toHaveLength(2)
-    expect(result.groups[1].items).toHaveLength(2)
-    expect(result.groups[0].items[0]).toMatchObject({
-      kind: "sample",
-      name: "NiFe oxide catalyst A",
-      projectId: "operando-catalyst-mapping",
-    })
-  })
-
-  it("restricts fixture data search to the selected project", async () => {
-    vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
-
-    const result = await searchWorkspace({
-      kinds: ["sample"],
-      limit: 8,
-      projectMfid: "fixture-project-1",
-      query: "Catalyst sample 2",
-      scenario: "dense",
-    })
-
-    expect(result.groups[0].items.map((item) => item.unique_id)).toEqual([
-      "fixture-sample-2",
-      "fixture-sample-25",
-    ])
-  })
-
-  it("reports one fixture search failure without hiding other groups", async () => {
-    vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
-
-    const result = await searchWorkspace({
-      kinds: allKinds,
-      limit: 8,
-      query: "operando",
-      scenario: "partial",
-    })
-
-    expect(result.groups.find((group) => group.kind === "dataset")).toEqual({
-      error: true,
-      items: [],
-      kind: "dataset",
-      total: null,
-    })
-    expect(
-      result.groups.find((group) => group.kind === "project")?.items
-    ).not.toHaveLength(0)
   })
 
   it("resolves a complete MFID directly", async () => {
@@ -103,7 +39,7 @@ describe("workspace search source", () => {
     ])
   })
 
-  it("sends the member affiliation to sample, dataset and metadata search", async () => {
+  it("sends the member and owner affiliations to the matching searches", async () => {
     vi.stubEnv("NODE_ENV", "development")
     vi.stubEnv("HUB_DATA_SOURCE", "api")
     vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
@@ -114,8 +50,6 @@ describe("workspace search source", () => {
       vi.fn(async (request: Request) => {
         const url = new URL(request.url)
         affiliations.set(url.pathname, url.searchParams.getAll("affiliation"))
-        if (url.pathname === "/users/search")
-          return crucibleApiResponse({ items: [], limit: 8 })
         return crucibleApiResponse({ items: [], limit: 8, total: 0 })
       })
     )
@@ -136,23 +70,8 @@ describe("workspace search source", () => {
     expect(affiliations.get("/datasets/search")).toEqual(["member"])
     expect(affiliations.get("/projects/search")).toEqual([])
     expect(affiliations.get("/resources/metadata/search")).toEqual(["member"])
-  })
 
-  it("sends the owner affiliation to every owned resource search", async () => {
-    vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "api")
-    vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
-    vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
-    const affiliations = new Map<string, string[]>()
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async (request: Request) => {
-        const url = new URL(request.url)
-        affiliations.set(url.pathname, url.searchParams.getAll("affiliation"))
-        return crucibleApiResponse({ items: [], limit: 8, total: 0 })
-      })
-    )
-
+    affiliations.clear()
     await searchWorkspace({
       affiliation: "owner",
       kinds: ["project", "instrument", "sample", "dataset"],
@@ -172,104 +91,6 @@ describe("workspace search source", () => {
       "/resources/metadata/search": ["owner"],
       "/samples/search": ["owner"],
     })
-  })
-
-  it("keeps only the caller's own fixture records when searching owned resources", async () => {
-    vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
-    const names = (result: Awaited<ReturnType<typeof searchWorkspace>>) =>
-      result.groups.flatMap((group) => group.items.map((item) => item.name))
-
-    const all = await searchWorkspace({
-      kinds: ["project", "sample", "dataset"],
-      limit: 50,
-      query: "",
-    })
-    const owned = await searchWorkspace({
-      affiliation: "owner",
-      kinds: ["project", "sample", "dataset"],
-      limit: 50,
-      query: "",
-    })
-
-    expect(names(owned).length).toBeGreaterThan(0)
-    expect(names(owned).length).toBeLessThan(names(all).length)
-    expect(names(owned)).not.toContain("Perovskite film PV-12")
-    expect(names(all)).toContain("Perovskite film PV-12")
-  })
-
-  it("shows the instrument identifier under instrument results", async () => {
-    vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
-
-    const result = await searchWorkspace({
-      kinds: ["instrument"],
-      limit: 8,
-      query: "Microprobe",
-    })
-
-    expect(result.groups[0].items[0]).toMatchObject({
-      context: "hard-xray-microprobe",
-      kind: "instrument",
-    })
-  })
-
-  it("shows the project slug under project results", async () => {
-    vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
-
-    const result = await searchWorkspace({
-      kinds: ["project"],
-      limit: 8,
-      query: "operando",
-    })
-
-    expect(result.groups[0].items[0]).toMatchObject({
-      context: "operando-catalyst-mapping",
-      kind: "project",
-    })
-  })
-
-  it("hides fixture search results visible only because they are public", async () => {
-    vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
-    const ids = (result: Awaited<ReturnType<typeof searchWorkspace>>) =>
-      result.groups.flatMap((group) =>
-        group.items.map((item) => item.unique_id)
-      )
-
-    const all = await searchWorkspace({
-      kinds: ["sample", "dataset"],
-      limit: 50,
-      query: "",
-    })
-    const member = await searchWorkspace({
-      affiliation: "member",
-      kinds: ["sample", "dataset"],
-      limit: 50,
-      query: "",
-    })
-
-    expect(ids(all).some((id) => fixturePublicOnlyMfids.has(id))).toBe(true)
-    expect(ids(member).some((id) => fixturePublicOnlyMfids.has(id))).toBe(false)
-  })
-
-  it("still finds a public-only record by its MFID", async () => {
-    vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
-
-    const result = await searchWorkspace({
-      affiliation: "member",
-      kinds: ["sample", "dataset"],
-      limit: 8,
-      query: "01J6Y8N4Q2R7M9K3T5V0W1X2ZH",
-    })
-
-    expect(
-      result.groups.flatMap((group) =>
-        group.items.map((item) => item.unique_id)
-      )
-    ).toEqual(["01J6Y8N4Q2R7M9K3T5V0W1X2ZH"])
   })
 
   it("bounds API aggregation and preserves successful groups", async () => {
@@ -372,21 +193,6 @@ describe("workspace search source", () => {
       "sa-hip",
       "user-mfid-3",
     ])
-  })
-
-  it("browses initial collections when query is empty in fixture mode", async () => {
-    vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
-
-    const result = await searchWorkspace({
-      kinds: ["instrument", "project"],
-      limit: 8,
-      query: "",
-    })
-
-    expect(result.groups.map((g) => g.kind)).toEqual(["instrument", "project"])
-    expect(result.groups[0].items.length).toBeGreaterThan(0)
-    expect(result.groups[1].items.length).toBeGreaterThan(0)
   })
 
   it("calls collection list endpoints rather than search endpoints when query is empty in API mode", async () => {

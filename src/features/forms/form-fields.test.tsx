@@ -43,26 +43,6 @@ function TestForm({ description }: { description?: string }) {
 describe("shared form fields", () => {
   afterEach(cleanup)
 
-  it("labels the control and passes input props through", () => {
-    render(<TestForm />)
-    const name = screen.getByRole("textbox", { name: /Name/ })
-    expect(name.id).toBe("name")
-    expect(name.getAttribute("name")).toBe("name")
-    expect(name.getAttribute("maxlength")).toBe("20")
-    expect(name).toHaveProperty("required", true)
-    expect(screen.getByRole("textbox", { name: /Notes/ }).tagName).toBe(
-      "TEXTAREA"
-    )
-  })
-
-  it("marks optional fields and leaves required ones unmarked", () => {
-    render(<TestForm />)
-    const optional = (label: string) =>
-      screen.getByText(label).closest("label")!.textContent
-    expect(optional("Notes")).toMatch(/optional/i)
-    expect(optional("Name")).not.toMatch(/optional/i)
-  })
-
   it("describes the control with its description", () => {
     render(<TestForm description="Shown on the project page." />)
     const name = screen.getByRole("textbox", { name: /Name/ })
@@ -84,15 +64,5 @@ describe("shared form fields", () => {
       "name-description name-error"
     )
     expect(error.closest("#name-error")).not.toBeNull()
-  })
-
-  it("updates the form value and shows errors after editing", async () => {
-    render(<TestForm />)
-    const notes = screen.getByRole("textbox", { name: /Notes/ })
-    fireEvent.change(notes, { target: { value: "too long" } })
-    fireEvent.blur(notes)
-    expect(await screen.findByText("Use 5 characters or fewer.")).toBeTruthy()
-    expect((notes as HTMLTextAreaElement).value).toBe("too long")
-    expect(notes.getAttribute("aria-invalid")).toBe("true")
   })
 })

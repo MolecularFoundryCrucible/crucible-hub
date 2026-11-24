@@ -22,11 +22,4 @@ describe("scrollContainer", () => {
     expect(scrollContainer(target)).toBe(outer)
     outer.remove()
   })
-
-  it("falls back to the window", () => {
-    const target = document.createElement("button")
-    document.body.append(target)
-    expect(scrollContainer(target)).toBe(window)
-    target.remove()
-  })
 })

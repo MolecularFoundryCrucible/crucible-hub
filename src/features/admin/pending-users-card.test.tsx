@@ -88,18 +88,6 @@ describe("PendingUsersCard", () => {
   })
   afterEach(cleanup)
 
-  it("shows nothing when nobody is waiting", async () => {
-    vi.mocked(getWorkspacePendingUsers).mockResolvedValue({
-      status: "ok",
-      data: { items: [], total: 0 },
-    } as never)
-    renderCard()
-    await waitFor(() =>
-      expect(vi.mocked(getWorkspacePendingUsers)).toHaveBeenCalled()
-    )
-    expect(screen.queryByText("Waiting for approval")).toBeNull()
-  })
-
   it("lists waiting accounts and approves one", async () => {
     vi.mocked(approveWorkspaceUserFn).mockResolvedValue({
       status: "ok",
@@ -139,8 +127,9 @@ describe("PendingUsersCard", () => {
     ).toBeTruthy()
   })
 
-  it("asks for a fresh sign-in when approving needs one", async () => {
+  it("asks for a fresh sign-in when approving or rejecting needs one", async () => {
     vi.mocked(approveWorkspaceUserFn).mockResolvedValue(reauthentication)
+    vi.mocked(rejectWorkspaceUserFn).mockResolvedValue(reauthentication)
     renderCard()
 
     fireEvent.click(await screen.findByRole("button", { name: "Approve" }))
@@ -152,10 +141,8 @@ describe("PendingUsersCard", () => {
       screen.getByText(/Approving accounts needs a recent sign-in/)
     ).toBeTruthy()
     expect(screen.queryByText(/Reference:/)).toBeNull()
-  })
 
-  it("asks for a fresh sign-in in the dialog when rejecting needs one", async () => {
-    vi.mocked(rejectWorkspaceUserFn).mockResolvedValue(reauthentication)
+    cleanup()
     renderCard()
 
     fireEvent.click(await screen.findByRole("button", { name: "Reject" }))

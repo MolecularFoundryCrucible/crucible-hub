@@ -20,18 +20,17 @@ function renderToggle(active: boolean) {
 describe("ManagementToggle", () => {
   afterEach(cleanup)
 
-  it("names itself with the word it shows", () => {
+  it("names itself with the word it shows without reporting a pressed toggle", () => {
     renderToggle(false)
-    const button = screen.getByRole("button", { name: "Edit members" })
-    expect(button.textContent).toBe("Edit")
-    expect(button.hasAttribute("data-active")).toBe(false)
-  })
+    const edit = screen.getByRole("button", { name: "Edit members" })
+    expect(edit.textContent).toBe("Edit")
+    expect(edit.hasAttribute("data-active")).toBe(false)
+    cleanup()
 
-  it("keeps the pressed fill without reporting a pressed toggle", () => {
     renderToggle(true)
-    const button = screen.getByRole("button", { name: "Done editing members" })
-    expect(button.textContent).toBe("Done")
-    expect(button.hasAttribute("data-active")).toBe(true)
-    expect(button.hasAttribute("aria-pressed")).toBe(false)
+    const done = screen.getByRole("button", { name: "Done editing members" })
+    expect(done.textContent).toBe("Done")
+    expect(done.hasAttribute("data-active")).toBe(true)
+    expect(done.hasAttribute("aria-pressed")).toBe(false)
   })
 })

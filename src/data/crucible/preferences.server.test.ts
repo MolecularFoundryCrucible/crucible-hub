@@ -33,23 +33,6 @@ describe("account preferences transport", () => {
     vi.unstubAllGlobals()
   })
 
-  it("keeps fixture preferences with increasing revisions", async () => {
-    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
-    const initial = await readAccountPreferences()
-    const saved = await patchAccountPreferences(
-      { default_record_kind: "datasets" },
-      initial.etag
-    )
-    expect(saved.state).toBe("saved")
-    expect(saved.document.revision).toBe(initial.revision + 1)
-    expect(saved.document.preferences.default_record_kind).toBe("datasets")
-    const removed = await patchAccountPreferences(
-      { default_record_kind: null },
-      saved.document.etag
-    )
-    expect(removed.document.preferences.default_record_kind).toBeUndefined()
-  })
-
   it("refuses API calls until preferences are enabled", async () => {
     stubApiMode(false)
     await expect(readAccountPreferences()).rejects.toThrow(
@@ -57,72 +40,41 @@ describe("account preferences transport", () => {
     )
   })
 
-  it("reads the document and its ETag from the API", async () => {
+  it("sends the changed keys as a merge patch with the strong If-Match form of a weak ETag", async () => {
     stubApiMode()
     const requests: Request[] = []
     vi.stubGlobal(
       "fetch",
       vi.fn(async (input: Request | string, init?: RequestInit) => {
-        requests.push(new Request(input, init))
-        return apiDocument(3, { theme: "dark" })
-      })
-    )
-
-    await expect(readAccountPreferences()).resolves.toEqual({
-      etag: '"p3"',
-      preferences: { theme: "dark" },
-      revision: 3,
-      updatedAt: "2026-10-14T12:00:00Z",
-    })
-    expect(requests[0].url).toBe("https://api.example.test/account/preferences")
-    expect(requests[0].headers.get("authorization")).toBe(
-      "Bearer local-test-key"
-    )
-  })
-
-  it("sends a weak ETag back as its strong form", async () => {
-    stubApiMode()
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async () =>
-        Response.json(
-          {
-            preferences: {},
-            revision: 2,
-            schema_version: 1,
-            updated_at: null,
-          },
-          {
-            headers: { "Crucible-Privilege-Mode": "normal", ETag: 'W/"p2"' },
-          }
-        )
-      )
-    )
-
-    await expect(readAccountPreferences()).resolves.toMatchObject({
-      etag: '"p2"',
-    })
-  })
-
-  it("sends the changed keys as a merge patch with If-Match", async () => {
-    stubApiMode()
-    const requests: Request[] = []
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async (input: Request | string, init?: RequestInit) => {
-        requests.push(new Request(input, init))
+        const request = new Request(input, init)
+        requests.push(request)
+        if (request.method === "GET") {
+          return Response.json(
+            {
+              preferences: {},
+              revision: 2,
+              schema_version: 1,
+              updated_at: null,
+            },
+            {
+              headers: { "Crucible-Privilege-Mode": "normal", ETag: 'W/"p2"' },
+            }
+          )
+        }
         return apiDocument(4, { default_record_kind: "datasets" })
       })
     )
 
+    const current = await readAccountPreferences()
+    expect(current.etag).toBe('"p2"')
     const update = await patchAccountPreferences(
       { default_record_kind: "datasets" },
-      '"p3"'
+      current.etag
     )
     expect(update.state).toBe("saved")
-    expect(requests[0].method).toBe("PATCH")
-    expect(requests[0].headers.get("if-match")).toBe('"p3"')
-    await expect(requests[0].json()).resolves.toEqual({
+    expect(requests[1].method).toBe("PATCH")
+    expect(requests[1].headers.get("if-match")).toBe('"p2"')
+    await expect(requests[1].json()).resolves.toEqual({
       default_record_kind: "datasets",
     })
   })

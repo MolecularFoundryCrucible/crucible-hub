@@ -111,6 +111,6 @@ Hub runs as a non-root containerized Node server under `/hub`. Vite and Nitro ba
 
 ## Validation gates
 
-`npm run validate` is the full static and production-build gate; `npm run validate:static` omits only the build. CI runs the static and unit gate in parallel with one browser job that installs Chromium, runs the functional browser suite, builds once, and exercises the production Node runtime (`npm run test:production`). Failure reports and traces are kept only when a browser job fails. Screenshots are local review artifacts and are never generated or committed by CI. The focused commands are listed in [`CONTRIBUTING.md`](../CONTRIBUTING.md#commands).
+`npm run validate` is the full static and production-build gate; `npm run validate:static` omits only the build. CI runs the static and unit gate in parallel with one browser job that installs Chromium, builds once, and runs the browser suite against the production Node runtime (`npm run test:e2e`). Failure reports and traces are kept only when a browser job fails. Screenshots are local review artifacts and are never generated or committed by CI. The focused commands are listed in [`CONTRIBUTING.md`](../CONTRIBUTING.md#commands).
 
 A blocking architectural failure requires a new decision record.

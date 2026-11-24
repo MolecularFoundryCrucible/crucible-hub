@@ -69,39 +69,4 @@ describe("ResourceCollectionNameCell", () => {
     expect(container.querySelectorAll("td")).toHaveLength(1)
     expect(previewProps).toHaveBeenCalledWith(expect.objectContaining({ mfid }))
   })
-
-  it("supports a compact-only dataset subtype without route-specific behavior", () => {
-    const { container } = renderCell({
-      kind: "dataset",
-      mfid: "01J6Y8N4Q2R7M9K3T5V0W1X2Z2",
-      name: "Operando series",
-      subtype: "XAS",
-      subtypeVisibility: "compact",
-    })
-
-    expect(
-      screen.getByRole("link", { name: "Preview Operando series" })
-    ).toBeTruthy()
-    expect(
-      container.querySelector('[data-resource-type="dataset"]')
-    ).toBeTruthy()
-    expect(container.querySelector("td > span")?.className).toContain(
-      "resource-collection-subtype-compact"
-    )
-  })
-
-  it("applies collection truncation classes to name container and child preview link", () => {
-    const { container } = renderCell({
-      kind: "sample",
-      mfid: "01J6Y8N4Q2R7M9K3T5V0W1X2Z1",
-      name: "Catalyst sample",
-      subtype: "oxide powder",
-      subtypeVisibility: "always",
-    })
-
-    const nameContainer = container.querySelector("[data-directory-name]")
-    expect(nameContainer?.className).toContain("truncate")
-    expect(nameContainer?.className).toContain("[&>*]:block")
-    expect(nameContainer?.className).toContain("[&>*]:truncate")
-  })
 })

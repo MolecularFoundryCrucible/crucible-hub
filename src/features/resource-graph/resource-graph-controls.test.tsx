@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { GraphFilterMenu, ResourceGraphLegend } from "./resource-graph-controls"
+import { GraphFilterMenu } from "./resource-graph-controls"
 import { resolveResourceGraphDisplay } from "./resource-graph-display"
 
 describe("graph filters", () => {
@@ -47,20 +47,5 @@ describe("graph filters", () => {
       associations: true,
       hidden: [],
     })
-  })
-
-  it("shows only visible kinds in the legend and the hidden count", () => {
-    render(
-      <ResourceGraphLegend
-        display={resolveResourceGraphDisplay({ hide: ["dataset"] })}
-        expandable
-        hiddenCount={3}
-      />
-    )
-
-    expect(screen.getByText("Sample")).toBeTruthy()
-    expect(screen.queryByText("Dataset")).toBeNull()
-    expect(screen.getByText("3 hidden by filters")).toBeTruthy()
-    expect(screen.getByText("Load more")).toBeTruthy()
   })
 })

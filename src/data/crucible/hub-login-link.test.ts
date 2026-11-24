@@ -3,11 +3,8 @@ import { describe, expect, it } from "vitest"
 import { hubLoginHref, hubSignInChoices } from "./hub-login-link"
 
 describe("hubLoginHref", () => {
-  it("stays relative when no sign-in address is configured", () => {
+  it("stays relative without a sign-in address and starts on the configured one so the login cookie reaches the callback", () => {
     expect(hubLoginHref(null)).toBe("/hub/auth/login")
-  })
-
-  it("starts on the configured address so the login cookie reaches the callback", () => {
     expect(hubLoginHref("https://hub.example.test")).toBe(
       "https://hub.example.test/hub/auth/login"
     )
@@ -33,16 +30,10 @@ describe("hubSignInChoices", () => {
   const orcid = { display_name: "ORCID", is_orcid: true, key: "orcid" }
   const lab = { display_name: "Berkeley Lab", is_orcid: false, key: "lbl" }
 
-  it("offers a neutral button when the methods are unknown", () => {
+  it("offers a neutral button, a single named method or each method by its key", () => {
     expect(hubSignInChoices(null, null)).toEqual([
       { href: "/hub/auth/login", isOrcid: false, label: "Sign in" },
     ])
-    expect(hubSignInChoices([], null)).toEqual([
-      { href: "/hub/auth/login", isOrcid: false, label: "Sign in" },
-    ])
-  })
-
-  it("names a single method and lets the API pick it", () => {
     expect(hubSignInChoices([orcid], null, "/hub/data")).toEqual([
       {
         href: "/hub/auth/login?returnTo=%2Fhub%2Fdata",
@@ -50,9 +41,6 @@ describe("hubSignInChoices", () => {
         label: "Sign in with ORCID",
       },
     ])
-  })
-
-  it("offers each method by its key when there are several", () => {
     expect(hubSignInChoices([orcid, lab], "https://hub.example.test")).toEqual([
       {
         href: "https://hub.example.test/hub/auth/login?provider=orcid",

@@ -31,33 +31,24 @@ describe("motionDuration", () => {
     )
   }
 
-  it("returns the token in milliseconds", () => {
+  it("returns the token in milliseconds, zero under reduced motion except the indicator delay", () => {
     stubMotion(".18s", false)
     expect(motionDuration("--motion-standard")).toBe(180)
-  })
-
-  it("returns zero under reduced motion", () => {
     stubMotion("180ms", true)
     expect(motionDuration("--motion-standard")).toBe(0)
-  })
-
-  it("keeps the indicator delay under reduced motion", () => {
     stubMotion("200ms", true)
     expect(motionDuration("--motion-indicator-delay")).toBe(200)
   })
 })
 
 describe("cubicBezier", () => {
-  it("evaluates CSS cubic-bezier curves", () => {
+  it("evaluates CSS cubic-bezier curves and falls back to linear", () => {
     const linear = cubicBezier("cubic-bezier(0, 0, 1, 1)")
     expect(linear(0.5)).toBeCloseTo(0.5, 3)
     const ease = cubicBezier("cubic-bezier(0.25, 0.1, 0.25, 1)")
     expect(ease(0)).toBe(0)
     expect(ease(1)).toBe(1)
     expect(ease(0.5)).toBeCloseTo(0.8024, 3)
-  })
-
-  it("falls back to linear for anything else", () => {
     expect(cubicBezier("steps(4)")(0.3)).toBe(0.3)
   })
 })

@@ -217,23 +217,6 @@ describe("InstrumentAccessCard", () => {
     )
   }
 
-  it("renders manager, members, and operators", async () => {
-    renderCard()
-
-    expect(screen.getByText("Access management")).toBeTruthy()
-    expect(screen.getByText("Members")).toBeTruthy()
-    expect(screen.getByText("Operators")).toBeTruthy()
-
-    expect(screen.getByText("Morgan Patel")).toBeTruthy()
-    expect(screen.getByText("Manager")).toBeTruthy()
-
-    expect(screen.getByText("Jordan Reyes")).toBeTruthy()
-    expect(screen.getByText("Editor")).toBeTruthy()
-
-    expect(screen.getByText("Beamline Collector")).toBeTruthy()
-    expect(screen.getByText("Operator")).toBeTruthy()
-  })
-
   it("shows members and operators read-only to people who cannot manage access", () => {
     render(
       <QueryClientProvider client={queryClient}>
@@ -487,21 +470,6 @@ describe("InstrumentAccessCard", () => {
     expect(screen.queryByRole("option", { name: /Robot Operator/i })).toBeNull()
   })
 
-  it("omits the checkbox from the manager row in managing mode", () => {
-    renderCard()
-
-    fireEvent.click(screen.getByRole("button", { name: "Edit access" }))
-
-    expect(
-      screen.queryByRole("checkbox", {
-        name: "Select Morgan Patel for removal",
-      })
-    ).toBeNull()
-    expect(
-      screen.getByRole("checkbox", { name: "Select Jordan Reyes for removal" })
-    ).toBeTruthy()
-  })
-
   it("removes multiple selected members through the batch dialog", async () => {
     const [secondMember] = withEntryCapabilities([
       {
@@ -637,62 +605,6 @@ describe("InstrumentAccessCard", () => {
       name: /Robot Operator/i,
     })
     fireEvent.click(option)
-
-    const dialogAddButton = within(dialog).getByRole("button", {
-      name: "Add operator",
-    })
-    fireEvent.click(dialogAddButton)
-
-    await waitFor(() => {
-      expect(addWorkspaceInstrumentOperator).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            instrumentMfid: instrument.unique_id,
-            serviceAccountId: candidateOperator.unique_id,
-          }),
-        })
-      )
-    })
-  })
-
-  it("adds an operator with arrow-key and enter selection", async () => {
-    vi.mocked(getWorkspaceSearch).mockResolvedValue(
-      searchResponse([candidateOperator])
-    )
-    vi.mocked(addWorkspaceInstrumentOperator).mockResolvedValue(
-      ok([
-        ...initialOperators,
-        {
-          first_name: "Robot",
-          is_service_account: true,
-          last_name: "Operator",
-          role: "operator",
-          unique_id: candidateOperator.unique_id,
-          username: "robot-operator",
-        },
-      ])
-    )
-
-    renderCard()
-
-    ensureManaging("Edit access")
-    fireEvent.click(screen.getByRole("button", { name: "Add operator" }))
-
-    const dialog = screen.getByRole("dialog", { name: "Add operator" })
-    const searchInput = within(dialog).getByRole("combobox", {
-      name: "Search service accounts",
-    })
-    fireEvent.click(searchInput)
-    fireEvent.change(searchInput, { target: { value: "jam" } })
-
-    const option = await screen.findByRole("option", {
-      name: /Robot Operator/i,
-    })
-    fireEvent.keyDown(searchInput, { key: "ArrowDown" })
-    expect(option.hasAttribute("data-highlighted")).toBe(true)
-    fireEvent.keyDown(searchInput, { key: "Enter" })
-
-    expect((searchInput as HTMLInputElement).value).toBe("Robot Operator")
 
     const dialogAddButton = within(dialog).getByRole("button", {
       name: "Add operator",

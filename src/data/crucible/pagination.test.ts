@@ -6,19 +6,14 @@ import { identityScope } from "./query-keys"
 describe("identityScopedPreviousData", () => {
   const scope = identityScope("hosted", "account-a")
 
-  it("retains a previous page for the same identity", () => {
-    const page = { items: ["project-a"] }
+  it("retains a previous page only for the same account, server and privilege mode", () => {
+    const page = { items: ["private-project"] }
 
     expect(
       identityScopedPreviousData(scope, page, {
         queryKey: [...scope, "projects", "list", { offset: 0 }],
       })
     ).toBe(page)
-  })
-
-  it("does not retain data from another account or server", () => {
-    const page = { items: ["private-project"] }
-
     expect(
       identityScopedPreviousData(scope, page, {
         queryKey: ["crucible", "hosted", "account-b", "normal", "projects"],
@@ -35,11 +30,6 @@ describe("identityScopedPreviousData", () => {
         ],
       })
     ).toBeUndefined()
-  })
-
-  it("does not retain data from another privilege mode", () => {
-    const page = { items: ["private-project"] }
-
     expect(
       identityScopedPreviousData(scope, page, {
         queryKey: ["crucible", "hosted", "account-a", "elevated", "projects"],
@@ -66,7 +56,7 @@ describe("sameKindPreviousData", () => {
     ).toBe(page)
   })
 
-  it("drops results of another kind", () => {
+  it("drops results of another kind or another account", () => {
     expect(
       sameKindPreviousData(
         scope,
@@ -83,9 +73,6 @@ describe("sameKindPreviousData", () => {
         key({ mode: "metadata" })
       )
     ).toBeUndefined()
-  })
-
-  it("still drops results from another account", () => {
     expect(
       sameKindPreviousData(scope, { field: "measurement" }, page, {
         queryKey: [

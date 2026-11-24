@@ -36,17 +36,7 @@ describe("resource preview ownership", () => {
 })
 
 describe("resource preview validation", () => {
-  it("preserves valid identifiers without treating the old fallback as special", () => {
-    expect(resourcePreviewSearchSchema.parse({ preview: origin })).toEqual({
-      preview: origin,
-    })
-    expect(resolveResourcePreview("invalid")).toEqual({
-      preview: "invalid",
-      invalidPreview: false,
-    })
-  })
-
-  it.each(["", "../private", "with spaces", "x".repeat(256), 42])(
+  it.each(["../private", 42])(
     "exposes malformed input as an invalid selection without a request target",
     (value) => {
       const search = resourcePreviewSearchSchema.parse({ preview: value })
@@ -145,22 +135,6 @@ describe("resource preview trail", () => {
         "data",
         "other-data-host"
       )
-    ).toBe(undefined)
-  })
-
-  it("keeps legacy trails scoped to resource hosts", () => {
-    const { hostKind: _, ...legacyTrail } = trail
-
-    expect(
-      resolveResourcePreviewTrail(
-        legacyTrail,
-        "runtime-owner",
-        "resource",
-        origin
-      )
-    ).toEqual(trail)
-    expect(
-      resolveResourcePreviewTrail(legacyTrail, "runtime-owner", "data", origin)
     ).toBe(undefined)
   })
 

@@ -27,7 +27,7 @@ const ELK_LAYOUT_TIMEOUT_MS = 6000
 let elk: ELKInstance | undefined
 
 /** Drops the engine, or only `failed` when given, so a newer engine survives. */
-export function resetResourceGraphLayoutEngine(failed?: ELKInstance) {
+function resetResourceGraphLayoutEngine(failed?: ELKInstance) {
   if (!elk || (failed && failed !== elk)) return
   try {
     elk.terminateWorker()

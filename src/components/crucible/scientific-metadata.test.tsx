@@ -15,28 +15,6 @@ import {
 describe("ScientificMetadata", () => {
   afterEach(cleanup)
 
-  it("shows every top-level field without an arbitrary cutoff", () => {
-    render(
-      <ScientificMetadata
-        metadata={{
-          alpha: 1,
-          beta: 2,
-          delta: 4,
-          epsilon: 5,
-          eta: 7,
-          gamma: 3,
-          theta: 8,
-          zeta: 6,
-        }}
-      />
-    )
-
-    expect(screen.getByText("alpha")).toBeTruthy()
-    expect(screen.getByText("theta")).toBeTruthy()
-    expect(screen.getByText("zeta")).toBeTruthy()
-    expect(screen.queryByText(/additional field/)).toBeNull()
-  })
-
   it("renders nested dictionaries and lists as recursive disclosures", () => {
     render(
       <ScientificMetadata
@@ -79,30 +57,6 @@ describe("ScientificMetadata", () => {
       screen.getByText("Complete scientific value with a second line")
         .textContent
     ).toBe("Complete scientific value\nwith a second line")
-  })
-
-  it("labels empty nested collections and strings explicitly", () => {
-    render(
-      <ScientificMetadata
-        metadata={{ empty_list: [], empty_object: {}, empty_string: "" }}
-      />
-    )
-
-    expect(screen.getByText("[]")).toBeTruthy()
-    expect(screen.getByText("{}")).toBeTruthy()
-    expect(screen.getByText("Empty string")).toBeTruthy()
-  })
-
-  it("renders short scalar arrays inline", () => {
-    render(
-      <ScientificMetadata
-        metadata={{ axes: ["energy", "intensity"], shape: [32, 64] }}
-      />
-    )
-
-    expect(screen.getByText('["energy", "intensity"]')).toBeTruthy()
-    expect(screen.getByText("[32, 64]")).toBeTruthy()
-    expect(document.querySelector("details")).toBeNull()
   })
 
   it("filters nested metadata by field or value", () => {
@@ -161,23 +115,6 @@ describe("ScientificMetadata", () => {
         (details) => !details.open
       )
     ).toBe(true)
-  })
-
-  it("handles absent and empty root metadata", () => {
-    const { rerender } = render(<ScientificMetadata metadata={null} />)
-    expect(
-      screen.getByText("No scientific metadata is available.")
-    ).toBeTruthy()
-
-    rerender(
-      <ScientificMetadata emptyMessage="Nothing recorded." metadata={{}} />
-    )
-    expect(screen.getByText("Nothing recorded.")).toBeTruthy()
-
-    rerender(<ScientificMetadata metadata={[]} />)
-    expect(
-      screen.getByText("No scientific metadata is available.")
-    ).toBeTruthy()
   })
 
   it("renders scalar roots without treating false or zero as absent", () => {

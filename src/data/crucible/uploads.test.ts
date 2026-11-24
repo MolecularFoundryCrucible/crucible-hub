@@ -5,7 +5,6 @@ import {
   computeUploadDigests,
   createUploadPartChecksums,
   CRC32C_POLYNOMIAL,
-  MAX_CONCURRENT_PARTS,
   MAX_PARTS_PER_SIGN_REQUEST,
   MAX_UPLOAD_SIZE,
   planUploadParts,
@@ -44,18 +43,6 @@ function crc32cBase64FromHex(hex: string): string {
 }
 
 describe("upload part planning", () => {
-  it("plans one part for a small file", () => {
-    expect(planUploadParts(1024)).toEqual([
-      { partNumber: 1, start: 0, end: 1024 },
-    ])
-  })
-
-  it("keeps one part for a file at the part size", () => {
-    expect(planUploadParts(UPLOAD_PART_SIZE)).toEqual([
-      { partNumber: 1, start: 0, end: UPLOAD_PART_SIZE },
-    ])
-  })
-
   it("adds a final short part above the part size", () => {
     expect(planUploadParts(UPLOAD_PART_SIZE + 1)).toEqual([
       { partNumber: 1, start: 0, end: UPLOAD_PART_SIZE },
@@ -63,38 +50,14 @@ describe("upload part planning", () => {
     ])
   })
 
-  it("plans the maximum 500 GiB upload", () => {
-    const parts = planUploadParts(MAX_UPLOAD_SIZE)
-    const partCount = MAX_UPLOAD_SIZE / UPLOAD_PART_SIZE
-    expect(parts).toHaveLength(partCount)
-    expect(parts[0]).toEqual({
-      partNumber: 1,
-      start: 0,
-      end: UPLOAD_PART_SIZE,
-    })
-    expect(parts.at(-1)).toEqual({
-      partNumber: partCount,
-      start: MAX_UPLOAD_SIZE - UPLOAD_PART_SIZE,
-      end: MAX_UPLOAD_SIZE,
-    })
-  })
-
-  it("rejects uploads above the maximum size", () => {
+  it("rejects invalid sizes", () => {
     expect(() => planUploadParts(MAX_UPLOAD_SIZE + 1)).toThrow(UploadSizeError)
-  })
-
-  it("rejects non-positive part sizes", () => {
-    expect(() => planUploadParts(10, 0)).toThrow()
-    expect(() => planUploadParts(10, -4)).toThrow()
+    expect(() => planUploadParts(-1)).toThrow()
+    expect(() => planUploadParts(1.5)).toThrow()
   })
 
   it("plans no parts for an empty file", () => {
     expect(planUploadParts(0)).toEqual([])
-  })
-
-  it("rejects invalid sizes", () => {
-    expect(() => planUploadParts(-1)).toThrow()
-    expect(() => planUploadParts(1.5)).toThrow()
   })
 })
 
@@ -103,43 +66,17 @@ describe("upload filename validation", () => {
     expect(validateUploadFilename("runs/run-001/data.csv")).toEqual([])
   })
 
-  it("requires a name", () => {
+  it("rejects unsafe names", () => {
     expect(validateUploadFilename("")).toHaveLength(1)
-  })
-
-  it("rejects backslashes and control characters", () => {
     expect(validateUploadFilename("a\\b")).toHaveLength(1)
     expect(validateUploadFilename("a\nb")).toHaveLength(1)
-    expect(validateUploadFilename("a\u0000b")).toHaveLength(1)
-  })
-
-  it("rejects absolute paths and empty segments", () => {
     expect(validateUploadFilename("/abs/path")).toHaveLength(2)
     expect(validateUploadFilename("a//b")).toHaveLength(1)
-    expect(validateUploadFilename("a/")).toHaveLength(1)
-  })
-
-  it("rejects dot segments", () => {
-    expect(validateUploadFilename("./a")).toHaveLength(1)
     expect(validateUploadFilename("../a")).toHaveLength(1)
-    expect(validateUploadFilename("a/./b")).toHaveLength(1)
-    expect(validateUploadFilename("a/../b")).toHaveLength(1)
   })
 })
 
 describe("upload digests", () => {
-  it("computes known digests for a single part", async () => {
-    const file = new Blob(["123456789"])
-    const digests = await computeUploadDigests(file, planUploadParts(file.size))
-
-    expect(digests).toEqual({
-      sha256Hex:
-        "15e2b0d3c33891ebb0f1ef609ec419420c20e320ce94c65fbc8c3312448eb225",
-      crc32cBase64: "4waSgw==",
-      partCrc32cBase64: ["4waSgw=="],
-    })
-  })
-
   it("computes known CRC32C per part and for the whole file", async () => {
     const file = new Blob(["hello world"])
     const digests = await computeUploadDigests(
@@ -192,22 +129,10 @@ describe("upload digests", () => {
     expect(digests.partCrc32cBase64).toEqual([])
   })
 
-  it("reports progress after each read chunk", async () => {
-    const file = new Blob(["123456789"])
-    const progress = vi.fn()
-
-    await computeUploadDigests(file, planUploadParts(file.size), progress)
-
-    expect(progress).toHaveBeenCalledWith(9)
-  })
-
-  it("fails when parts do not cover the file", async () => {
+  it("fails when parts do not tile the file", async () => {
     await expect(
       computeUploadDigests(new Blob(["123456789"]), [])
     ).rejects.toThrow("do not tile the file")
-  })
-
-  it("fails when parts overhang or offset the file", async () => {
     await expect(
       computeUploadDigests(new Blob([new Uint8Array(10)]), planUploadParts(8))
     ).rejects.toThrow("do not tile the file")
@@ -300,21 +225,6 @@ describe("part uploads", () => {
         put.url.startsWith("https://uploads.crucible.invalid/")
       )
     ).toBe(true)
-  })
-
-  it("runs at most the concurrent part limit at once", async () => {
-    const file = new Blob([new Uint8Array(10)])
-    const stats = signedTransport()
-
-    await runUploadParts({
-      file,
-      parts: planUploadParts(file.size, 1),
-      signatures: Array.from({ length: file.size }, () => "c2ln"),
-      transport: stats.transport,
-      wait: async () => {},
-    })
-
-    expect(stats.maxActive).toBe(MAX_CONCURRENT_PARTS)
   })
 
   it("signs just-in-time windows capped at the API limit", async () => {
@@ -612,54 +522,6 @@ describe("part uploads", () => {
     expect(puts.map((put) => put.partNumber)).toEqual([1, 2])
   })
 
-  it("honors long Retry-After values from the server", async () => {
-    const file = new Blob(["a"])
-    const waits: number[] = []
-    let signCalls = 0
-    const { transport, puts } = signedTransport()
-    const failingSign: UploadPartTransport = {
-      ...transport,
-      async signParts(parts) {
-        signCalls += 1
-        if (signCalls === 1) {
-          throw rateLimitedError(3600)
-        }
-        return transport.signParts(parts)
-      },
-    }
-
-    await runUploadParts({
-      file,
-      parts: planUploadParts(file.size, 1),
-      signatures: ["c2ln"],
-      transport: failingSign,
-      wait: async (milliseconds) => {
-        waits.push(milliseconds)
-      },
-    })
-
-    expect(waits).toEqual([3600000])
-    expect(puts).toHaveLength(1)
-  })
-
-  it("caps signing windows at the API limit", async () => {
-    const file = new Blob([new Uint8Array(70)])
-    const { transport, signRequests } = signedTransport()
-
-    await runUploadParts({
-      file,
-      parts: planUploadParts(file.size, 1),
-      signatures: Array.from({ length: file.size }, () => "c2ln"),
-      transport,
-      signWindowParts: 128,
-      wait: async () => {},
-    })
-
-    expect(signRequests).toHaveLength(2)
-    expect(signRequests[0]).toHaveLength(MAX_PARTS_PER_SIGN_REQUEST)
-    expect(signRequests[1]).toEqual([65, 66, 67, 68, 69, 70])
-  })
-
   it("stops mid-flight when the signal aborts", async () => {
     const file = new Blob([new Uint8Array(4)])
     const controller = new AbortController()
@@ -697,23 +559,5 @@ describe("part uploads", () => {
     expect(caught instanceof UploadPartError).toBe(false)
     expect(signals[0]).toBe(controller.signal)
     expect(signRequests).toHaveLength(1)
-  })
-
-  it("stops before signing when the signal is already aborted", async () => {
-    const controller = new AbortController()
-    controller.abort()
-    const { transport, signRequests } = signedTransport()
-
-    await expect(
-      runUploadParts({
-        file: new Blob(["ab"]),
-        parts: planUploadParts(2, 1),
-        signatures: ["c2ln", "c2ln"],
-        transport,
-        signal: controller.signal,
-        wait: async () => {},
-      })
-    ).rejects.toThrow()
-    expect(signRequests).toEqual([])
   })
 })

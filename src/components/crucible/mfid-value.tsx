@@ -14,7 +14,7 @@ import {
 import { useCopyFeedback } from "@/hooks/use-copy-feedback"
 import { cn } from "@/lib/utils"
 
-export function CopyMfidButton({
+function CopyMfidButton({
   size = "icon-xs",
   value,
 }: {

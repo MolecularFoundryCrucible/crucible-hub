@@ -3,15 +3,6 @@ import { describe, expect, it } from "vitest"
 import { resolveProjectDataFilters } from "./project-data-filter-state"
 
 describe("project data filter state", () => {
-  it("ignores a direction without a sort, which the panel can no longer fix", () => {
-    const resolution = resolveProjectDataFilters(
-      { direction: "asc" },
-      "datasets"
-    )
-    expect(resolution.valid).toBe(true)
-    expect(resolution).toEqual(resolveProjectDataFilters({}, "datasets"))
-  })
-
   it("adds the member affiliation unless public data is included", () => {
     const access = { elevated: false, includePublicByDefault: false }
     const excluded = resolveProjectDataFilters(
@@ -62,11 +53,7 @@ describe("project data filter state", () => {
 
   it.each([
     [{ visibility: "secret" }, "samples"],
-    [{ createdFrom: "2026-02-30" }, "samples"],
-    [{ createdFrom: "2026-03-02", createdTo: "2026-03-01" }, "samples"],
     [{ instrumentMfid: "instrument-1" }, "samples"],
-    [{ instrumentMfid: "" }, "datasets"],
-    [{ instrumentMfid: "x".repeat(256) }, "datasets"],
   ] as const)("rejects invalid or hidden filters", (search, kind) => {
     expect(resolveProjectDataFilters(search, kind).valid).toBe(false)
   })

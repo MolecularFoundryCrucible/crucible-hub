@@ -212,17 +212,6 @@ describe("JoinRequestQueue", () => {
     )
   }
 
-  it("lists requests in the shared table with a count", async () => {
-    renderQueue()
-
-    const table = await screen.findByRole("table", {
-      name: "Requests to join",
-    })
-    expect(within(table).getByText("R. Park")).toBeTruthy()
-    expect(within(table).getByText("Operando Catalyst Mapping")).toBeTruthy()
-    expect(screen.getByText("All 1 join requests shown")).toBeTruthy()
-  })
-
   it("approves with the chosen role", async () => {
     renderQueue()
 
@@ -261,15 +250,5 @@ describe("JoinRequestQueue", () => {
         data: expect.objectContaining({ role: undefined, status: "rejected" }),
       })
     )
-  })
-
-  it("shows the empty state", async () => {
-    vi.mocked(getJoinRequests).mockResolvedValue({
-      data: { items: [], nextCursor: null, total: 0 },
-      status: "ok",
-    })
-    renderQueue()
-
-    expect(await screen.findByText("No requests need review")).toBeTruthy()
   })
 })

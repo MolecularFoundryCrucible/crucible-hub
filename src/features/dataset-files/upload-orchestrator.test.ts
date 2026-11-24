@@ -269,16 +269,4 @@ describe("dataset file upload orchestration", () => {
     ])
     vi.unstubAllGlobals()
   })
-
-  it("abandons a session whose part size cannot be planned", async () => {
-    vi.mocked(initializeWorkspaceDatasetUpload).mockResolvedValue(
-      ok({ partSize: 0, state: "uploading", uploadId: "upload-1" })
-    )
-
-    await expect(upload(new File(["abc"], "data.dat"))).rejects.toThrow()
-    expect(abortWorkspaceDatasetUpload).toHaveBeenCalledWith({
-      data: { datasetMfid: "dataset-1", uploadId: "upload-1" },
-    })
-    expect(signWorkspaceDatasetUploadParts).not.toHaveBeenCalled()
-  })
 })

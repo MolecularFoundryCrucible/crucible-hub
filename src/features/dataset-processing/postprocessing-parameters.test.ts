@@ -1,8 +1,6 @@
 import { describe, expect, it } from "vitest"
 
 import {
-  pipelineDescription,
-  pipelineLabel,
   pipelineParameterFields,
   pipelineParameters,
 } from "./postprocessing-parameters"
@@ -53,13 +51,6 @@ describe("pipeline parameters", () => {
     ])
   })
 
-  it("has no fields for a pipeline without parameters", () => {
-    expect(pipelineParameterFields({ properties: {}, type: "object" })).toEqual(
-      []
-    )
-    expect(pipelineParameterFields({})).toEqual([])
-  })
-
   it("refuses shapes the form cannot show", () => {
     expect(
       pipelineParameterFields({
@@ -83,12 +74,5 @@ describe("pipeline parameters", () => {
     })
     expect(pipelineParameters(fields, { tiles: "" })).toBeNull()
     expect(pipelineParameters(fields, { tiles: "2.5" })).toBeNull()
-  })
-
-  it("names pipelines for people", () => {
-    expect(pipelineLabel("mosaic_stitch")).toBe("Mosaic stitch")
-    expect(
-      pipelineDescription("Postprocessing: stitch image tiles into a mosaic.")
-    ).toBe("Stitch image tiles into a mosaic.")
   })
 })

@@ -8,7 +8,7 @@ import { fixtureScenarioSchema } from "./fixture-scenarios"
 import { readWorkspacePerson } from "./people.server"
 import { queryCancellationMiddleware } from "./query-cancellation"
 
-export const personDetailInputSchema = z.object({
+const personDetailInputSchema = z.object({
   personId: z.string().trim().min(1).max(255),
   scenario: fixtureScenarioSchema.optional(),
 })

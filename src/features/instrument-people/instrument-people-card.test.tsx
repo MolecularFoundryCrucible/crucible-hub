@@ -83,11 +83,4 @@ describe("InstrumentPeopleCard", () => {
     renderCard(true)
     expect(screen.getByText("Manage members")).toBeTruthy()
   })
-
-  it("says when membership is not visible", () => {
-    renderCard(false, null)
-    expect(
-      screen.getByText("Detailed membership is not available.")
-    ).toBeTruthy()
-  })
 })

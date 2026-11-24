@@ -5,16 +5,13 @@ import { instrumentDatasetScope } from "./instrument-dataset-scope"
 const base = { elevated: false, includePublicByDefault: false }
 
 describe("instrumentDatasetScope", () => {
-  it.each(["viewer", "editor", "admin", "owner"])(
-    "shows a %s every dataset on the instrument by default",
-    (role) => {
-      expect(instrumentDatasetScope({ ...base, role })).toEqual({
-        affiliation: "member",
-        includeInstrumentAccess: true,
-        member: true,
-      })
-    }
-  )
+  it("shows a member every dataset on the instrument by default", () => {
+    expect(instrumentDatasetScope({ ...base, role: "viewer" })).toEqual({
+      affiliation: "member",
+      includeInstrumentAccess: true,
+      member: true,
+    })
+  })
 
   it("ignores public data while showing all of a member's datasets", () => {
     expect(

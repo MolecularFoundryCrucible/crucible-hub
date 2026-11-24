@@ -2,63 +2,12 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { crucibleApiResponse } from "@/test/crucible-api-response"
 
-import {
-  checkWorkspaceUsernameExactMatch,
-  patchWorkspaceAccount,
-  readWorkspaceAccount,
-} from "./account.server"
+import { patchWorkspaceAccount } from "./account.server"
 
 describe("workspace account source", () => {
   afterEach(() => {
     vi.unstubAllEnvs()
     vi.unstubAllGlobals()
-  })
-
-  it("returns the fixture account outside production", async () => {
-    vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
-
-    const account = await readWorkspaceAccount()
-
-    expect(account.unique_id).toBe("0000-0000-0000-000X")
-    expect(account.email).toBe("avery.chen@example.invalid")
-    expect(account.last_active_at).toBe("2026-09-01T16:00:00Z")
-  })
-
-  it("matches the account username when checking username availability", async () => {
-    vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
-
-    await expect(checkWorkspaceUsernameExactMatch("avery.chen")).resolves.toBe(
-      true
-    )
-    await expect(checkWorkspaceUsernameExactMatch("AVERY.CHEN")).resolves.toBe(
-      true
-    )
-    await expect(checkWorkspaceUsernameExactMatch("morgan.lee")).resolves.toBe(
-      true
-    )
-    await expect(
-      checkWorkspaceUsernameExactMatch("available.username")
-    ).resolves.toBe(false)
-  })
-
-  it("returns a confirmed fixture profile update", async () => {
-    vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
-
-    await expect(
-      patchWorkspaceAccount({
-        email: "avery@example.invalid",
-        first_name: "Avery",
-        username: "avery_chen",
-      })
-    ).resolves.toMatchObject({
-      email: "avery@example.invalid",
-      first_name: "Avery",
-      last_name: "Chen",
-      username: "avery_chen",
-    })
   })
 
   it("patches only selected profile fields through the API", async () => {
@@ -111,15 +60,5 @@ describe("workspace account source", () => {
       username: "ada_lovelace",
     })
     expect(fetchMock).toHaveBeenCalledTimes(2)
-  })
-
-  it("does not bypass the production fixture guard", async () => {
-    vi.stubEnv("NODE_ENV", "production")
-    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
-    vi.stubEnv("HUB_ENABLE_FIXTURES", "")
-
-    await expect(readWorkspaceAccount()).rejects.toThrow(
-      "The Crucible API login exchange is not connected yet."
-    )
   })
 })

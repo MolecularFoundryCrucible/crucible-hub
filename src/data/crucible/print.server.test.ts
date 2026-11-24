@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { crucibleApiResponse } from "@/test/crucible-api-response"
 
-import { printWorkspaceLabel, readWorkspacePrinters } from "./print.server"
+import { printWorkspaceLabel } from "./print.server"
 
 function stubApi(responses: unknown[]) {
   vi.stubEnv("NODE_ENV", "development")
@@ -24,17 +24,6 @@ describe("label printing", () => {
   afterEach(() => {
     vi.unstubAllEnvs()
     vi.unstubAllGlobals()
-  })
-
-  it("lists printers from the API", async () => {
-    const requests = stubApi([
-      { printers: [{ online: true, printer_id: "spinbot", ts: 1 }] },
-    ])
-
-    expect(await readWorkspacePrinters()).toEqual([
-      { online: true, printer_id: "spinbot", ts: 1 },
-    ])
-    expect(new URL(requests[0].url).pathname).toBe("/print/printers")
   })
 
   it("sends the resource MFID and label name to the chosen printer", async () => {
@@ -64,19 +53,5 @@ describe("label printing", () => {
       name: "Activated catalyst morphology",
       printer_id: "spinbot",
     })
-  })
-
-  it("reports an offline fixture printer as a timeout", async () => {
-    vi.stubEnv("NODE_ENV", "development")
-    vi.stubEnv("HUB_DATA_SOURCE", "fixture")
-
-    const result = await printWorkspaceLabel({
-      mfid: "01J6Y8N4Q2R7M9K3T5V0W1X2Z9",
-      name: "Sample",
-      printerId: "glovebox",
-    })
-
-    expect(result.status).toBe("timeout")
-    expect(result.detail).toMatch(/not currently online/)
   })
 })

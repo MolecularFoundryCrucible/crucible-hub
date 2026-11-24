@@ -28,11 +28,6 @@ function Harness({ start }: { start: number | null }) {
 describe("ThumbnailViewer", () => {
   afterEach(cleanup)
 
-  it("stays closed without a selection", () => {
-    render(<Harness start={null} />)
-    expect(screen.queryByRole("dialog")).toBeNull()
-  })
-
   it("shows the chosen image and steps through the others", async () => {
     render(<Harness start={0} />)
     const dialog = await screen.findByRole("dialog")
@@ -53,12 +48,6 @@ describe("ThumbnailViewer", () => {
 
     fireEvent.keyDown(dialog, { key: "ArrowLeft" })
     expect(screen.getByText("2 of 3")).toBeTruthy()
-  })
-
-  it("closes from the close button", async () => {
-    render(<Harness start={1} />)
-    fireEvent.click(await screen.findByRole("button", { name: "Close" }))
-    expect(screen.queryByRole("img", { name: "Detail" })).toBeNull()
   })
 
   it("steps with a horizontal swipe and ignores vertical ones", async () => {

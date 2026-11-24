@@ -474,7 +474,7 @@ export function FileDownloadAction({
   )
 }
 
-export function initiateFileDownload(url: string) {
+function initiateFileDownload(url: string) {
   const anchor = document.createElement("a")
   anchor.href = url
   anchor.referrerPolicy = "no-referrer"

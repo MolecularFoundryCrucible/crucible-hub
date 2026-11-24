@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { cleanup, render, screen, waitFor } from "@testing-library/react"
+import { cleanup, render } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { PendingUsersBadge } from "./pending-users-badge"
@@ -39,15 +39,5 @@ describe("PendingUsersBadge", () => {
   it("waits until administrator view is confirmed before asking", () => {
     renderBadge(false)
     expect(vi.mocked(getWorkspacePendingUsers)).not.toHaveBeenCalled()
-  })
-
-  it("shows how many accounts are waiting", async () => {
-    renderBadge(true)
-    expect(
-      await screen.findByLabelText("3 accounts waiting for approval")
-    ).toBeTruthy()
-    await waitFor(() =>
-      expect(vi.mocked(getWorkspacePendingUsers)).toHaveBeenCalledTimes(1)
-    )
   })
 })

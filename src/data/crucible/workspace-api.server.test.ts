@@ -163,40 +163,7 @@ describe("API workspace adapter", () => {
     expect(JSON.stringify(source)).not.toContain("sensitive upstream detail")
   })
 
-  it("propagates caller cancellation to the upstream request", async () => {
-    const controller = new AbortController()
-    const upstreamSignals: AbortSignal[] = []
-    const fetch = vi.fn<typeof globalThis.fetch>((input, init) => {
-      const request = new Request(input, init)
-      upstreamSignals.push(request.signal)
-      return new Promise<Response>((_resolve, reject) => {
-        request.signal.addEventListener(
-          "abort",
-          () => reject(request.signal.reason),
-          { once: true }
-        )
-      })
-    })
-
-    const sourcePromise = readWorkspaceFromApi({
-      baseUrl: "https://api.example.test",
-      bearerToken: "test-token",
-      fetch,
-      signal: controller.signal,
-    })
-    await vi.waitFor(() => expect(fetch).toHaveBeenCalledTimes(2))
-    controller.abort(new DOMException("Query cancelled", "AbortError"))
-    const source = await sourcePromise
-
-    expect(upstreamSignals).toHaveLength(2)
-    expect(upstreamSignals.every((signal) => signal.aborted)).toBe(true)
-    expect(source).toEqual({
-      status: "unavailable",
-      reason: "The local Hub server could not reach the Crucible API.",
-    })
-  })
-
-  it("propagates the bounded timeout to the upstream request", async () => {
+  it("propagates caller cancellation and the bounded timeout to the upstream request", async () => {
     const timeoutController = new AbortController()
     vi.spyOn(AbortSignal, "timeout").mockReturnValue(timeoutController.signal)
     const upstreamSignals: AbortSignal[] = []
@@ -212,19 +179,39 @@ describe("API workspace adapter", () => {
       })
     })
 
-    const sourcePromise = readWorkspaceFromApi({
+    const controller = new AbortController()
+    const cancelledPromise = readWorkspaceFromApi({
+      baseUrl: "https://api.example.test",
+      bearerToken: "test-token",
+      fetch,
+      signal: controller.signal,
+    })
+    await vi.waitFor(() => expect(fetch).toHaveBeenCalledTimes(2))
+    controller.abort(new DOMException("Query cancelled", "AbortError"))
+    const cancelled = await cancelledPromise
+
+    expect(upstreamSignals).toHaveLength(2)
+    expect(upstreamSignals.every((signal) => signal.aborted)).toBe(true)
+    expect(cancelled).toEqual({
+      status: "unavailable",
+      reason: "The local Hub server could not reach the Crucible API.",
+    })
+
+    upstreamSignals.length = 0
+    fetch.mockClear()
+    const timedOutPromise = readWorkspaceFromApi({
       baseUrl: "https://api.example.test",
       bearerToken: "test-token",
       fetch,
     })
     await vi.waitFor(() => expect(fetch).toHaveBeenCalledTimes(2))
     timeoutController.abort(new DOMException("Timed out", "TimeoutError"))
-    const source = await sourcePromise
+    const timedOut = await timedOutPromise
 
     expect(AbortSignal.timeout).toHaveBeenCalledWith(15_000)
     expect(upstreamSignals).toHaveLength(2)
     expect(upstreamSignals.every((signal) => signal.aborted)).toBe(true)
-    expect(source).toEqual({
+    expect(timedOut).toEqual({
       status: "unavailable",
       reason: "The Crucible API did not respond before the local timeout.",
     })

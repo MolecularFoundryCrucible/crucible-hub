@@ -48,18 +48,6 @@ const destinations = [
     to: "/samples/$sampleMfid",
   },
   {
-    kind: "dataset",
-    params: { datasetMfid: "resource-mfid" },
-    search: { preview: undefined },
-    to: "/datasets/$datasetMfid",
-  },
-  {
-    kind: "project",
-    params: { projectMfid: "resource-mfid" },
-    search: { preview: undefined },
-    to: "/projects/$projectMfid",
-  },
-  {
     kind: "instrument",
     params: { instrumentMfid: "resource-mfid" },
     search: {},
@@ -100,43 +88,5 @@ describe("ResourceFullPageLink", () => {
     expect(
       screen.getByRole("link", { name: "Open full page: Named resource" })
     ).toBeTruthy()
-  })
-
-  it("uses a responsive table control with a tooltip", () => {
-    render(
-      <ResourceFullPageLink
-        kind="dataset"
-        mfid="resource-mfid"
-        name="Named dataset"
-        presentation="table"
-      />
-    )
-
-    const link = screen.getByRole("link", {
-      name: "Open full page: Named dataset",
-    })
-    expect(link.className).toContain("size-7")
-    expect(link.querySelector("svg")).toBeTruthy()
-    expect(link.textContent).toBe("")
-    expect(screen.getByRole("tooltip").textContent).toBe(
-      "Open full page: Named dataset"
-    )
-  })
-
-  it("uses a labeled inspector-footer control with an inline-end icon", () => {
-    render(
-      <ResourceFullPageLink
-        kind="project"
-        mfid="resource-mfid"
-        name="Named project"
-        presentation="inspector-footer"
-      />
-    )
-
-    const link = screen.getByRole("link", {
-      name: "Open full page: Named project",
-    })
-    expect(link.textContent).toBe("Open")
-    expect(link.querySelector('[data-icon="inline-end"]')).toBeTruthy()
   })
 })

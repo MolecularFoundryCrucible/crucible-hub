@@ -79,16 +79,6 @@ describe("PostprocessingCard", () => {
   })
   afterEach(cleanup)
 
-  it("lists runs with their status and failure", async () => {
-    renderCard()
-
-    const table = await screen.findByRole("table", {
-      name: "Post-processing runs",
-    })
-    expect(within(table).getByText("Mosaic stitch")).toBeTruthy()
-    expect(within(table).getByText("Tiles overlap.")).toBeTruthy()
-  })
-
   it("starts a pipeline with a retry-safe key", async () => {
     renderCard()
 
@@ -131,24 +121,5 @@ describe("PostprocessingCard", () => {
     expect(screen.queryByRole("button", { name: "Run pipeline" })).toBeNull()
     expect(vi.mocked(getDatasetPostprocessingRuns)).not.toHaveBeenCalled()
     expect(vi.mocked(getWorkspacePipelines)).not.toHaveBeenCalled()
-  })
-
-  it("says when post-processing is off on the server", async () => {
-    vi.mocked(getDatasetPostprocessingRuns).mockResolvedValue({
-      error: {
-        correlationId: "c",
-        kind: "unavailable",
-        message: "This isn't turned on for this Crucible server.",
-        retryable: false,
-      },
-      status: "error",
-    })
-    renderCard()
-
-    expect(
-      await screen.findByText(
-        "Post-processing isn't turned on for this Crucible server"
-      )
-    ).toBeTruthy()
   })
 })

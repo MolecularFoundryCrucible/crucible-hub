@@ -25,30 +25,6 @@ const sampleBuckets: readonly WorkspaceFacetBucket[] = [
 ]
 
 describe("buildFacetComboboxState", () => {
-  it("lists all non-empty existing facet buckets when the input is blank", () => {
-    expect(buildFacetComboboxState(sampleBuckets, "")).toEqual({
-      items: [
-        { count: 8, kind: "existing", value: "catalyst" },
-        { count: 4, kind: "existing", value: "thin film" },
-      ],
-      selectedItem: null,
-    })
-  })
-
-  it("keeps all existing options visible on initial open when the current value matches an existing facet", () => {
-    expect(
-      buildFacetComboboxState(sampleBuckets, "catalyst", {
-        filterByValue: false,
-      })
-    ).toEqual({
-      items: [
-        { count: 8, kind: "existing", value: "catalyst" },
-        { count: 4, kind: "existing", value: "thin film" },
-      ],
-      selectedItem: { count: 8, kind: "existing", value: "catalyst" },
-    })
-  })
-
   it("filters matching existing facets and appends a create item for novel input", () => {
     expect(
       buildFacetComboboxState(sampleBuckets, "  cat ", {

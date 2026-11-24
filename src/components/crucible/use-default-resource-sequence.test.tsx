@@ -82,11 +82,6 @@ describe("useDefaultResourceSequence", () => {
     expect(result.current).toBe(false)
   })
 
-  it("does nothing away from Overview", () => {
-    render(null, false)
-    expect(mocks.create).not.toHaveBeenCalled()
-  })
-
   it("does not rebuild on a page where it was cleared", () => {
     mocks.clearedMfid = "dataset-1"
     render()

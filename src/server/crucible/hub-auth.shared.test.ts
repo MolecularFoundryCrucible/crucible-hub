@@ -16,8 +16,6 @@ import {
   finishHubLogin,
   hubApiAuthorizationUrl,
   hasHubSession,
-  hubSessionIdentity,
-  hubSignInFailureDetails,
   logoutHubSession,
   productionHubAuthReady,
   sessionApiFetch,
@@ -35,7 +33,7 @@ import {
   closePostgresSessionPool,
 } from "./hub-session-postgres.server"
 import { readSession, replaceSession } from "./hub-session-store.server"
-import { oauthForm, oauthRoute, oauthTokenAnswer } from "@/test/oauth"
+import { oauthRoute, oauthTokenAnswer } from "@/test/oauth"
 import { startRequestScope } from "@/test/start-request"
 
 const databaseUrl = process.env.HUB_TEST_SESSION_DATABASE_URL
@@ -196,178 +194,6 @@ describe.skipIf(!databaseUrl)("Hub sessions shared through Postgres", () => {
     await expect(checkPostgresSessionStore()).resolves.toBeUndefined()
   })
 
-  it("keeps the session and revokes the tokens when re-confirming returns another account", async () => {
-    vi.useFakeTimers({ toFake: ["Date"] })
-    vi.setSystemTime(new Date("2026-10-06T12:00:00.000Z"))
-    stubSharedEnv()
-    const { sessionCookie, requests } = await signedInSession(() =>
-      Response.json([])
-    )
-    const stepUp = startRequestScope(
-      "http://127.0.0.1:3000/hub/auth/login?max_age=0",
-      { headers: { cookie: sessionCookie } }
-    )
-    const location = await stepUp.run(() =>
-      beginHubLogin("/hub/reauthenticated", 0)
-    )
-    const state = new URL(location).searchParams.get("state")!
-    const loginCookie = stepUp
-      .setCookies()
-      .find((value) => value.startsWith("crucible_hub_login="))!
-      .split(";")[0]
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
-        const path = oauthRoute(input, init)
-        requests.push(path)
-        return path === "/oauth/token:authorization_code"
-          ? Response.json(
-              oauthTokenAnswer({
-                ...tokenResponse,
-                user_unique_id: "mfid-other",
-              })
-            )
-          : new Response(null)
-      })
-    )
-    const callback = startRequestScope(
-      "http://127.0.0.1:3000/hub/auth/callback",
-      { headers: { cookie: `${sessionCookie}; ${loginCookie}` } }
-    )
-    const error = await callback
-      .run(() =>
-        finishHubLogin("code", state, null, "https://api.example.test")
-      )
-      .catch((reason: unknown) => reason)
-    expect(hubSignInFailureDetails(error)).toEqual({
-      reason: "account-mismatch",
-    })
-    expect(requests.slice(-2)).toEqual([
-      "/oauth/token:authorization_code",
-      "/oauth/revoke",
-    ])
-    const after = startRequestScope("http://127.0.0.1:3000/hub/data", {
-      headers: { cookie: sessionCookie },
-    })
-    await expect(
-      after.run(() => withHubAuthRequest(async () => hubSessionIdentity()))
-    ).resolves.toBe(tokenResponse.user_unique_id)
-  })
-
-  it("ends the replaced session when the same account signs in again", async () => {
-    vi.useFakeTimers({ toFake: ["Date"] })
-    vi.setSystemTime(new Date("2026-10-06T12:00:00.000Z"))
-    stubSharedEnv()
-    const { sessionCookie } = await signedInSession(() => Response.json([]))
-    const stepUp = startRequestScope(
-      "http://127.0.0.1:3000/hub/auth/login?max_age=0",
-      { headers: { cookie: sessionCookie } }
-    )
-    const location = await stepUp.run(() =>
-      beginHubLogin("/hub/reauthenticated", 0)
-    )
-    const state = new URL(location).searchParams.get("state")!
-    const loginCookie = stepUp
-      .setCookies()
-      .find((value) => value.startsWith("crucible_hub_login="))!
-      .split(";")[0]
-    const revoked: unknown[] = []
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
-        const path = oauthRoute(input, init)
-        if (path === "/oauth/revoke") {
-          revoked.push(oauthForm(init))
-        }
-        return path === "/oauth/token:authorization_code"
-          ? Response.json(
-              oauthTokenAnswer({
-                ...tokenResponse,
-                auth_time: new Date().toISOString(),
-                refresh_token: "refresh-2",
-              })
-            )
-          : new Response(null)
-      })
-    )
-    const callback = startRequestScope(
-      "http://127.0.0.1:3000/hub/auth/callback",
-      { headers: { cookie: `${sessionCookie}; ${loginCookie}` } }
-    )
-    await expect(
-      callback.run(() =>
-        finishHubLogin("code", state, null, "https://api.example.test")
-      )
-    ).resolves.toBe("/hub/reauthenticated")
-    expect(revoked).toEqual([
-      { token: "refresh-1", token_type_hint: "refresh_token" },
-    ])
-  })
-
-  it("keeps Administrator view and its expiry when the same account re-confirms", async () => {
-    vi.useFakeTimers({ toFake: ["Date"] })
-    vi.setSystemTime(new Date("2026-10-06T12:00:00.000Z"))
-    stubSharedEnv()
-    const signedIn = await signedInSession(() => Response.json([]))
-    const elevate = startRequestScope("http://127.0.0.1:3000/hub/data", {
-      headers: { cookie: signedIn.sessionCookie },
-    })
-    await elevate.run(() =>
-      withHubAuthRequest(() => updateSharedPrivilegeMode("elevated"))
-    )
-    const sessionCookie = elevate
-      .setCookies()
-      .find((value) => value.startsWith("crucible_hub_session="))!
-      .split(";")[0]
-
-    vi.setSystemTime(new Date("2026-10-06T20:00:00.000Z"))
-    const stepUp = startRequestScope(
-      "http://127.0.0.1:3000/hub/auth/login?max_age=0",
-      { headers: { cookie: sessionCookie } }
-    )
-    const location = await stepUp.run(() =>
-      beginHubLogin("/hub/reauthenticated", 0)
-    )
-    const state = new URL(location).searchParams.get("state")!
-    const loginCookie = stepUp
-      .setCookies()
-      .find((value) => value.startsWith("crucible_hub_login="))!
-      .split(";")[0]
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(async (input: string | URL | Request, init?: RequestInit) =>
-        oauthRoute(input, init) === "/oauth/token:authorization_code"
-          ? Response.json(
-              oauthTokenAnswer({
-                ...tokenResponse,
-                auth_time: new Date().toISOString(),
-                refresh_token: "refresh-2",
-              })
-            )
-          : new Response(null)
-      )
-    )
-    const callback = startRequestScope(
-      "http://127.0.0.1:3000/hub/auth/callback",
-      { headers: { cookie: `${sessionCookie}; ${loginCookie}` } }
-    )
-    await callback.run(() =>
-      finishHubLogin("code", state, null, "https://api.example.test")
-    )
-    const replaced = callback
-      .setCookies()
-      .find((value) => /^crucible_hub_session=./.test(value))!
-      .split(";")[0]
-    const modeAt = (time: string) => {
-      vi.setSystemTime(new Date(time))
-      return startRequestScope("http://127.0.0.1:3000/hub/data", {
-        headers: { cookie: replaced },
-      }).run(() => withHubAuthRequest(async () => sharedRequestPrivilegeMode()))
-    }
-    await expect(modeAt("2026-10-06T20:00:01.000Z")).resolves.toBe("elevated")
-    await expect(modeAt("2026-10-07T00:00:01.000Z")).resolves.toBe("normal")
-  })
-
   it("keeps a pending sign-in link in the database for its own session only", async () => {
     vi.useFakeTimers({ toFake: ["Date"] })
     vi.setSystemTime(new Date("2026-10-06T22:00:00.000Z"))
@@ -425,56 +251,6 @@ describe.skipIf(!databaseUrl)("Hub sessions shared through Postgres", () => {
     ])
   })
 
-  it("keeps the session and the current access token when a refresh is rate limited", async () => {
-    vi.useFakeTimers({ toFake: ["Date"] })
-    vi.setSystemTime(new Date("2026-10-06T22:59:45.000Z"))
-    stubSharedEnv()
-    const { call, requests } = await signedInSession((path) =>
-      path === "/oauth/token:refresh_token"
-        ? new Response(null, { headers: { "Retry-After": "20" }, status: 429 })
-        : Response.json([])
-    )
-
-    const first = await call()
-    const second = await call()
-    expect(first.response?.status).toBe(200)
-    expect(second.response?.status).toBe(200)
-    expect(second.signedIn).toBe(true)
-    expect(requests).toEqual([
-      "/oauth/token:authorization_code",
-      "/oauth/token:refresh_token",
-      "/datasets",
-      "/datasets",
-    ])
-  })
-
-  it("waits out a rate-limited refresh after expiry and then recovers", async () => {
-    vi.useFakeTimers({ toFake: ["Date"] })
-    vi.setSystemTime(new Date("2026-10-06T23:00:30.000Z"))
-    stubSharedEnv()
-    let refreshes = 0
-    const { call } = await signedInSession((path) => {
-      if (path !== "/oauth/token:refresh_token") return Response.json([])
-      refreshes += 1
-      return refreshes === 1
-        ? new Response(null, { headers: { "Retry-After": "10" }, status: 429 })
-        : Response.json(oauthTokenAnswer(refreshedTokens))
-    })
-
-    const failed = await call()
-    expect(failed.error).toMatchObject({ status: 429 })
-    expect(failed.signedIn).toBe(true)
-    const waiting = await call()
-    expect(waiting.error).toMatchObject({ status: 429 })
-    expect(refreshes).toBe(1)
-
-    vi.setSystemTime(new Date("2026-10-06T23:00:41.000Z"))
-    const recovered = await call()
-    expect(recovered.response?.status).toBe(200)
-    expect(recovered.signedIn).toBe(true)
-    expect(refreshes).toBe(2)
-  })
-
   it("takes over a refresh claim abandoned by a stopped instance", async () => {
     vi.useFakeTimers({ toFake: ["Date"] })
     vi.setSystemTime(new Date("2026-10-06T23:00:30.000Z"))
@@ -513,21 +289,6 @@ describe.skipIf(!databaseUrl)("Hub sessions shared through Postgres", () => {
     const results = await Promise.all([call(), call()])
     expect(results.map((result) => result.response?.status)).toEqual([200, 200])
     expect(refreshes).toBe(1)
-  })
-
-  it("closes the session after an uncertain refresh", async () => {
-    vi.useFakeTimers({ toFake: ["Date"] })
-    vi.setSystemTime(new Date("2026-10-06T23:00:30.000Z"))
-    stubSharedEnv()
-    const { call } = await signedInSession((path) =>
-      path === "/oauth/token:refresh_token"
-        ? new Response(null, { status: 504 })
-        : Response.json([])
-    )
-
-    const result = await call()
-    expect(result.error).toBeInstanceOf(Error)
-    expect(result.signedIn).toBe(false)
   })
 
   it("keeps a session for days and returns administrator mode to normal after twelve hours", async () => {

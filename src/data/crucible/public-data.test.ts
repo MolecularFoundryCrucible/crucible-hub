@@ -31,16 +31,19 @@ describe("resolveCollectionAffiliation", () => {
     }
   })
 
-  it("excludes public data by default", () => {
+  it("excludes public data by default and follows an explicit choice over the saved default", () => {
     expect(
       resolveCollectionAffiliation({
         elevated: false,
         includePublicByDefault: false,
       })
     ).toBe("member")
-  })
-
-  it("follows an explicit choice over the saved default", () => {
+    expect(
+      resolveCollectionAffiliation({
+        elevated: false,
+        includePublicByDefault: true,
+      })
+    ).toBeUndefined()
     expect(
       resolveCollectionAffiliation({
         elevated: false,
@@ -55,15 +58,6 @@ describe("resolveCollectionAffiliation", () => {
         publicData: "exclude",
       })
     ).toBe("member")
-  })
-
-  it("follows the saved default when no choice is made", () => {
-    expect(
-      resolveCollectionAffiliation({
-        elevated: false,
-        includePublicByDefault: true,
-      })
-    ).toBeUndefined()
   })
 })
 

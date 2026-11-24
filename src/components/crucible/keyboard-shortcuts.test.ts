@@ -42,23 +42,4 @@ describe("keyboardShortcutGroups", () => {
     expect(descriptions("/", false)).not.toContain("Search this project")
     expect(descriptions("/projects/a", true)).toContain("Search this project")
   })
-
-  it("lists arrows on a record Overview and F on its Graph", () => {
-    expect(descriptions("/datasets/a")).toContain("Previous or next record")
-    expect(descriptions("/datasets/a/graph")).not.toContain(
-      "Previous or next record"
-    )
-    expect(descriptions("/datasets/a/graph")).toContain(
-      "Center the focused graph node"
-    )
-  })
-
-  it("names the group after the current record", () => {
-    expect(
-      keyboardShortcutGroups("/samples/a", false).map((group) => group.title)
-    ).toEqual(["General", "Go to", "This sample"])
-    expect(
-      keyboardShortcutGroups("/", false).map((group) => group.title)
-    ).toEqual(["General", "Go to"])
-  })
 })

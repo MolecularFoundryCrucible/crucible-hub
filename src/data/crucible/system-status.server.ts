@@ -19,7 +19,7 @@ export function clearSystemStatusCache() {
   cachedStatus = null
 }
 
-export function readFixtureSystemStatus(): SystemStatus {
+function readFixtureSystemStatus(): SystemStatus {
   return {
     status: "ok",
     hub: hubStatus(),

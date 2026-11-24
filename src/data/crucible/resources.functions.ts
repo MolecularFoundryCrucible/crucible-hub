@@ -175,10 +175,10 @@ export const DATASET_MEASUREMENT_MAX_LENGTH = 255
 export const DATASET_DATA_FORMAT_MAX_LENGTH = 255
 export const DATASET_DATA_TYPE_MAX_LENGTH = 255
 export const DATASET_SESSION_NAME_MAX_LENGTH = 255
-export const SCIENTIFIC_METADATA_KEY_MAX_LENGTH = 1024
+const SCIENTIFIC_METADATA_KEY_MAX_LENGTH = 1024
 export const SCIENTIFIC_METADATA_MAX_DEPTH = 64
-export const SCIENTIFIC_METADATA_MAX_FIELDS = 10_000
-export const SCIENTIFIC_METADATA_MAX_SERIALIZED_BYTES = 1_048_576
+const SCIENTIFIC_METADATA_MAX_FIELDS = 10_000
+const SCIENTIFIC_METADATA_MAX_SERIALIZED_BYTES = 1_048_576
 
 const canonicalResourceMfidSchema = z
   .string()
@@ -351,7 +351,7 @@ const timestampChangeSchema = z
   .nullable()
   .optional()
 
-export const sampleDescriptiveUpdateInputSchema = z
+const sampleDescriptiveUpdateInputSchema = z
   .object({
     changes: z
       .object({
@@ -395,7 +395,7 @@ const datasetNameChangeSchema = z
 const nullableDatasetTextChangeSchema = (maxLength: number) =>
   z.string().trim().min(1).max(maxLength).nullable().optional()
 
-export const datasetDescriptiveUpdateInputSchema = z
+const datasetDescriptiveUpdateInputSchema = z
   .object({
     changes: z
       .object({

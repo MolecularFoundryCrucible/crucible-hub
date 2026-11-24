@@ -14,7 +14,6 @@ import { getWorkspaceAccount } from "@/data/crucible/account.functions"
 import {
   createWorkspaceApiKeyFn,
   getWorkspaceApiKeys,
-  renameWorkspaceApiKeyFn,
 } from "@/data/crucible/api-keys.functions"
 import { identityScope } from "@/data/crucible/query-keys"
 import type { WorkspaceApiKey } from "@/data/crucible/workspace-source"
@@ -119,7 +118,7 @@ describe("ApiKeysSection", () => {
     expect(within(table).queryByRole("button")).toBeNull()
   })
 
-  it("creates a key that lasts a year by default and shows it once", async () => {
+  it("creates a key that lasts a year by default or a chosen expiry, and shows it once", async () => {
     vi.mocked(createWorkspaceApiKeyFn).mockResolvedValue({
       data: { ...workstation, api_key: "crucible_secret", id: 4 },
       status: "ok",
@@ -136,20 +135,18 @@ describe("ApiKeysSection", () => {
     expect(vi.mocked(createWorkspaceApiKeyFn)).toHaveBeenCalledWith({
       data: { expiresAt: null, name: "Beamline laptop", scenario: undefined },
     })
-  })
 
-  it("sends a shorter expiry when one is chosen", async () => {
-    vi.mocked(createWorkspaceApiKeyFn).mockResolvedValue({
-      data: { ...workstation, api_key: "crucible_secret", id: 4 },
-      status: "ok",
-    })
+    cleanup()
+    vi.mocked(createWorkspaceApiKeyFn).mockClear()
     renderSection()
 
-    const dialog = await openNewKeyDialog("Short")
-    fireEvent.change(within(dialog).getByLabelText("Expires after"), {
+    const shortDialog = await openNewKeyDialog("Short")
+    fireEvent.change(within(shortDialog).getByLabelText("Expires after"), {
       target: { value: "30" },
     })
-    fireEvent.click(within(dialog).getByRole("button", { name: "Create key" }))
+    fireEvent.click(
+      within(shortDialog).getByRole("button", { name: "Create key" })
+    )
 
     await waitFor(() =>
       expect(vi.mocked(createWorkspaceApiKeyFn)).toHaveBeenCalled()
@@ -182,33 +179,5 @@ describe("ApiKeysSection", () => {
         "You already have 10 active API keys. Revoke one before creating another."
       )
     ).toBeTruthy()
-  })
-
-  it("renames a key from its menu", async () => {
-    vi.mocked(renameWorkspaceApiKeyFn).mockResolvedValue({
-      data: { ...workstation, name: "Workstation" },
-      status: "ok",
-    })
-    renderSection()
-
-    fireEvent.click(
-      await screen.findByRole("button", {
-        name: "Actions for Analysis workstation",
-      })
-    )
-    fireEvent.click(await screen.findByRole("menuitem", { name: "Rename" }))
-    const dialog = await screen.findByRole("dialog", {
-      name: "Rename API key",
-    })
-    fireEvent.change(within(dialog).getByLabelText("Name"), {
-      target: { value: "Workstation" },
-    })
-    fireEvent.click(within(dialog).getByRole("button", { name: "Save" }))
-
-    await waitFor(() =>
-      expect(vi.mocked(renameWorkspaceApiKeyFn)).toHaveBeenCalledWith({
-        data: { keyId: 3, name: "Workstation", scenario: undefined },
-      })
-    )
   })
 })

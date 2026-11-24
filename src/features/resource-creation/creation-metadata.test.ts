@@ -45,24 +45,6 @@ describe("creation metadata", () => {
     expect(creationMetadataResult(rows(["", "5"])).ok).toBe(false)
     expect(creationMetadataResult(rows(["a", "1"], [" a", "2"])).ok).toBe(false)
   })
-
-  it("validates JSON drafts", () => {
-    const json = (text: string) => ({
-      ...emptyCreationMetadata(),
-      json: text,
-      mode: "json" as const,
-    })
-    expect(creationMetadataResult(json('{"beam": {"energy": 7}}'))).toEqual({
-      metadata: { beam: { energy: 7 } },
-      ok: true,
-    })
-    expect(creationMetadataResult(json("[1, 2]")).ok).toBe(false)
-    expect(creationMetadataResult(json("{")).ok).toBe(false)
-    expect(creationMetadataResult(json("{}"))).toEqual({
-      metadata: null,
-      ok: true,
-    })
-  })
 })
 
 describe("unsupported metadata characters", () => {

@@ -106,4 +106,4 @@ A missing role is a design-system change in `src/styles.css`, never a local colo
 ## Checks
 
 - `npm run design:check`: rejects raw colors, inline styles, arbitrary values, primitive typography, raw buttons, and visual `Button` overrides outside `src/components/ui`, rejects raw motion values and numeric layers everywhere, then checks every role pair for WCAG 2.2 AA contrast in both themes.
-- `tests/production/design-system.spec.ts`: the fixture page shows the palette, roles, actions, and badges in light and dark.
+- `tests/e2e/design-system.spec.ts`: the fixture page has no detectable accessibility violations in light and dark.

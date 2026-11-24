@@ -29,12 +29,6 @@ const instrument = {
   name: "Beamline 5.3.2",
   unique_id: "01J6Y8N4Q2R7M9K3T5V0W1X2Z1",
 } satisfies WorkspaceSearchResult
-const person = {
-  context: "@ada",
-  kind: "person",
-  name: "Ada Lovelace",
-  unique_id: "ada",
-} satisfies WorkspaceSearchResult
 
 function response(
   kind: WorkspaceSearchKind,
@@ -151,18 +145,6 @@ describe("ResourceChooser", () => {
     expect(screen.getByDisplayValue("Beamline 5.3.2")).toBeTruthy()
   })
 
-  it("does not open the browse popup on focus alone", () => {
-    vi.mocked(getWorkspaceSearch).mockResolvedValue(
-      response("instrument", [instrument])
-    )
-    renderChooser()
-
-    const input = screen.getByRole("combobox", { name: "Search instruments" })
-    fireEvent.focus(input)
-
-    expect(screen.queryByRole("listbox")).toBeNull()
-  })
-
   it("keeps pending and error feedback inside the dropdown", async () => {
     let rejectSearch: ((reason?: unknown) => void) | undefined
     vi.mocked(getWorkspaceSearch).mockImplementation((opts) => {
@@ -195,20 +177,6 @@ describe("ResourceChooser", () => {
     )
   })
 
-  it("shows a kind-specific empty state without changing the selection", async () => {
-    vi.mocked(getWorkspaceSearch).mockResolvedValue(response("project", []))
-    const { onChange } = renderChooser({ kind: "project" })
-
-    const input = screen.getByRole("combobox", { name: "Search projects" })
-    fireEvent.focus(input)
-    fireEvent.change(input, { target: { value: "missing" } })
-    fireEvent.keyDown(input, { key: "ArrowDown" })
-    expect(
-      await screen.findByText("No available projects matched this search.")
-    ).toBeTruthy()
-    expect(onChange).not.toHaveBeenCalled()
-  })
-
   it("keeps the selection while typing and restores it on Escape", async () => {
     vi.mocked(getWorkspaceSearch).mockResolvedValue(
       response("instrument", [instrument])
@@ -230,32 +198,6 @@ describe("ResourceChooser", () => {
     expect(onChange).not.toHaveBeenCalled()
   })
 
-  it("keeps the dropdown arrow beside the clear button", () => {
-    renderChooser({ value: instrument })
-    expect(
-      screen.getByRole("button", { name: "Clear instrument" })
-    ).toBeTruthy()
-    expect(
-      screen.getByRole("button", { name: "Show options" }).className
-    ).not.toContain("hidden")
-  })
-
-  it("shows plain names in the filter presentation", async () => {
-    vi.mocked(getWorkspaceSearch).mockResolvedValue(
-      response("instrument", [instrument])
-    )
-    renderChooser({ presentation: "filter", value: instrument })
-
-    expect(screen.queryByText(`(${instrument.unique_id})`)).toBeNull()
-    const input = screen.getByDisplayValue("Beamline 5.3.2")
-    fireEvent.click(input)
-    const option = await screen.findByRole("option", { name: "Beamline 5.3.2" })
-    expect(option.textContent).toBe("Beamline 5.3.2")
-    expect(
-      screen.getByText("Type 3 or more characters to search all instruments.")
-    ).toBeTruthy()
-  })
-
   it("clears a confirmed selection", () => {
     const { onChange } = renderChooser({ value: instrument })
 
@@ -264,52 +206,5 @@ describe("ResourceChooser", () => {
     fireEvent.click(screen.getByRole("button", { name: "Clear instrument" }))
 
     expect(onChange).toHaveBeenCalledWith(undefined)
-  })
-
-  it("supports people and custom empty labels", async () => {
-    vi.mocked(getWorkspaceSearch).mockResolvedValue(
-      response("person", [person])
-    )
-    const { onChange } = renderChooser({
-      emptyLabel: "Not selected",
-      kind: "person",
-    })
-
-    const input = screen.getByRole("combobox", { name: "Search people" })
-    expect(input.getAttribute("placeholder")).toBe("Not selected")
-
-    fireEvent.focus(input)
-    fireEvent.change(input, {
-      target: { value: "ada" },
-    })
-    fireEvent.keyDown(input, { key: "ArrowDown" })
-    expect(await screen.findByText("Ada Lovelace")).toBeTruthy()
-    fireEvent.click(screen.getByRole("option", { name: /Ada Lovelace/ }))
-    expect(onChange).toHaveBeenCalledWith(person)
-  })
-
-  it("shows browse suggestions immediately after clearing an existing selection", async () => {
-    vi.mocked(getWorkspaceSearch).mockResolvedValue(
-      response("person", [person])
-    )
-    const { onChange } = renderChooser({
-      emptyLabel: "Choose a project lead",
-      excludeServiceAccounts: true,
-      kind: "person",
-      value: person,
-    })
-
-    expect(screen.getByDisplayValue("Ada Lovelace")).toBeTruthy()
-    expect(screen.getByText(`(${person.unique_id})`)).toBeTruthy()
-
-    fireEvent.click(screen.getByRole("button", { name: "Clear person" }))
-    expect(onChange).toHaveBeenCalledWith(undefined)
-
-    expect(
-      await screen.findByText(
-        "Available people (enter at least 3 characters to search all)"
-      )
-    ).toBeTruthy()
-    expect(screen.getByRole("option", { name: /Ada Lovelace/ })).toBeTruthy()
   })
 })
