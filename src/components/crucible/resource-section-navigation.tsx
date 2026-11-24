@@ -1,5 +1,5 @@
 export const resourceSectionLinkClassName =
-  "relative flex min-h-10 shrink-0 items-center rounded-md px-1.5 text-label text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:px-3"
+  "relative flex min-h-10 shrink-0 items-center rounded-md px-1.5 text-label text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-ring focus-visible:ring-offset-2 sm:px-3"
 
 export const resourceSectionActiveProps = {
   className:

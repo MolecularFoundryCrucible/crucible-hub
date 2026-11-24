@@ -199,7 +199,7 @@ function SignInHistoryRow({ event }: { event: WorkspaceAuthEvent }) {
                 {details.length > 0 && event.actor_unique_id ? " · " : null}
                 {event.actor_unique_id ? (
                   <Link
-                    className="rounded-sm underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring"
+                    className="rounded-sm underline-offset-4 focus-ring hover:underline"
                     params={{ userId: event.actor_unique_id }}
                     to="/users/$userId"
                   >

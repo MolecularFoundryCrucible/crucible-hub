@@ -14,7 +14,7 @@ export function SelectableTextLink({
     props: mergeProps<"a">(
       {
         className: cn(
-          "min-w-0 rounded-sm text-left outline-none select-text hover:underline focus-visible:ring-2 focus-visible:ring-ring",
+          "min-w-0 rounded-sm text-left focus-ring select-text hover:underline",
           className
         ),
         draggable: false,

@@ -31,7 +31,7 @@ function ResourceListItem({ className, ...props }: ComponentProps<"li">) {
 }
 
 const resourceListItemContentVariants = cva(
-  "flex w-full min-w-0 gap-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+  "flex w-full min-w-0 gap-3 text-left focus-ring focus-visible:ring-inset",
   {
     variants: {
       density: {
