@@ -17,6 +17,7 @@ import {
   useReactFlow,
 } from "@xyflow/react"
 import type { NodeMouseHandler, OnNodeDrag } from "@xyflow/react"
+import "./resource-graph.css"
 import "@xyflow/react/dist/style.css"
 
 import { PendingIcon } from "@/components/crucible/pending-icon"
