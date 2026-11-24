@@ -73,9 +73,9 @@ import type {
 import {
   DiscardChangesDialog,
   useDiscardProtection,
-} from "@/features/forms/discard-changes"
-import { EmailField, UsernameField } from "@/features/forms/identifier-fields"
-import { useSlugConflict } from "@/features/forms/slug-availability"
+} from "@/components/forms/discard-changes"
+import { EmailField, UsernameField } from "@/components/forms/identifier-fields"
+import { useSlugConflict } from "@/components/forms/slug-availability"
 import { resourceDisplayName } from "@/lib/resource-name"
 import { PendingUserActions } from "@/features/admin/pending-users-card"
 import {
@@ -84,7 +84,7 @@ import {
 } from "@/features/admin/user-account-status"
 import { PersonSecurityCard } from "@/features/account-profile/security-card"
 import { formatSignInMethods } from "@/lib/sign-in-methods"
-import { useAppForm } from "@/features/forms/app-form"
+import { useAppForm } from "@/components/forms/app-form"
 
 const platformRoleDescriptions = {
   admin: "Full platform administration.",

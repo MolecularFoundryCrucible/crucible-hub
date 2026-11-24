@@ -32,7 +32,7 @@ vi.mock("@/components/crucible/workspace-provider", () => ({
     identityScope("crucible-fixture:populated", "account"),
 }))
 
-vi.mock("@/features/preferences/use-account-preferences", () => ({
+vi.mock("@/hooks/use-account-preferences", () => ({
   useAccountPreferences: () => ({
     preferences: { hub: { label_printer: "spinbot" } },
     update,

@@ -13,15 +13,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   DiscardChangesDialog,
   useDiscardProtection,
-} from "@/features/forms/discard-changes"
+} from "@/components/forms/discard-changes"
 import {
   Field,
   FieldError,
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
-import { fieldErrors, shouldShowFieldError } from "@/features/forms/field-state"
-import { useAppForm } from "@/features/forms/app-form"
+import {
+  fieldErrors,
+  shouldShowFieldError,
+} from "@/components/forms/field-state"
+import { useAppForm } from "@/components/forms/app-form"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import { createWorkspaceDataset } from "@/data/crucible/creation.functions"

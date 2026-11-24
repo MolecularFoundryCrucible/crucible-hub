@@ -12,9 +12,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   DiscardChangesDialog,
   useDiscardProtection,
-} from "@/features/forms/discard-changes"
+} from "@/components/forms/discard-changes"
 import { FieldGroup } from "@/components/ui/field"
-import { useAppForm } from "@/features/forms/app-form"
+import { useAppForm } from "@/components/forms/app-form"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import { createWorkspaceInstrument } from "@/data/crucible/instruments.functions"
 import { crucibleKeys } from "@/data/crucible/query-keys"
@@ -26,8 +26,8 @@ import {
   unwrapHubResult,
 } from "@/data/crucible/result"
 import { instrumentIdSchema } from "@/data/crucible/slugs"
-import { InstrumentIdField } from "@/features/forms/identifier-fields"
-import { useSlugConflict } from "@/features/forms/slug-availability"
+import { InstrumentIdField } from "@/components/forms/identifier-fields"
+import { useSlugConflict } from "@/components/forms/slug-availability"
 import { FormErrorRegion } from "@/components/crucible/form-error"
 import { CreationFormActions } from "@/components/crucible/creation-form-actions"
 

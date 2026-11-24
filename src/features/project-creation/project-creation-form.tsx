@@ -22,7 +22,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   DiscardChangesDialog,
   useDiscardProtection,
-} from "@/features/forms/discard-changes"
+} from "@/components/forms/discard-changes"
 import {
   Field,
   FieldError,
@@ -30,8 +30,11 @@ import {
   FieldLabel,
   FieldTitle,
 } from "@/components/ui/field"
-import { fieldErrors, shouldShowFieldError } from "@/features/forms/field-state"
-import { useAppForm } from "@/features/forms/app-form"
+import {
+  fieldErrors,
+  shouldShowFieldError,
+} from "@/components/forms/field-state"
+import { useAppForm } from "@/components/forms/app-form"
 import { accountQueryOptions } from "@/data/crucible/account.queries"
 import { createWorkspaceProject } from "@/data/crucible/creation.functions"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
@@ -48,8 +51,8 @@ import type {
   WorkspaceAccount,
   WorkspaceSearchResult,
 } from "@/data/crucible/workspace-source"
-import { ProjectIdField } from "@/features/forms/identifier-fields"
-import { useSlugConflict } from "@/features/forms/slug-availability"
+import { ProjectIdField } from "@/components/forms/identifier-fields"
+import { useSlugConflict } from "@/components/forms/slug-availability"
 import { FormErrorRegion } from "@/components/crucible/form-error"
 import { CreationFormActions } from "@/components/crucible/creation-form-actions"
 import { reservedProjectIdMessage } from "./project-id-errors"

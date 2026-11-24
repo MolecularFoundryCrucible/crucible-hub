@@ -7,7 +7,7 @@ import {
   publicDataSearchValue,
 } from "@/data/crucible/public-data"
 import type { PublicDataChoice } from "@/data/crucible/public-data"
-import { useIncludePublicByDefault } from "@/features/preferences/public-data"
+import { useIncludePublicByDefault } from "@/hooks/public-data"
 import { useMemo, useState } from "react"
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 import { Link, getRouteApi } from "@tanstack/react-router"

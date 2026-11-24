@@ -25,9 +25,9 @@ import {
   profileNameMissing,
   ProfileNameHint,
 } from "./account-profile-fields"
-import { UsernameField } from "@/features/forms/identifier-fields"
-import { useSlugConflict } from "@/features/forms/slug-availability"
-import { useAppForm } from "@/features/forms/app-form"
+import { UsernameField } from "@/components/forms/identifier-fields"
+import { useSlugConflict } from "@/components/forms/slug-availability"
+import { useAppForm } from "@/components/forms/app-form"
 
 export function AccountSetupForm({
   account,

@@ -50,9 +50,12 @@ A proposal or unmerged API contract is not accepted behavior.
 - `src/features/`: product workflows and page composition
 - `src/components/ui/`: controlled shadcn primitives
 - `src/components/crucible/`: shared domain components and semantic icons
+- `src/components/forms/`: the shared form kit (TanStack Form fields, identifier fields, discard-changes guard)
+- `src/hooks/`: shared hooks, including account preferences
 - `src/data/crucible/`: browser-safe models, Query ownership, fixtures, and adapters
 - `src/server/crucible/`: server-only API transport and safe errors
 - `src/generated/` and `contracts/`: generated client types and the pinned OpenAPI contract
+- Imports point down: routes, then features, then shared code (`components`, `hooks`), then `data`, `server`, and `lib`. Features may use each other; shared code never imports a feature or route, and `data`, `server`, and `lib` never import UI. ESLint enforces this.
 
 ## Architecture invariants
 

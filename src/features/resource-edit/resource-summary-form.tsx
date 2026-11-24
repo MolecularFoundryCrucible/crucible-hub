@@ -22,8 +22,11 @@ import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import {
   DiscardChangesDialog,
   useDiscardProtection,
-} from "@/features/forms/discard-changes"
-import { fieldErrors, shouldShowFieldError } from "@/features/forms/field-state"
+} from "@/components/forms/discard-changes"
+import {
+  fieldErrors,
+  shouldShowFieldError,
+} from "@/components/forms/field-state"
 import { crucibleKeys } from "@/data/crucible/query-keys"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import { resourceQueryOptions } from "@/data/crucible/resources.queries"
@@ -57,7 +60,7 @@ import { FacetCombobox } from "@/components/crucible/facet-combobox"
 import { SaveError } from "@/components/crucible/form-error"
 import { SummaryFields, contextFields } from "./resource-summary-card"
 import type { DatasetDetail, SampleDetail } from "./resource-summary-card"
-import { useAppForm } from "@/features/forms/app-form"
+import { useAppForm } from "@/components/forms/app-form"
 
 const sampleSummaryFormSchema = z.object({
   description: z

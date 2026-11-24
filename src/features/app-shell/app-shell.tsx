@@ -124,8 +124,8 @@ import {
   useRecentlyViewed,
 } from "@/features/recently-viewed/recently-viewed"
 import type { RecentlyViewedResource } from "@/features/recently-viewed/recently-viewed"
-import { useThemePreference } from "@/features/preferences/theme-preference"
-import { useAccountPreferences } from "@/features/preferences/use-account-preferences"
+import { useThemePreference } from "@/hooks/theme-preference"
+import { useAccountPreferences } from "@/hooks/use-account-preferences"
 import { resourceDisplayName } from "@/lib/resource-name"
 
 const sidebarRecentLimit = 4

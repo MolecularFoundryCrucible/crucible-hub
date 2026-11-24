@@ -1,6 +1,6 @@
 import { privilegeModeFromScope } from "@/data/crucible/query-keys"
 import { resolveCollectionAffiliation } from "@/data/crucible/public-data"
-import { useIncludePublicByDefault } from "@/features/preferences/public-data"
+import { useIncludePublicByDefault } from "@/hooks/public-data"
 import { useEffect, useRef, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Link, useLocation, useNavigate } from "@tanstack/react-router"

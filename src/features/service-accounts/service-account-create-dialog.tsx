@@ -20,9 +20,12 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
-import { UsernameField } from "@/features/forms/identifier-fields"
-import { useSlugConflict } from "@/features/forms/slug-availability"
-import { fieldErrors, shouldShowFieldError } from "@/features/forms/field-state"
+import { UsernameField } from "@/components/forms/identifier-fields"
+import { useSlugConflict } from "@/components/forms/slug-availability"
+import {
+  fieldErrors,
+  shouldShowFieldError,
+} from "@/components/forms/field-state"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import { createWorkspaceServiceAccount } from "@/data/crucible/service-accounts.functions"
@@ -33,7 +36,7 @@ import {
   hubActionError,
   withReauthentication,
 } from "@/components/crucible/reauthentication"
-import { useAppForm } from "@/features/forms/app-form"
+import { useAppForm } from "@/components/forms/app-form"
 
 const createServiceAccountSchema = z.object({
   unique_id: z

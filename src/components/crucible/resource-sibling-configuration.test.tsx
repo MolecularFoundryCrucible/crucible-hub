@@ -27,7 +27,7 @@ vi.mock("./resource-sibling-navigation", () => ({
   useActivateResourceSiblingCollection: () => mocks.activate,
   useClearResourceSiblingNavigation: () => vi.fn(),
 }))
-vi.mock("@/features/preferences/use-account-preferences", () => ({
+vi.mock("@/hooks/use-account-preferences", () => ({
   useAccountPreferences: () => ({
     enabled: true,
     preferences: {},

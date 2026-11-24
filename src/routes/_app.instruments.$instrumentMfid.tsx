@@ -1,4 +1,4 @@
-import { loadIncludePublicByDefault } from "@/features/preferences/public-data"
+import { loadIncludePublicByDefault } from "@/hooks/public-data"
 import { createFileRoute } from "@tanstack/react-router"
 import { EntityWorkspacePending } from "@/components/crucible/resource-tab-state"
 import { resourceSummaryQueryOptions } from "@/data/crucible/resources.queries"

@@ -42,14 +42,14 @@ import type {
 import {
   DiscardChangesDialog,
   useDiscardProtection,
-} from "@/features/forms/discard-changes"
+} from "@/components/forms/discard-changes"
 import { USERNAME_MAX_LENGTH, usernameSchema } from "@/data/crucible/slugs"
 import { OneTimeCredentialDialog } from "./one-time-credential-dialog"
 import {
   hubActionError,
   withReauthentication,
 } from "@/components/crucible/reauthentication"
-import { useAppForm } from "@/features/forms/app-form"
+import { useAppForm } from "@/components/forms/app-form"
 
 const serviceAccountProfileSchema = z.object({
   first_name: z.string().trim().max(255),

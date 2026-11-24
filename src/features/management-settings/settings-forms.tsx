@@ -13,8 +13,8 @@ import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import {
   DiscardChangesDialog,
   useDiscardProtection,
-} from "@/features/forms/discard-changes"
-import { useAppForm } from "@/features/forms/app-form"
+} from "@/components/forms/discard-changes"
+import { useAppForm } from "@/components/forms/app-form"
 import {
   INSTRUMENT_DESCRIPTION_MAX_LENGTH,
   INSTRUMENT_LOCATION_MAX_LENGTH,
@@ -46,8 +46,8 @@ import type {
 import {
   InstrumentIdField,
   ProjectIdField,
-} from "@/features/forms/identifier-fields"
-import { useSlugConflict } from "@/features/forms/slug-availability"
+} from "@/components/forms/identifier-fields"
+import { useSlugConflict } from "@/components/forms/slug-availability"
 import { SaveError } from "@/components/crucible/form-error"
 import { reservedProjectIdMessage } from "@/features/project-creation/project-id-errors"
 

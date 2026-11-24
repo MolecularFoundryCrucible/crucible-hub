@@ -26,7 +26,7 @@ vi.mock("@/data/crucible/creation.functions", () => ({
   createWorkspaceProject: vi.fn(),
 }))
 
-vi.mock("@/features/forms/slug-availability", async (importOriginal) => ({
+vi.mock("@/components/forms/slug-availability", async (importOriginal) => ({
   ...(await importOriginal<Record<string, unknown>>()),
   useSlugAvailability: () => ({ status: "available" }),
 }))

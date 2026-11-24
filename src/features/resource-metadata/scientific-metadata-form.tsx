@@ -29,8 +29,11 @@ import type {
 import {
   DiscardChangesDialog,
   useDiscardProtection,
-} from "@/features/forms/discard-changes"
-import { fieldErrors, shouldShowFieldError } from "@/features/forms/field-state"
+} from "@/components/forms/discard-changes"
+import {
+  fieldErrors,
+  shouldShowFieldError,
+} from "@/components/forms/field-state"
 import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
 import { SaveError } from "@/components/crucible/form-error"
 import type { EditableResource } from "./scientific-metadata-editor"
@@ -40,7 +43,7 @@ import {
   metadataDraftResult,
   metadataDraftSchema,
 } from "./metadata-input"
-import { useAppForm } from "@/features/forms/app-form"
+import { useAppForm } from "@/components/forms/app-form"
 
 function metadataEqual(
   left: WorkspaceMetadataValue,
