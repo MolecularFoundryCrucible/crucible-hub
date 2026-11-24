@@ -4,6 +4,7 @@ test("navigates projects, preview deep links, and nested instrument datasets wit
   page,
 }) => {
   await page.goto("/hub/projects")
+  await page.waitForLoadState("networkidle")
   const projectDataResponses: string[] = []
   page.on("response", (response) => {
     const url = response.url()

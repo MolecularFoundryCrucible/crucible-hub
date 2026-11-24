@@ -1,6 +1,5 @@
 import { execSync } from "node:child_process"
 import { readFileSync } from "node:fs"
-import { resolve, sep } from "node:path"
 import { defineConfig, loadEnv } from "vite"
 import type { UserConfig } from "vite"
 import { tanstackStart } from "@tanstack/react-start/plugin/vite"
@@ -38,10 +37,6 @@ function resolveAppVersion(): string {
     JSON.parse(readFileSync("package.json", "utf8")) as { version: string }
   ).version
 }
-
-const sharedSourceRoots = ["components", "lib", "data"].map(
-  (directory) => resolve("src", directory) + sep
-)
 
 const gitCommit = resolveGitCommit()
 const appVersion = resolveAppVersion()
@@ -88,21 +83,7 @@ const config = defineConfig({
           ...rolldownOptions,
           output: {
             codeSplitting: {
-              groups: [
-                {
-                  name: "vendor",
-                  test: /node_modules[\\/](?!(?:elkjs|@xyflow|qrcode\.react|hash-wasm|@tanstack[\\/](?:react-form|form-core))[\\/])/,
-                  minShareCount: 2,
-                  priority: 2,
-                },
-                {
-                  name: "shared",
-                  test: (id) =>
-                    sharedSourceRoots.some((root) => id.startsWith(root)),
-                  minShareCount: 2,
-                  priority: 1,
-                },
-              ],
+              groups: [{ name: "initial", tags: ["$initial"] }],
             },
           },
         },
@@ -111,7 +92,18 @@ const config = defineConfig({
   },
   plugins: [
     tailwindcss(),
-    tanstackStart({ start: { entry: "start.ts" } }),
+    tanstackStart({
+      start: { entry: "start.ts" },
+      router: {
+        codeSplittingOptions: {
+          defaultBehavior: [
+            ["component", "pendingComponent"],
+            ["errorComponent"],
+            ["notFoundComponent"],
+          ],
+        },
+      },
+    }),
     nitro({
       baseURL: "/hub/",
       compressPublicAssets: { gzip: true, brotli: true },
