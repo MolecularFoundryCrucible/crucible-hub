@@ -46,6 +46,7 @@ A test earns its place by guarding behavior that could plausibly regress and tha
 - Cover one row per distinct branch, not every input variation; a table of inputs that take the same path is one case.
 - Always test security boundaries: sessions, origin and CSRF checks, permission and privilege checks, credential handling, cache and referrer headers, and API URL validation.
 - Accessibility runs as one axe check per major layout, in light and dark themes.
+- Vitest runs server, data, and library tests in Node and component, feature, and hook tests in jsdom (`vitest.config.ts` projects). A library test that needs the DOM opts in with a `// @vitest-environment jsdom` first line.
 
 ## Changelog
 
