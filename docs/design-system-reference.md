@@ -163,7 +163,7 @@ Tables use semantic markup without a headless table package. Column alignment co
 ## Forms and overlays
 
 - Every control has a label, grouping, announced validation, and distinct required, optional (muted `(optional)`), disabled, read-only, pending, and failed states. Drafts survive failure.
-- Identifier inputs with a live availability check use `src/features/forms/identifier-fields.tsx` and `useSlugConflict`.
+- Identifier inputs with a live availability check use `src/components/forms/identifier-fields.tsx` and `useSlugConflict`.
 - Facet-backed sample and dataset fields use `FacetCombobox`, which lists existing values with counts and offers `Create "<value>"`.
 - Confirmations use `ConfirmationDialog`: `kind="dialog"` for reversible changes, `kind="alert"` for consequential or destructive ones.
 - Overlays avoid stacking. A dialog over a modal sheet keeps a transparent backdrop, and the sheet dims through `data-nested-dialog-open`.

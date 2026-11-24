@@ -20,7 +20,10 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
-import { fieldErrors, shouldShowFieldError } from "@/features/forms/field-state"
+import {
+  fieldErrors,
+  shouldShowFieldError,
+} from "@/components/forms/field-state"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 import { crucibleKeys } from "@/data/crucible/query-keys"
@@ -32,9 +35,9 @@ import {
 import { emailSchema, usernameSchema } from "@/data/crucible/slugs"
 import { createWorkspaceUserFn } from "@/data/crucible/users.functions"
 import type { WorkspaceAdminUser } from "@/data/crucible/workspace-source"
-import { EmailField, UsernameField } from "@/features/forms/identifier-fields"
-import { useSlugConflict } from "@/features/forms/slug-availability"
-import { useAppForm } from "@/features/forms/app-form"
+import { EmailField, UsernameField } from "@/components/forms/identifier-fields"
+import { useSlugConflict } from "@/components/forms/slug-availability"
+import { useAppForm } from "@/components/forms/app-form"
 
 const createUserSchema = z.object({
   email: emailSchema.or(z.literal("")),

@@ -11,7 +11,7 @@ const allowedPrefixes = ["components/ui/", "generated/"]
 const windowLayoutFiles = new Set([
   "components/crucible/administrator-view-control.tsx",
   "components/crucible/app-footer.tsx",
-  "components/crucible/app-shell.tsx",
+  "features/app-shell/app-shell.tsx",
   "components/crucible/back-to-top.tsx",
   "components/crucible/create-menu.tsx",
   "components/crucible/global-search.tsx",
@@ -212,7 +212,7 @@ const singleTruthIcons = [
   {
     allowed: new Set([
       "components/crucible/icons.ts",
-      "components/crucible/app-shell.tsx",
+      "features/app-shell/app-shell.tsx",
       "components/crucible/create-menu.tsx",
       "components/crucible/resource-creation-actions.tsx",
     ]),

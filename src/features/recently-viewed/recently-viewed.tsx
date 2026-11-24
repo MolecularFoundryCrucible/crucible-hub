@@ -23,7 +23,7 @@ import {
 import { hubErrorMessage, unwrapHubResult } from "@/data/crucible/result"
 import { notifyError, notifySuccess } from "@/components/crucible/notifications"
 import { recentResourcesQueryOptions } from "@/data/crucible/recent-resources.queries"
-import { useAccountPreferences } from "@/features/preferences/use-account-preferences"
+import { useAccountPreferences } from "@/hooks/use-account-preferences"
 
 export type RecentlyViewedResource = RecentResource
 

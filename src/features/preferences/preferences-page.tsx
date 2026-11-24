@@ -47,8 +47,8 @@ import {
   isDefaultResourceSequence,
 } from "@/data/crucible/resource-sequence"
 import { recentScopeOptions } from "@/features/home/home-data"
-import { useThemePreference } from "@/features/preferences/theme-preference"
-import { useAccountPreferences } from "@/features/preferences/use-account-preferences"
+import { useThemePreference } from "@/hooks/theme-preference"
+import { useAccountPreferences } from "@/hooks/use-account-preferences"
 import { useClearRecentHistory } from "@/features/recently-viewed/recently-viewed"
 import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
 import { Button } from "@/components/ui/button"

@@ -43,7 +43,7 @@ import {
 } from "@/data/crucible/resource-sequence"
 import type { WorkspaceResourceDetail } from "@/data/crucible/workspace-source"
 import { PendingIcon } from "@/components/crucible/pending-icon"
-import { useAccountPreferences } from "@/features/preferences/use-account-preferences"
+import { useAccountPreferences } from "@/hooks/use-account-preferences"
 
 type Resource = Extract<WorkspaceResourceDetail, { kind: "dataset" | "sample" }>
 

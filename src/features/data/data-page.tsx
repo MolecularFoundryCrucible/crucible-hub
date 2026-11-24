@@ -4,7 +4,7 @@ import {
   publicDataSearchValue,
 } from "@/data/crucible/public-data"
 import type { PublicDataAccess } from "@/data/crucible/public-data"
-import { useIncludePublicByDefault } from "@/features/preferences/public-data"
+import { useIncludePublicByDefault } from "@/hooks/public-data"
 import { useMemo } from "react"
 import {
   useInfiniteQuery,

@@ -28,7 +28,7 @@ import { labelNameMaxLength } from "@/data/crucible/print"
 import { printWorkspaceResourceLabel } from "@/data/crucible/print.functions"
 import { printersQueryOptions } from "@/data/crucible/print.queries"
 import { hubErrorMessage, unwrapHubResult } from "@/data/crucible/result"
-import { useAccountPreferences } from "@/features/preferences/use-account-preferences"
+import { useAccountPreferences } from "@/hooks/use-account-preferences"
 
 export function PrintLabelButton({
   mfid,

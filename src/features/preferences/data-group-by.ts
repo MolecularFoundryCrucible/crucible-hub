@@ -4,7 +4,7 @@ import type { AccountPreferences } from "@/data/crucible/preferences"
 import { accountPreferencesQueryOptions } from "@/data/crucible/preferences.queries"
 import type { IdentityScope } from "@/data/crucible/query-keys"
 
-import { useAccountPreferences } from "./use-account-preferences"
+import { useAccountPreferences } from "@/hooks/use-account-preferences"
 
 export type DataGroupBy = NonNullable<
   NonNullable<AccountPreferences["hub"]>["data_group_by"]

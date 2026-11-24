@@ -12,7 +12,7 @@ import {
   resourceSequencePreferenceKey,
 } from "@/data/crucible/resource-sequence"
 import type { WorkspaceResourceDetail } from "@/data/crucible/workspace-source"
-import { useAccountPreferences } from "@/features/preferences/use-account-preferences"
+import { useAccountPreferences } from "@/hooks/use-account-preferences"
 
 export function useDefaultResourceSequence({
   enabled,

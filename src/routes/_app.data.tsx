@@ -1,5 +1,5 @@
 import { privilegeModeFromScope } from "@/data/crucible/query-keys"
-import { loadIncludePublicByDefault } from "@/features/preferences/public-data"
+import { loadIncludePublicByDefault } from "@/hooks/public-data"
 import { createFileRoute } from "@tanstack/react-router"
 import { resourcePreviewSearchSchema } from "@/data/crucible/resource-preview-search"
 import {

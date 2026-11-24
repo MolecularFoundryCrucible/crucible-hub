@@ -32,7 +32,7 @@ import { InspectorDatasetThumbnails } from "@/features/resource-inspector/resour
 import {
   isResourceOverviewPath,
   preloadResourceShell,
-} from "../../features/resource-detail/resource-detail-page"
+} from "./resource-detail-page"
 
 vi.mock("@/data/crucible/resources.functions", () => ({
   DATASET_DATA_FORMAT_MAX_LENGTH: 255,

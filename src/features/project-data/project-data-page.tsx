@@ -1,5 +1,5 @@
 import { privilegeModeFromScope } from "@/data/crucible/query-keys"
-import { useIncludePublicByDefault } from "@/features/preferences/public-data"
+import { useIncludePublicByDefault } from "@/hooks/public-data"
 import { useWorkspaceScope } from "@/components/crucible/workspace-provider"
 import { getRouteApi } from "@tanstack/react-router"
 import type { z } from "zod"

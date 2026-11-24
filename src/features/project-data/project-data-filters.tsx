@@ -4,7 +4,7 @@ import {
   publicDataFilterState,
   publicDataSearchValue,
 } from "@/data/crucible/public-data"
-import { useIncludePublicByDefault } from "@/features/preferences/public-data"
+import { useIncludePublicByDefault } from "@/hooks/public-data"
 import { useEffect, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"

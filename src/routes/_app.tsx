@@ -7,7 +7,7 @@ import {
 } from "@tanstack/react-router"
 import { z } from "zod"
 
-import { AppShell } from "@/components/crucible/app-shell"
+import { AppShell } from "@/features/app-shell/app-shell"
 import { RootError } from "@/components/crucible/route-error"
 import { useReauthenticationNotice } from "@/components/crucible/reauthentication"
 import { WorkspaceProvider } from "@/components/crucible/workspace-provider"
@@ -25,7 +25,7 @@ import {
 } from "@/data/crucible/fixture-scenarios"
 import { crucibleKeys, identityScope } from "@/data/crucible/query-keys"
 import { getWorkspace } from "@/data/crucible/workspace.functions"
-import { AccountThemeSync } from "@/features/preferences/theme-preference"
+import { AccountThemeSync } from "@/hooks/theme-preference"
 
 export const Route = createFileRoute("/_app")({
   validateSearch: z.object({

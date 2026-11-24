@@ -18,13 +18,16 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
-import { fieldErrors, shouldShowFieldError } from "@/features/forms/field-state"
-import { useAppForm } from "@/features/forms/app-form"
+import {
+  fieldErrors,
+  shouldShowFieldError,
+} from "@/components/forms/field-state"
+import { useAppForm } from "@/components/forms/app-form"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import {
   DiscardChangesDialog,
   useDiscardProtection,
-} from "@/features/forms/discard-changes"
+} from "@/components/forms/discard-changes"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import { createWorkspaceSample } from "@/data/crucible/creation.functions"
 import { crucibleKeys } from "@/data/crucible/query-keys"

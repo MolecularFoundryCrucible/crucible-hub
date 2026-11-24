@@ -26,7 +26,7 @@ vi.mock("./resource-sibling-navigation", () => ({
     clearedMfid: mocks.clearedMfid,
   }),
 }))
-vi.mock("@/features/preferences/use-account-preferences", () => ({
+vi.mock("@/hooks/use-account-preferences", () => ({
   useAccountPreferences: () => ({
     enabled: true,
     error: null,
