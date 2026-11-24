@@ -534,6 +534,16 @@ function scan(directory) {
         `${localPath}: imports hover-card primitives instead of using IdentityHoverCard`
       )
     }
+    if (
+      localPath !== "components/crucible/form-error.tsx" &&
+      /text-destructive"[^>]*role="alert"|role="alert"[^>]*text-destructive/.test(
+        content
+      )
+    ) {
+      violations.push(
+        `${localPath}: hand-written error message instead of InlineError, SaveError, or FieldError`
+      )
+    }
     if (content.includes("rounded-none bg-transparent ring-0")) {
       violations.push(
         `${localPath}: strips shared component styling instead of using an explicit presentation`

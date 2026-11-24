@@ -1,3 +1,4 @@
+import { InlineError } from "./form-error"
 import { useEffect, useEffectEvent, useId, useRef } from "react"
 
 import { BackToTop } from "@/components/crucible/back-to-top"
@@ -85,14 +86,10 @@ export function CollectionPagination({
           </Button>
         ) : null}
         {isError ? (
-          <p
-            className="basis-full text-supporting text-destructive"
-            id={errorId}
-            role="alert"
-          >
+          <InlineError className="basis-full" id={errorId} size="supporting">
             More {label} could not be loaded. The loaded results remain
             available.
-          </p>
+          </InlineError>
         ) : null}
       </div>
       <BackToTop />

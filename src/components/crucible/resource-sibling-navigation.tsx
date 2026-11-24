@@ -1,3 +1,4 @@
+import { InlineError } from "./form-error"
 import {
   createContext,
   useCallback,
@@ -538,10 +539,10 @@ export function ResourceSiblingNavigationControls({
         )}
       </ButtonGroup>
       {navigation.loadErrorDirection ? (
-        <p className="text-supporting text-destructive" role="alert">
+        <InlineError size="supporting">
           The {navigation.loadErrorDirection} items could not be loaded. Try
           again.
-        </p>
+        </InlineError>
       ) : null}
     </nav>
   )

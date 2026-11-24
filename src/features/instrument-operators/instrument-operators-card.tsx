@@ -1,3 +1,4 @@
+import { InlineError } from "@/components/crucible/form-error"
 import { entryActions } from "@/data/crucible/entry-capabilities"
 import { useId, useMemo, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
@@ -395,9 +396,7 @@ export function InstrumentAccessCard({
             </p>
           ) : membersQuery.isError ? (
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <p className="text-body text-destructive" role="alert">
-                Members could not be loaded.
-              </p>
+              <InlineError>Members could not be loaded.</InlineError>
               <Button
                 onClick={() => void membersQuery.refetch()}
                 size="sm"
@@ -494,9 +493,7 @@ export function InstrumentAccessCard({
               </p>
             ) : operatorsQuery.isError ? (
               <div className="mt-3 flex flex-wrap items-center gap-2">
-                <p className="text-body text-destructive" role="alert">
-                  Operators could not be loaded.
-                </p>
+                <InlineError>Operators could not be loaded.</InlineError>
                 <Button
                   onClick={() => void operatorsQuery.refetch()}
                   size="sm"
@@ -526,9 +523,7 @@ export function InstrumentAccessCard({
           </div>
 
           {error && !addMemberOpen && !addOperatorOpen ? (
-            <p className="mt-4 text-body text-destructive" role="alert">
-              {error}
-            </p>
+            <InlineError className="mt-4">{error}</InlineError>
           ) : null}
         </CardContent>
       </Card>
@@ -694,9 +689,7 @@ function AddOperatorDialog({
           value={candidate}
         />
         {submitError ? (
-          <p className="mt-4 text-body text-destructive" role="alert">
-            {submitError}
-          </p>
+          <InlineError className="mt-4">{submitError}</InlineError>
         ) : null}
         <DialogFooter className="mt-6">
           <Button

@@ -1,3 +1,4 @@
+import { InlineError } from "./form-error"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -173,9 +174,5 @@ export function ConfirmationDialog({
 
 function ConfirmationError({ children }: { children?: React.ReactNode }) {
   if (!children) return null
-  return (
-    <div className="text-body text-destructive" role="alert">
-      {children}
-    </div>
-  )
+  return <InlineError render={<div />}>{children}</InlineError>
 }

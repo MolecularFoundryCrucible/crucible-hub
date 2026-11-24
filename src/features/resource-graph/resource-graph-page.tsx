@@ -1,3 +1,4 @@
+import { InlineError } from "@/components/crucible/form-error"
 import { Suspense, useCallback, useMemo, useState } from "react"
 import { keepPreviousData, useQueries, useQuery } from "@tanstack/react-query"
 
@@ -438,10 +439,10 @@ export function ResourceGraphPage({
       )}
 
       {expansions.states.some((state) => state.isError) ? (
-        <p className="text-body text-destructive" role="alert">
+        <InlineError>
           The graph could not be expanded. Use the retry action beside the
           affected resource.
-        </p>
+        </InlineError>
       ) : null}
     </section>
   )

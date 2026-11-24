@@ -1,3 +1,4 @@
+import { InlineError } from "@/components/crucible/form-error"
 import { useEffect, useRef, useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import type { QueryKey, UseQueryResult } from "@tanstack/react-query"
@@ -332,12 +333,9 @@ export function PersonSignInMethodsSection({
               Password setup link
             </Button>
             {link.error ? (
-              <p
-                className="max-w-xs text-right text-body text-destructive"
-                role="alert"
-              >
+              <InlineError className="max-w-xs text-right">
                 {link.error}
-              </p>
+              </InlineError>
             ) : null}
           </div>
         ) : null
@@ -446,9 +444,9 @@ function PasswordRow({
           name="Password"
           subtitle={
             error ? (
-              <span className="text-destructive" role="alert">
+              <InlineError render={<span />} size="supporting">
                 {error}
-              </span>
+              </InlineError>
             ) : undefined
           }
         />
@@ -780,12 +778,7 @@ function AddSignInMethodMenu({
         </DropdownMenuContent>
       </DropdownMenu>
       {error ? (
-        <p
-          className="max-w-xs text-right text-body text-destructive"
-          role="alert"
-        >
-          {error}
-        </p>
+        <InlineError className="max-w-xs text-right">{error}</InlineError>
       ) : null}
     </div>
   )

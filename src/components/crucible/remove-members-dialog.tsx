@@ -1,3 +1,4 @@
+import { InlineError } from "./form-error"
 import { PendingIcon } from "@/components/crucible/pending-icon"
 import { Button } from "@/components/ui/button"
 import {
@@ -71,11 +72,7 @@ export function RemoveMembersDialog({
             ))}
           </ul>
         ) : null}
-        {commitError ? (
-          <p className="text-body text-destructive" role="alert">
-            {commitError}
-          </p>
-        ) : null}
+        {commitError ? <InlineError>{commitError}</InlineError> : null}
         <DialogFooter>
           <Button
             disabled={committing}

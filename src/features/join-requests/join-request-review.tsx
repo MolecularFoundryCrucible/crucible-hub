@@ -1,3 +1,4 @@
+import { InlineError } from "@/components/crucible/form-error"
 import {
   useInfiniteQuery,
   useMutation,
@@ -361,11 +362,7 @@ function SubmittedTable({
   const [error, setError] = useState<string>()
   return (
     <>
-      {error ? (
-        <p className="px-4 pb-3 text-body text-destructive" role="alert">
-          {error}
-        </p>
-      ) : null}
+      {error ? <InlineError className="px-4 pb-3">{error}</InlineError> : null}
       <Table
         aria-label="Your requests to join"
         className="identity-directory-table table-fixed"

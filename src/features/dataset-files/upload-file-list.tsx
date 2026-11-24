@@ -1,3 +1,4 @@
+import { InlineError } from "@/components/crucible/form-error"
 import { memo, useCallback, useId, useRef, useState } from "react"
 
 import {
@@ -648,9 +649,7 @@ function RowDetail({
   if (state.status === "error") {
     return (
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-        <p className="text-supporting text-destructive" role="alert">
-          {state.message}
-        </p>
+        <InlineError size="supporting">{state.message}</InlineError>
         {state.replaceable && replaceTarget && !uploading ? (
           <ReplaceExistingAction
             item={item}
@@ -664,9 +663,7 @@ function RowDetail({
   if (issues.length && !uploading) {
     return (
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-        <p className="text-supporting text-destructive" role="alert">
-          {issues[0]}
-        </p>
+        <InlineError size="supporting">{issues[0]}</InlineError>
         {issues[0] === EXISTING_FILE_ISSUE && replaceTarget ? (
           <ReplaceExistingAction
             item={item}

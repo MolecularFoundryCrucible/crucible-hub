@@ -1,11 +1,12 @@
+import {
+  TablePending,
+  PanelState,
+  PanelUpdateError,
+} from "@/components/crucible/collection-state"
 import { useId, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { lazyNamed } from "@/lib/lazy-named"
 
-import {
-  PanelState,
-  PanelUpdateError,
-} from "@/components/crucible/collection-state"
 import {
   AddFilesIcon,
   DownloadFileIcon,
@@ -29,7 +30,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
 import {
   Table,
   TableBody,
@@ -103,7 +103,19 @@ export function DatasetFiles({
         className={filesResult.isPending || files?.length ? "px-0" : undefined}
       >
         {filesResult.isPending ? (
-          <FilesTablePending />
+          <TablePending
+            columns={[
+              { className: "w-full max-w-0", label: "Filename" },
+              { className: "hidden @md:table-cell", label: "Storage" },
+              {
+                className: "hidden @md:table-cell",
+                kind: "numeric",
+                label: "Size",
+              },
+              { kind: "action", label: "File action" },
+            ]}
+            label="file metadata"
+          />
         ) : files !== undefined ? (
           <div className="flex flex-col gap-3">
             {filesResult.isError ? (
@@ -147,45 +159,6 @@ export function DatasetFiles({
         />
       ) : null}
     </Card>
-  )
-}
-
-function FilesTablePending() {
-  return (
-    <div aria-label="Loading file metadata" role="status">
-      <Table aria-label="Files">
-        <TableHeader>
-          <TableRow>
-            <TableHead>Filename</TableHead>
-            <TableHead className="hidden @md:table-cell">Storage</TableHead>
-            <TableHead className="hidden @md:table-cell" kind="numeric">
-              Size
-            </TableHead>
-            <TableHead kind="action">
-              <span className="sr-only">File action</span>
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {Array.from({ length: 3 }, (_, index) => (
-            <TableRow key={index}>
-              <TableCell className="w-full max-w-0">
-                <Skeleton className="h-5 w-40 max-w-full" />
-              </TableCell>
-              <TableCell className="hidden @md:table-cell">
-                <Skeleton className="h-4 w-16" />
-              </TableCell>
-              <TableCell className="hidden @md:table-cell" kind="numeric">
-                <Skeleton className="ml-auto h-4 w-12" />
-              </TableCell>
-              <TableCell kind="action">
-                <Skeleton className="ml-auto size-8" />
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
   )
 }
 

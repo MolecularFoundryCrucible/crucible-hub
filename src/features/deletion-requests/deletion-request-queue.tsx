@@ -1,3 +1,8 @@
+import {
+  PendingName,
+  CollectionUpdateStatus,
+} from "@/components/crucible/collection-state"
+import { InlineError } from "@/components/crucible/form-error"
 import { useEffect, useId, useRef, useState } from "react"
 import {
   useInfiniteQuery,
@@ -6,7 +11,6 @@ import {
 } from "@tanstack/react-query"
 
 import { CollectionPagination } from "@/components/crucible/collection-pagination"
-import { CollectionUpdateStatus } from "@/components/crucible/collection-state"
 import { ConfirmationDialog } from "@/components/crucible/confirmation-dialog"
 import { StatusBadge } from "@/components/crucible/status-badge"
 import { LocalDateTime } from "@/components/crucible/local-date-time"
@@ -172,10 +176,10 @@ export function DeletionRequestQueue({
             render={<CardContent className="px-0" />}
           >
             {result.isRefetchError ? (
-              <p className="px-4 pb-3 text-body text-destructive" role="alert">
+              <InlineError className="px-4 pb-3">
                 The list could not be refreshed. Showing the last loaded
                 requests.
-              </p>
+              </InlineError>
             ) : null}
             <BulkReviewController
               items={bulkReview ? items : []}
@@ -291,13 +295,7 @@ function DeletionRequestPending({
                 </TableCell>
               ) : null}
               <TableCell className="deletion-request-resource">
-                <div className="flex min-w-0 items-center gap-2">
-                  <Skeleton className="size-5 shrink-0 rounded-sm" />
-                  <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                    <Skeleton className="h-4 w-3/5" />
-                    <Skeleton className="h-3 w-2/5" />
-                  </div>
-                </div>
+                <PendingName />
               </TableCell>
               {showProject ? (
                 <TableCell
@@ -1239,12 +1237,12 @@ function DeletionRequestDialog({
               </FieldGroup>
             ) : null}
             {mutation.isError ? (
-              <p className="text-body text-destructive" role="alert">
+              <InlineError>
                 {hubErrorMessage(
                   mutation.error,
                   "The deletion request could not be reviewed. Your notes are still here."
                 )}
-              </p>
+              </InlineError>
             ) : null}
             <DialogFooter>
               <Button

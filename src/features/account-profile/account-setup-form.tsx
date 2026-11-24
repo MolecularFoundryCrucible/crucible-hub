@@ -1,3 +1,4 @@
+import { InlineError } from "@/components/crucible/form-error"
 import { useMemo, useState } from "react"
 import { useStore } from "@tanstack/react-form"
 
@@ -133,11 +134,7 @@ export function AccountSetupForm({
           </form.Subscribe>
         </FieldGroup>
       </fieldset>
-      {saveError ? (
-        <p className="text-body text-destructive" role="alert">
-          {saveError}
-        </p>
-      ) : null}
+      {saveError ? <InlineError>{saveError}</InlineError> : null}
       <form.Subscribe
         selector={(state) =>
           state.canSubmit &&

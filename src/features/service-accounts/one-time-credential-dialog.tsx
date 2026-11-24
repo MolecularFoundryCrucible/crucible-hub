@@ -1,3 +1,4 @@
+import { InlineError } from "@/components/crucible/form-error"
 import { IdentifierInput } from "@/components/crucible/identifier-input"
 import { CopyIcon, CopySuccessIcon } from "@/components/crucible/icons"
 import { MfidText } from "@/components/crucible/mfid-text"
@@ -107,9 +108,9 @@ export function OneTimeCredentialDialog({
               {copyState === "success" ? "API key copied" : null}
             </span>
             {copyState === "error" ? (
-              <p className="text-body text-destructive" role="alert">
+              <InlineError>
                 The API key could not be copied. Select and copy it manually.
-              </p>
+              </InlineError>
             ) : null}
           </div>
         ) : null}

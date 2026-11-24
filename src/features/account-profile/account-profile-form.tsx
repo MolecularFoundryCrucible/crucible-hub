@@ -1,3 +1,4 @@
+import { InlineError } from "@/components/crucible/form-error"
 import { useMemo, useState } from "react"
 import { useStore } from "@tanstack/react-form"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
@@ -206,9 +207,7 @@ export function AccountProfileForm({
               </FieldGroup>
             </fieldset>
             {saveError ? (
-              <p className="mt-4 text-body text-destructive" role="alert">
-                {saveError}
-              </p>
+              <InlineError className="mt-4">{saveError}</InlineError>
             ) : null}
           </form>
         </CardContent>

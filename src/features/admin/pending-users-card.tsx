@@ -1,3 +1,4 @@
+import { InlineError } from "@/components/crucible/form-error"
 import { useState } from "react"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Link } from "@tanstack/react-router"
@@ -203,12 +204,7 @@ export function PendingUserActions({
         </Button>
       </div>
       {error && !rejecting ? (
-        <p
-          className="max-w-xs text-right text-body text-destructive"
-          role="alert"
-        >
-          {error}
-        </p>
+        <InlineError className="max-w-xs text-right">{error}</InlineError>
       ) : null}
       <ConfirmationDialog
         confirmLabel="Reject"

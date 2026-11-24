@@ -1,3 +1,4 @@
+import { InlineError } from "@/components/crucible/form-error"
 import { useNavigate } from "@tanstack/react-router"
 import { useEffect, useRef, useState } from "react"
 import { useStore } from "@tanstack/react-form"
@@ -510,9 +511,7 @@ function UserProfileCard({
               </div>
             </dl>
             {saveError ? (
-              <p className="mt-4 text-body text-destructive" role="alert">
-                {saveError}
-              </p>
+              <InlineError className="mt-4">{saveError}</InlineError>
             ) : null}
           </form>
         </CardContent>

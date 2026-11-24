@@ -83,6 +83,7 @@ A missing role is a design-system change in `src/styles.css`, never a local colo
 - Motion explains change; it never decorates. Use a role from [the motion roles](design-system-reference.md#motion), never a raw duration, curve, or `z-*` value.
 - Overlays get their motion and layer from `src/components/ui`; do not add timing classes to them in feature code.
 - Wrap reloading content in `PendingRegion` and time other indicators with `useDelayedFlag`, so nothing flashes on fast responses.
+- Build first-load placeholders from `CollectionTablePending`, `TablePending`, `ResourceListPending`, and `PendingName` in `collection-state.tsx`, shaped like the content they replace.
 - New list items fade in through `useEnteringKeys` with `enterMotionClassName`; conditional sections open through `Reveal`.
 - Keep dialog content until its close animation ends; reset state in `onOpenChangeComplete`, not when `open` becomes false.
 
@@ -94,16 +95,17 @@ A missing role is a design-system change in `src/styles.css`, never a local colo
 
 ## Do and don't
 
-| Do                                                                               | Don't                                                    |
-| -------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| `<Button variant="ghost">Edit</Button>` on a read-first card                     | An outlined or solid Edit competing with the card's data |
-| Two equal page-header actions solid side by side (Create sample, Create dataset) | A solid action in the top bar and another in the header  |
-| `bg-secondary` via `aria-current="page"` for a selected list item                | A custom selected color in feature code                  |
-| Status as `<Badge variant="warning">Retrying</Badge>`                            | A custom warning color in feature code                   |
-| Add a role to `src/styles.css` when a job is unserved                            | `bg-[color-mix(...)]` or a hex value in a component      |
-| Save, Create, Print                                                              | "Save scientific metadata", filler helper text           |
+| Do                                                                               | Don't                                                           |
+| -------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| `<Button variant="ghost">Edit</Button>` on a read-first card                     | An outlined or solid Edit competing with the card's data        |
+| Two equal page-header actions solid side by side (Create sample, Create dataset) | A solid action in the top bar and another in the header         |
+| `bg-secondary` via `aria-current="page"` for a selected list item                | A custom selected color in feature code                         |
+| Status as `<Badge variant="warning">Retrying</Badge>`                            | A custom warning color in feature code                          |
+| Add a role to `src/styles.css` when a job is unserved                            | `bg-[color-mix(...)]` or a hex value in a component             |
+| Save, Create, Print                                                              | "Save scientific metadata", filler helper text                  |
+| `<InlineError>{error}</InlineError>` beside the action that failed               | A hand-written `text-destructive` paragraph with `role="alert"` |
 
 ## Checks
 
-- `npm run design:check`: rejects raw colors, inline styles, arbitrary values, primitive typography, raw buttons, and visual `Button` overrides outside `src/components/ui`, rejects raw motion values and numeric layers everywhere, then checks every role pair for WCAG 2.2 AA contrast in both themes.
+- `npm run design:check`: rejects raw colors, inline styles, arbitrary values, primitive typography, raw buttons, and visual `Button` overrides outside `src/components/ui`, rejects raw motion values and numeric layers everywhere, rejects hand-written error messages (use `InlineError`, `SaveError`, or `FieldError`), then checks every role pair for WCAG 2.2 AA contrast in both themes.
 - `tests/e2e/design-system.spec.ts`: the fixture page has no detectable accessibility violations in light and dark.
