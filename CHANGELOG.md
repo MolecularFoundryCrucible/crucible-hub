@@ -6,6 +6,7 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- Add files and Request ingestion choose ingestors with a searchable picker that describes each ingestor, suggests the ones matching a file's extension, and says when no ingestor is available; one choice applies to every file and each file can be changed on its own line. New uploads default to Auto-detect, and No ingestion is now Don't ingest.
 - Add files warns when the dataset's project or instrument names a default store that is no longer configured on the server, so the files went to the next default store.
 - Administrators see the ingestion workers registered in the last day under Ingestion workers in Administrator view: whether each is live, when it was last seen, its versions, the stores it reads and the ingestors it offers.
 - An MFID too long for its column wraps instead of running under its copy button, which happened in Firefox at some window widths.

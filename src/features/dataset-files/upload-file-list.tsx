@@ -22,12 +22,14 @@ import { Button } from "@/components/ui/button"
 import { TruncatedText } from "@/components/ui/truncation-tooltip"
 import { Input } from "@/components/ui/input"
 import {
-  IngestorSelect,
+  IngestorPicker,
+  NO_INGESTORS_AVAILABLE,
   ingestorChoiceLabel,
-  sameIngestorChoice,
-  useIngestorClasses,
-} from "@/features/ingestion/ingestor-select"
-import type { IngestorChoice } from "@/features/ingestion/ingestor-select"
+  sharedIngestorChoice,
+  useIngestors,
+} from "@/features/ingestion/ingestor-picker"
+import type { IngestorChoice } from "@/features/ingestion/ingestor-picker"
+import type { WorkspaceIngestor } from "@/data/crucible/workspace-source"
 import { formatBytes } from "@/lib/format"
 import { formatDuration } from "@/lib/transfer-rate"
 import type { TransferEstimate } from "@/lib/transfer-rate"
@@ -46,7 +48,7 @@ import type {
   UploadSource,
 } from "./upload-batch"
 
-const EMPTY_CLASSES: readonly string[] = []
+const EMPTY_INGESTORS: readonly WorkspaceIngestor[] = []
 
 function defaultStoreNotice(storeIds: readonly string[]) {
   const names = storeIds.map((id) => `"${id}"`).join(" and ")
@@ -291,10 +293,10 @@ export function UploadFileList({
 }) {
   const allIngestorId = useId()
   const [renaming, setRenaming] = useState<string>()
-  const classesResult = useIngestorClasses(
+  const ingestorsResult = useIngestors(
     batch.ingestionEnabled && batch.items.length > 0
   )
-  const classes = classesResult.data ?? EMPTY_CLASSES
+  const ingestors = ingestorsResult.data ?? EMPTY_INGESTORS
   const handleRenameChange = useCallback((id: string, editing: boolean) => {
     setRenaming((current) =>
       editing ? id : current === id ? undefined : current
@@ -303,14 +305,10 @@ export function UploadFileList({
   const pendingItems = batch.items.filter(
     (item) => item.state.status !== "done"
   )
-  const [firstPending] = pendingItems
-  const sharedIngestor =
-    firstPending &&
-    pendingItems.every((item) =>
-      sameIngestorChoice(item.ingestor, firstPending.ingestor)
-    )
-      ? firstPending.ingestor
-      : "mixed"
+  const sharedIngestor = sharedIngestorChoice(
+    pendingItems.map((item) => item.ingestor)
+  )
+  const pendingFilenames = pendingItems.map((item) => item.filename)
   const finished = batch.items.length - pendingItems.length
 
   if (!batch.items.length) return null
@@ -335,11 +333,13 @@ export function UploadFileList({
                 >
                   Ingestor for all
                 </label>
-                <IngestorSelect
-                  classes={classes}
+                <IngestorPicker
+                  className="w-44"
+                  filenames={pendingFilenames}
                   id={allIngestorId}
+                  ingestors={ingestors}
+                  label="Ingestor for all"
                   onChange={batch.setIngestorForAll}
-                  size="sm"
                   value={sharedIngestor}
                 />
               </>
@@ -373,13 +373,21 @@ export function UploadFileList({
           <span>{defaultStoreNotice(batch.unavailableDefaultStores)}</span>
         </p>
       ) : null}
+      {batch.ingestionEnabled &&
+      pendingItems.length > 0 &&
+      ingestorsResult.isSuccess &&
+      ingestors.length === 0 ? (
+        <p className="text-supporting text-muted-foreground">
+          {NO_INGESTORS_AVAILABLE}
+        </p>
+      ) : null}
       <ul
         aria-label="Selected files"
         className="flex max-h-96 min-h-0 flex-col divide-y overflow-y-auto overscroll-contain rounded-lg border"
       >
         {batch.items.map((item) => (
           <UploadFileRow
-            classes={classes}
+            ingestors={ingestors}
             datasetMfid={datasetMfid}
             ingestionEnabled={batch.ingestionEnabled}
             issues={uploadItemIssues(
@@ -427,7 +435,7 @@ function RowIcon({ item, invalid }: { item: UploadItem; invalid: boolean }) {
 }
 
 const UploadFileRow = memo(function UploadFileRowItem({
-  classes,
+  ingestors,
   datasetMfid,
   ingestionEnabled,
   issues,
@@ -443,9 +451,9 @@ const UploadFileRow = memo(function UploadFileRowItem({
   replaceTarget,
   uploading,
 }: {
-  classes: readonly string[]
   datasetMfid?: string
   ingestionEnabled: boolean
+  ingestors: readonly WorkspaceIngestor[]
   issues: readonly string[]
   item: UploadItem
   onCancelReplace: (id: string) => void
@@ -515,12 +523,13 @@ const UploadFileRow = memo(function UploadFileRowItem({
                   {ingestorChoiceLabel(item.ingestor)}
                 </span>
               ) : (
-                <IngestorSelect
-                  className="w-36 sm:w-40"
-                  classes={classes}
+                <IngestorPicker
+                  className="max-w-40"
+                  filenames={[item.filename]}
+                  ingestors={ingestors}
                   label={`Ingestor for ${item.filename}`}
                   onChange={(choice) => onSetIngestor(item.id, choice)}
-                  size="sm"
+                  presentation="inline"
                   value={item.ingestor}
                 />
               )

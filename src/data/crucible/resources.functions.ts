@@ -9,7 +9,7 @@ import {
   requestWorkspaceFileIngestion,
   readWorkspaceDatasetFiles,
   readWorkspaceDatasetIngestionRequests,
-  readWorkspaceIngestionClasses,
+  readWorkspaceIngestors,
   readWorkspaceStores,
 } from "./dataset-files.server"
 import {
@@ -592,13 +592,13 @@ export const getWorkspaceDatasetIngestionRequests = createServerFn({
     )
   })
 
-export const getWorkspaceIngestionClasses = createServerFn({ method: "GET" })
+export const getWorkspaceIngestors = createServerFn({ method: "GET" })
   .middleware([queryCancellationMiddleware])
   .validator(ingestionClassesInputSchema)
   .handler(async ({ context, data }) => {
     setResponseHeader("Cache-Control", "no-store")
     return safeCrucibleCall(context.correlationId, () =>
-      readWorkspaceIngestionClasses(data.scenario, context.requestSignal)
+      readWorkspaceIngestors(data.scenario, context.requestSignal)
     )
   })
 

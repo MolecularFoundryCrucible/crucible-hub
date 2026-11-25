@@ -23,6 +23,7 @@ import type {
   WorkspaceIngestionRequestPage,
   WorkspaceFileDisposition,
   WorkspaceFileDownload,
+  WorkspaceIngestor,
   WorkspaceStore,
 } from "./workspace-source"
 
@@ -107,7 +108,9 @@ export async function readWorkspaceDatasetIngestionRequests(
     const dataset = fixtureWorkspace(scenario).datasets.find(
       (candidate) => candidate.unique_id === datasetMfid
     )
-    if (!dataset) throw new CrucibleResponseError(404)
+    if (!dataset && !datasetMfid.startsWith("fixture-dataset-")) {
+      throw new CrucibleResponseError(404)
+    }
     const key = fixtureIngestionKey(datasetMfid, scenario)
     const stored = fixtureIngestionState.get(key)
     if (stored) return { items: stored, total: stored.length }
@@ -177,27 +180,67 @@ function workspaceIngestionRequest(
   }
 }
 
-export async function readWorkspaceIngestionClasses(
+const apiIngestorsSchema = z
+  .array(
+    z
+      .object({
+        description: z.string().nullable().optional(),
+        file_extensions: z.array(z.string()).optional(),
+        name: z.string(),
+      })
+      .passthrough()
+  )
+  .max(1_000)
+
+const fixtureIngestors: readonly WorkspaceIngestor[] = [
+  {
+    description: "HDF5 files of any layout, as plain arrays and attributes.",
+    fileExtensions: [".h5", ".hdf5"],
+    name: "H5Ingestor",
+  },
+  {
+    description: "Images in common formats.",
+    fileExtensions: [".png", ".jpg", ".jpeg", ".tif", ".tiff"],
+    name: "ImageIngestor",
+  },
+  {
+    description: "HDF5 files written by ScopeFoundry.",
+    fileExtensions: [".h5"],
+    name: "ScopeFoundryH5Ingestor",
+  },
+]
+
+export async function readWorkspaceIngestors(
   scenario?: FixtureScenario,
   requestSignal?: AbortSignal
-): Promise<readonly string[]> {
+): Promise<readonly WorkspaceIngestor[]> {
   const configuration = readWorkspaceConfiguration()
   if (configuration.mode === "unavailable") {
     throw new Error(configuration.reason)
   }
   if (configuration.mode === "fixture") {
     fixtureWorkspace(scenario)
-    return ["H5Ingestor", "ImageIngestor"]
+    return fixtureIngestors
   }
 
   const client = createCrucibleClient(configuration, { privilegeMode: null })
-  const result = await client.GET("/ingestors", {
+  const result = await client.GET("/ingestors/details", {
     signal: crucibleRequestSignal(requestSignal),
   })
   if (!result.data) {
     throw new CrucibleResponseError(result.response, result.error)
   }
-  return [...new Set(result.data.map((value) => value.trim()).filter(Boolean))]
+  const ingestors = apiIngestorsSchema.safeParse(result.data)
+  if (!ingestors.success) {
+    throw new CrucibleContractError("ingestors", ingestors.error.issues)
+  }
+  return ingestors.data.map((ingestor) => ({
+    description: ingestor.description?.trim() || null,
+    fileExtensions: (ingestor.file_extensions ?? []).map((extension) =>
+      extension.toLowerCase()
+    ),
+    name: ingestor.name,
+  }))
 }
 
 const apiStoresSchema = z
@@ -277,12 +320,14 @@ export async function requestWorkspaceFileIngestion(
       findFixtureUploadedFile(fileMfid)
     if (!file) throw new CrucibleResponseError(404)
     if (file.storage_backend !== "gcs") throw new CrucibleResponseError(400)
-    const dataset = await readWorkspaceResource(
-      file.dataset_mfid,
-      scenario,
-      requestSignal
-    )
-    if (dataset?.kind !== "dataset" || !dataset.capabilities?.can_edit) {
+    const createdHere = file.dataset_mfid.startsWith("fixture-dataset-")
+    const dataset = createdHere
+      ? undefined
+      : await readWorkspaceResource(file.dataset_mfid, scenario, requestSignal)
+    if (
+      !createdHere &&
+      (dataset?.kind !== "dataset" || !dataset.capabilities?.can_edit)
+    ) {
       throw new CrucibleResponseError(403)
     }
     const key = fixtureIngestionKey(file.dataset_mfid, scenario)
