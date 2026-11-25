@@ -6,6 +6,7 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- The Storage column on a dataset's Files tab names the store holding each file (Crucible API 4.1.0 stores), and a file whose store isn't configured on the server shows its download as unavailable instead of failing.
 - The Hub is built against the Crucible API 4.1.0 contract and needs API 4.1.0 or later.
 - Adding a relationship that would create a lineage cycle, or that touches a resource awaiting deletion, now says so instead of suggesting the relationship already exists.
 - `/hub/fixtures/design-system` and `/hub/fixtures/scenarios` return 404 unless the server runs on fixture data, so deployments on live data no longer serve them.

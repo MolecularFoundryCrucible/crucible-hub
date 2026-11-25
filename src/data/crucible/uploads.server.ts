@@ -496,6 +496,7 @@ export async function completeWorkspaceUpload(
       size: session.size,
       storage_backend: "gcs",
       storage_path: null,
+      store_id: "foundry",
     }
     fixtureUploadedFiles.set(input.datasetMfid, [
       ...(fixtureUploadedFiles.get(input.datasetMfid) ?? []),

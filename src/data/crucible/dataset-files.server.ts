@@ -23,6 +23,7 @@ import type {
   WorkspaceIngestionRequestPage,
   WorkspaceFileDisposition,
   WorkspaceFileDownload,
+  WorkspaceStore,
 } from "./workspace-source"
 
 import { fixtureWorkspace, readWorkspaceResource } from "./resources.server"
@@ -199,6 +200,66 @@ export async function readWorkspaceIngestionClasses(
   return [...new Set(result.data.map((value) => value.trim()).filter(Boolean))]
 }
 
+const apiStoresSchema = z
+  .array(
+    z
+      .object({
+        default: z.boolean(),
+        description: z.string().nullable().optional(),
+        display_name: z.string().min(1).max(255),
+        id: z.string().min(1).max(63),
+      })
+      .passthrough()
+  )
+  .max(100)
+
+const fixtureStores: readonly WorkspaceStore[] = [
+  {
+    default: true,
+    description: null,
+    display_name: "Foundry storage",
+    id: "foundry",
+  },
+  {
+    default: false,
+    description: "Long-term storage for large imaging data.",
+    display_name: "Imaging archive",
+    id: "imaging-archive",
+  },
+]
+
+export async function readWorkspaceStores(
+  scenario?: FixtureScenario,
+  requestSignal?: AbortSignal
+): Promise<readonly WorkspaceStore[]> {
+  const configuration = readWorkspaceConfiguration()
+  if (configuration.mode === "unavailable") {
+    throw new Error(configuration.reason)
+  }
+  if (configuration.mode === "fixture") {
+    fixtureWorkspace(scenario)
+    return fixtureStores
+  }
+
+  const client = createCrucibleClient(configuration, { privilegeMode: null })
+  const result = await client.GET("/storage/stores", {
+    signal: crucibleRequestSignal(requestSignal),
+  })
+  if (!result.data) {
+    throw new CrucibleResponseError(result.response, result.error)
+  }
+  const stores = apiStoresSchema.safeParse(result.data)
+  if (!stores.success) {
+    throw new CrucibleContractError("storage-stores", stores.error.issues)
+  }
+  return stores.data.map((store) => ({
+    default: store.default,
+    description: store.description ?? null,
+    display_name: store.display_name,
+    id: store.id,
+  }))
+}
+
 export async function requestWorkspaceFileIngestion(
   fileMfid: string,
   ingestionClass?: string,
@@ -331,11 +392,12 @@ export async function createWorkspaceFileDownload(
     },
     signal: crucibleRequestSignal(requestSignal),
   })
-  if (result.response.status === 409) {
+  if (result.response.status === 409 || result.response.status === 503) {
     const conflict = new CrucibleResponseError(result.response, result.error)
     if (
-      conflict.conflictCode === undefined ||
-      conflict.conflictCode === "storage_location_invalid"
+      (result.response.status === 409 && conflict.conflictCode === undefined) ||
+      conflict.conflictCode === "storage_location_invalid" ||
+      conflict.conflictCode === "store_unavailable"
     )
       return { status: "unavailable" }
     throw conflict

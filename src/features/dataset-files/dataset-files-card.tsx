@@ -50,9 +50,15 @@ import {
 import type { SortDirection } from "@/data/crucible/collection-query"
 import { fixtureScenarioFromScope } from "@/data/crucible/fixture-scenarios"
 import { requestWorkspaceFileDownload } from "@/data/crucible/resources.functions"
-import { datasetFilesQueryOptions } from "@/data/crucible/resources.queries"
+import {
+  datasetFilesQueryOptions,
+  storesQueryOptions,
+} from "@/data/crucible/resources.queries"
 import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
-import type { WorkspaceDatasetFile } from "@/data/crucible/workspace-source"
+import type {
+  WorkspaceDatasetFile,
+  WorkspaceStore,
+} from "@/data/crucible/workspace-source"
 import { useExitSafeMount } from "@/hooks/use-exit-safe"
 import { formatBytes } from "@/lib/format"
 import { PendingIcon } from "@/components/crucible/pending-icon"
@@ -79,6 +85,7 @@ export function DatasetFiles({
   const uploadExit = useExitSafeMount(uploadOpen)
   const scope = useWorkspaceScope()
   const filesResult = useQuery(datasetFilesQueryOptions(scope, datasetMfid))
+  const stores = useQuery(storesQueryOptions(scope)).data
   const files = filesResult.data
   const uploadAvailable = canEdit && uploadsEnabled
   return (
@@ -129,6 +136,7 @@ export function DatasetFiles({
             {files.length ? (
               <FilesTable
                 files={files}
+                stores={stores}
                 permissions={{
                   canRemove: canDelete,
                   canRename: canEdit,
@@ -169,16 +177,30 @@ const fileNameCollator = new Intl.Collator(undefined, {
   sensitivity: "base",
 })
 
+function fileStorageLabel(
+  file: WorkspaceDatasetFile,
+  stores: readonly WorkspaceStore[] | undefined
+) {
+  if (file.storage_backend !== "gcs") return file.storage_backend
+  if (!file.store_id) return stores ? "Store not recorded" : "Stored"
+  if (!stores) return file.store_id
+  return (
+    stores.find((store) => store.id === file.store_id)?.display_name ??
+    `${file.store_id} (not configured)`
+  )
+}
+
 function compareFiles(
   left: WorkspaceDatasetFile,
   right: WorkspaceDatasetFile,
-  field: FileSortField
+  field: FileSortField,
+  stores: readonly WorkspaceStore[] | undefined
 ) {
   if (field === "size") return left.size - right.size
   if (field === "storage") {
     const storage = fileNameCollator.compare(
-      left.storage_backend,
-      right.storage_backend
+      fileStorageLabel(left, stores),
+      fileStorageLabel(right, stores)
     )
     if (storage !== 0) return storage
   }
@@ -188,9 +210,11 @@ function compareFiles(
 export function FilesTable({
   files,
   permissions,
+  stores,
 }: {
   files: readonly WorkspaceDatasetFile[]
   permissions?: FileRowPermissions
+  stores?: readonly WorkspaceStore[]
 }) {
   const scope = useWorkspaceScope()
   const identity = JSON.stringify(scope)
@@ -204,9 +228,9 @@ export function FilesTable({
   const sortedFiles = useMemo(() => {
     const factor = sort.direction === "asc" ? 1 : -1
     return [...files].sort(
-      (left, right) => factor * compareFiles(left, right, sort.field)
+      (left, right) => factor * compareFiles(left, right, sort.field, stores)
     )
-  }, [files, sort])
+  }, [files, sort, stores])
   const visibleFiles = expanded
     ? sortedFiles
     : sortedFiles.slice(0, COLLAPSED_LIST_LIMIT)
@@ -258,11 +282,11 @@ export function FilesTable({
                   presentation="collection"
                 />
                 <span className="mt-0.5 block pl-6 text-supporting text-muted-foreground @md:hidden">
-                  {file.storage_backend} · {formatBytes(file.size)}
+                  {fileStorageLabel(file, stores)} · {formatBytes(file.size)}
                 </span>
               </TableCell>
               <TableCell className="hidden @md:table-cell">
-                {file.storage_backend}
+                {fileStorageLabel(file, stores)}
               </TableCell>
               <TableCell className="hidden @md:table-cell" kind="numeric">
                 {formatBytes(file.size)}
