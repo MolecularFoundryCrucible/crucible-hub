@@ -455,6 +455,7 @@ export const demoWorkspace = {
       dataset_mfid: spectroscopyDatasetSummary.unique_id,
       filename: "operando-cycle-04.h5",
       storage_backend: "gcs",
+      store_id: "foundry",
       size: 281_206_784,
       sha256_hash:
         "4cc32a63d3a12d0f99b345ad5e747e9ab831e7a24d7426d4eba785c98d4951a1",
@@ -468,6 +469,7 @@ export const demoWorkspace = {
       dataset_mfid: spectroscopyDatasetSummary.unique_id,
       filename: "run-notes.txt",
       storage_backend: "local",
+      store_id: null,
       size: 18_421,
       sha256_hash:
         "713a7c531b7c19f8b11ed6eb16960751485822525609cd28d8da3e621f26b29d",
@@ -481,6 +483,7 @@ export const demoWorkspace = {
       dataset_mfid: "01J6Y8N4Q2R7M9K3T5V0W1X2Z9",
       filename: "activated-catalyst-map.ome.tiff",
       storage_backend: "gcs",
+      store_id: "imaging-archive",
       size: 1_842_337_920,
       sha256_hash:
         "529ae8aaaf9f19acf36270be58e1991bf0a0f6529893708dd9c3cea529bb9332",

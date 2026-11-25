@@ -10,6 +10,7 @@ import {
   readWorkspaceDatasetFiles,
   readWorkspaceDatasetIngestionRequests,
   readWorkspaceIngestionClasses,
+  readWorkspaceStores,
 } from "./dataset-files.server"
 import {
   deleteWorkspaceResource,
@@ -598,6 +599,16 @@ export const getWorkspaceIngestionClasses = createServerFn({ method: "GET" })
     setResponseHeader("Cache-Control", "no-store")
     return safeCrucibleCall(context.correlationId, () =>
       readWorkspaceIngestionClasses(data.scenario, context.requestSignal)
+    )
+  })
+
+export const getWorkspaceStores = createServerFn({ method: "GET" })
+  .middleware([queryCancellationMiddleware])
+  .validator(ingestionClassesInputSchema)
+  .handler(async ({ context, data }) => {
+    setResponseHeader("Cache-Control", "no-store")
+    return safeCrucibleCall(context.correlationId, () =>
+      readWorkspaceStores(data.scenario, context.requestSignal)
     )
   })
 

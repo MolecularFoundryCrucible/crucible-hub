@@ -147,12 +147,14 @@ describe("dataset file sources", () => {
           message: "File storage location is not valid: outside dataset",
         },
       },
+      409,
       "unavailable",
     ],
-    [{ detail: { code: "something_else" } }, "conflict"],
+    [{ detail: { code: "store_unavailable" } }, 503, "unavailable"],
+    [{ detail: { code: "something_else" } }, 409, "conflict"],
   ])(
-    "maps a download 409 body %# by its structured code",
-    async (body, outcome) => {
+    "maps a download error body %# by its structured code",
+    async (body, status, outcome) => {
       vi.stubEnv("NODE_ENV", "development")
       vi.stubEnv("HUB_DATA_SOURCE", "api")
       vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
@@ -162,7 +164,7 @@ describe("dataset file sources", () => {
         vi.fn(
           async () =>
             new Response(JSON.stringify(body), {
-              status: 409,
+              status,
               headers: { "Content-Type": "application/json" },
             })
         )

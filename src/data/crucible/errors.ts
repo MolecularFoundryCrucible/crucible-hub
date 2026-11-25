@@ -48,6 +48,7 @@ export type HubConflictCode =
   | "join_request_closed"
   | "project_not_found"
   | "filename_exists"
+  | "store_unavailable"
   | "lineage_cycle"
   | "filename_immutable"
   | "pending_deletion"

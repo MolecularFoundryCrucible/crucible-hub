@@ -244,6 +244,7 @@ export const crucibleKeys = {
     [...scope, "join-requests", normalizeFilters(filters)] as const,
   ingestionClasses: (scope: IdentityScope) =>
     [...scope, "ingestion", "classes"] as const,
+  stores: (scope: IdentityScope) => [...scope, "storage", "stores"] as const,
   datasetThumbnails: (scope: IdentityScope, datasetMfid: string) =>
     [...scope, "datasets", "thumbnails", datasetMfid] as const,
   datasetThumbnailPreviews: (

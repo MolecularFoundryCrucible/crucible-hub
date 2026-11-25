@@ -579,6 +579,8 @@ export type WorkspaceDatasetThumbnailOperation =
 
 export type WorkspaceFileDisposition = "attachment" | "inline"
 
+export type WorkspaceStore = Schema<"StoreRead">
+
 export type WorkspaceFileDownload =
   | { status: "ready"; url: string; expiresInSeconds: number }
   | { status: "unavailable" }

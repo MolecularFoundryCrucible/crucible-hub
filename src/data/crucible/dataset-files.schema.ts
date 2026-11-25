@@ -12,5 +12,6 @@ export const apiDatasetFileSchema = z
     size: z.number().int().nonnegative(),
     storage_backend: z.string().min(1).max(255),
     storage_path: z.string().nullable().optional(),
+    store_id: z.string().min(1).max(63).nullable().optional(),
   })
   .passthrough()
