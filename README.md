@@ -18,7 +18,7 @@ ghcr.io/molecularfoundrycrucible/crucible-hub:<version>
 
 [crucible-selfhost](https://github.com/MolecularFoundryCrucible/crucible-selfhost) is the starting point for hosting a full Crucible deployment: it runs the API and its front door, and its guides link to each component, including this one. You need:
 
-- A [Crucible API](https://github.com/MolecularFoundryCrucible/crucible-api), release 4.1.0 or later (each image's `gov.lbl.crucible.api.min-version` label names the oldest it supports), with Hub sign-in configured: your Hub's callbacks allowed, each provider's callback (`<API>/oauth/callback/<provider>`) registered with that provider, a client secret shared with the Hub, and a way to sign in (passwords, on by default in the API's Compose bundle, or a provider such as ORCID).
+- A [Crucible API](https://github.com/MolecularFoundryCrucible/crucible-api), release 4.1.1 or later (each image's `gov.lbl.crucible.api.min-version` label names the oldest it supports), with Hub sign-in configured: your Hub's callbacks allowed, each provider's callback (`<API>/oauth/callback/<provider>`) registered with that provider, a client secret shared with the Hub, and a way to sign in (passwords, on by default in the API's Compose bundle, or a provider such as ORCID).
 - One address in front of both, the API under `/api/v4/` and the Hub under `/hub/`: HTTPS, or `http://localhost` when everything runs on one machine.
 - Docker with Compose v2.20 or later.
 
