@@ -746,7 +746,12 @@ export type WorkspaceUploadSession = {
 }
 
 export type WorkspaceUploadInitiation =
-  | { partSize: number; state: WorkspaceUploadSessionState; uploadId: string }
+  | {
+      partSize: number
+      state: WorkspaceUploadSessionState
+      unavailableDefaultStores?: string[]
+      uploadId: string
+    }
   | { file: WorkspaceDatasetFile; state: "completed" }
   | { etag: string; fileMfid: string; state: "filename_exists" }
   | { state: "file_changed" }

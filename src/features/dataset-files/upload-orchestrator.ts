@@ -160,6 +160,7 @@ export async function uploadDatasetFile(options: {
   file: File
   filename: string
   onProgress: (progress: UploadProgress) => void
+  onUnavailableDefaultStores?: (storeIds: readonly string[]) => void
   replace?: { etag: string; fileMfid: string }
   scenario?: FixtureScenario
   signal: AbortSignal
@@ -170,6 +171,7 @@ export async function uploadDatasetFile(options: {
     file,
     filename,
     onProgress,
+    onUnavailableDefaultStores,
     replace,
     scenario,
     signal,
@@ -227,6 +229,9 @@ export async function uploadDatasetFile(options: {
       uploadedBytes: file.size,
     })
     return initiation.file
+  }
+  if (initiation.unavailableDefaultStores) {
+    onUnavailableDefaultStores?.(initiation.unavailableDefaultStores)
   }
   const uploadId = initiation.uploadId
   const partSize = initiation.partSize

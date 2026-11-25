@@ -135,6 +135,9 @@ export function useUploadBatch({
   const queryClient = useQueryClient()
   const [items, setItems] = useState<UploadItem[]>([])
   const [uploading, setUploading] = useState(false)
+  const [unavailableDefaultStores, setUnavailableDefaultStores] = useState<
+    readonly string[]
+  >([])
   const [progress, setProgress] = useState<UploadBatchProgress>()
   const controller = useRef<AbortController | null>(null)
   const leaveGuard = useUploadLeaveGuard(
@@ -230,6 +233,7 @@ export function useUploadBatch({
 
   const reset = useCallback(() => {
     setItems([])
+    setUnavailableDefaultStores([])
   }, [])
 
   const requestIngestion = useCallback(
@@ -334,6 +338,10 @@ export function useUploadBatch({
           filename: item.filename,
           ...(item.replace ? { replace: item.replace } : {}),
           ...(storeId ? { storeId } : {}),
+          onUnavailableDefaultStores: (storeIds) =>
+            setUnavailableDefaultStores((previous) => [
+              ...new Set([...previous, ...storeIds]),
+            ]),
           onProgress: (next) => {
             if (next.phase === "done") return
             transferred.set(item.id, next.uploadedBytes)
@@ -488,6 +496,7 @@ export function useUploadBatch({
     setIngestorForAll,
     start,
     totalBytes,
+    unavailableDefaultStores,
     uploading,
   }
 }

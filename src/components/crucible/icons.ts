@@ -79,6 +79,7 @@ export {
   Undo2 as KeepExistingFileIcon,
   RotateCcw as RetryDownloadIcon,
   CircleAlert as UploadFailureIcon,
+  TriangleAlert as StoreWarningIcon,
   Save as SaveChangesIcon,
   LoaderCircle as SavingChangesIcon,
   X as CancelChangesIcon,
