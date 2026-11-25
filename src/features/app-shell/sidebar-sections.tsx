@@ -18,6 +18,7 @@ import {
   CollapseSidebarIcon,
   PreferencesIcon,
   ExpandSidebarIcon,
+  IngestionWorkersIcon,
   SignOutIcon,
   ThemeIcon,
 } from "@/components/crucible/icons"
@@ -321,6 +322,26 @@ export function SidebarAdministrationLinks({
             >
               <PrincipalTypeIcon type="service_account" />
               <span>Service accounts</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        ) : null}
+        {canOpenPlatformAdministration(account, mode) ? (
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              isActive={pathname.startsWith("/admin/workers")}
+              tooltip="Ingestion workers"
+              render={
+                <Link
+                  aria-current={
+                    pathname.startsWith("/admin/workers") ? "page" : undefined
+                  }
+                  preload={false}
+                  to="/admin/workers"
+                />
+              }
+            >
+              <IngestionWorkersIcon aria-hidden="true" />
+              <span>Ingestion workers</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         ) : null}
