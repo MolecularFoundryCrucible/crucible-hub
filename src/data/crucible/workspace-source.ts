@@ -52,7 +52,7 @@ export type WorkspaceApiCredentialStatus = Pick<
   "created_at" | "expires_at" | "last_used_at" | "valid"
 >
 
-export type WorkspaceApiKey = Omit<Schema<"ApiKeyListItem">, "older_routes">
+export type WorkspaceApiKey = Schema<"ApiKeyListItem">
 
 export type WorkspacePasswordLink = {
   expires_at: string
@@ -68,10 +68,7 @@ export type WorkspaceApiKeyPage = {
   total: number
 }
 
-export type WorkspaceCreatedApiKey = Omit<
-  Schema<"ApiKeyCreated">,
-  "older_routes"
->
+export type WorkspaceCreatedApiKey = Schema<"ApiKeyCreated">
 
 export type WorkspaceSignedInSession = Schema<"SessionRead">
 
