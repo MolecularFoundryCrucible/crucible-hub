@@ -94,7 +94,7 @@ export function MfidValue({
         type="mfid"
       />
       <MfidText
-        className="min-w-0 break-all sm:break-normal sm:whitespace-nowrap"
+        className="min-w-0 break-all"
         presentation={presentation}
         value={value}
       />
