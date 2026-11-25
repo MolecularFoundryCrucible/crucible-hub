@@ -99,20 +99,6 @@
         "title": "AccessGrantWrite",
         "type": "object"
       },
-      "AccessGroupCreate": {
-        "description": "Fields required to create a new access group.",
-        "properties": {
-          "group_name": {
-            "title": "Group Name",
-            "type": "string"
-          }
-        },
-        "required": [
-          "group_name"
-        ],
-        "title": "AccessGroupCreate",
-        "type": "object"
-      },
       "AccessGroupMemberRead": {
         "description": "A public-safe group member profile plus their standing role.",
         "properties": {
@@ -207,25 +193,6 @@
           "role"
         ],
         "title": "AccessGroupMemberRead",
-        "type": "object"
-      },
-      "AccessGroupRead": {
-        "description": "Response model for AccessGroup.",
-        "properties": {
-          "group_name": {
-            "title": "Group Name",
-            "type": "string"
-          },
-          "id": {
-            "title": "Id",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "id",
-          "group_name"
-        ],
-        "title": "AccessGroupRead",
         "type": "object"
       },
       "AccessPermission": {
@@ -755,13 +722,6 @@
             ],
             "title": "Name"
           },
-          "older_routes": {
-            "default": false,
-            "deprecated": true,
-            "description": "Deprecated: always false, since the single-key routes are gone. Removed in a later release.",
-            "title": "Older Routes",
-            "type": "boolean"
-          },
           "revoked_at": {
             "anyOf": [
               {
@@ -844,13 +804,6 @@
               }
             ],
             "title": "Name"
-          },
-          "older_routes": {
-            "default": false,
-            "deprecated": true,
-            "description": "Deprecated: always false, since the single-key routes are gone. Removed in a later release.",
-            "title": "Older Routes",
-            "type": "boolean"
           },
           "revoked_at": {
             "anyOf": [
@@ -1042,6 +995,18 @@
               }
             ],
             "title": "Storage Path"
+          },
+          "store_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The store holding a stored file (see GET /storage/stores); null for a catalog-only record, or a stored file whose store has not been recorded yet.",
+            "title": "Store Id"
           }
         },
         "required": [
@@ -2585,6 +2550,63 @@
         "title": "DeletableResourceType",
         "type": "string"
       },
+      "DeletedFileRead": {
+        "description": "A deleted file whose content is still kept and can be restored until restorable_until.",
+        "properties": {
+          "dataset_mfid": {
+            "title": "Dataset Mfid",
+            "type": "string"
+          },
+          "deleted_at": {
+            "format": "date-time",
+            "title": "Deleted At",
+            "type": "string"
+          },
+          "file_mfid": {
+            "title": "File Mfid",
+            "type": "string"
+          },
+          "filename": {
+            "title": "Filename",
+            "type": "string"
+          },
+          "restorable_until": {
+            "format": "date-time",
+            "title": "Restorable Until",
+            "type": "string"
+          },
+          "sha256_hash": {
+            "title": "Sha256 Hash",
+            "type": "string"
+          },
+          "size": {
+            "title": "Size",
+            "type": "integer"
+          },
+          "store_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Store Id"
+          }
+        },
+        "required": [
+          "file_mfid",
+          "dataset_mfid",
+          "filename",
+          "size",
+          "sha256_hash",
+          "deleted_at",
+          "restorable_until"
+        ],
+        "title": "DeletedFileRead",
+        "type": "object"
+      },
       "DeletionAuditLogRead": {
         "description": "Response model for DeletionAuditLog.",
         "properties": {
@@ -3468,117 +3490,6 @@
           }
         },
         "title": "HTTPValidationError",
-        "type": "object"
-      },
-      "HubCodeExchangeRequest": {
-        "properties": {
-          "code": {
-            "maxLength": 128,
-            "minLength": 32,
-            "title": "Code",
-            "type": "string"
-          },
-          "code_verifier": {
-            "maxLength": 128,
-            "minLength": 43,
-            "title": "Code Verifier",
-            "type": "string"
-          },
-          "redirect_uri": {
-            "maxLength": 512,
-            "minLength": 1,
-            "title": "Redirect Uri",
-            "type": "string"
-          }
-        },
-        "required": [
-          "code",
-          "code_verifier",
-          "redirect_uri"
-        ],
-        "title": "HubCodeExchangeRequest",
-        "type": "object"
-      },
-      "HubRefreshRequest": {
-        "properties": {
-          "refresh_token": {
-            "maxLength": 128,
-            "minLength": 50,
-            "title": "Refresh Token",
-            "type": "string"
-          }
-        },
-        "required": [
-          "refresh_token"
-        ],
-        "title": "HubRefreshRequest",
-        "type": "object"
-      },
-      "HubRevokeRequest": {
-        "properties": {
-          "token": {
-            "maxLength": 128,
-            "minLength": 50,
-            "title": "Token",
-            "type": "string"
-          }
-        },
-        "required": [
-          "token"
-        ],
-        "title": "HubRevokeRequest",
-        "type": "object"
-      },
-      "HubTokenResponse": {
-        "properties": {
-          "access_expires_at": {
-            "format": "date-time",
-            "title": "Access Expires At",
-            "type": "string"
-          },
-          "access_token": {
-            "title": "Access Token",
-            "type": "string"
-          },
-          "auth_time": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Auth Time"
-          },
-          "refresh_expires_at": {
-            "format": "date-time",
-            "title": "Refresh Expires At",
-            "type": "string"
-          },
-          "refresh_token": {
-            "title": "Refresh Token",
-            "type": "string"
-          },
-          "token_type": {
-            "default": "Bearer",
-            "title": "Token Type",
-            "type": "string"
-          },
-          "user_unique_id": {
-            "title": "User Unique Id",
-            "type": "string"
-          }
-        },
-        "required": [
-          "access_token",
-          "refresh_token",
-          "access_expires_at",
-          "refresh_expires_at",
-          "user_unique_id"
-        ],
-        "title": "HubTokenResponse",
         "type": "object"
       },
       "IdentityRead": {
@@ -5033,6 +4944,20 @@
             "minimum": 0.0,
             "title": "Size",
             "type": "integer"
+          },
+          "store_id": {
+            "anyOf": [
+              {
+                "maxLength": 63,
+                "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The store to upload to (see GET /storage/stores); by default the project's, then the instrument's, then the server's default store.",
+            "title": "Store Id"
           }
         },
         "required": [
@@ -5104,6 +5029,20 @@
             "minimum": 0.0,
             "title": "Size",
             "type": "integer"
+          },
+          "store_id": {
+            "anyOf": [
+              {
+                "maxLength": 63,
+                "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The store to upload the new content to; by default the file's current store.",
+            "title": "Store Id"
           }
         },
         "required": [
@@ -5190,6 +5129,18 @@
           "state": {
             "title": "State",
             "type": "string"
+          },
+          "store_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The store this upload goes to (see GET /storage/stores)",
+            "title": "Store Id"
           },
           "upload_id": {
             "anyOf": [
@@ -5532,6 +5483,60 @@
           "items"
         ],
         "title": "PaginatedResponse[DatasetResponse]",
+        "type": "object"
+      },
+      "PaginatedResponse_DeletedFileRead_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/DeletedFileRead"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "offset": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offset"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
+          }
+        },
+        "required": [
+          "limit",
+          "items"
+        ],
+        "title": "PaginatedResponse[DeletedFileRead]",
         "type": "object"
       },
       "PaginatedResponse_DeletionAuditLogRead_": {
@@ -7419,46 +7424,6 @@
         "title": "RequesterFacetBucket",
         "type": "object"
       },
-      "ResourceAccessGroupRead": {
-        "description": "The reply of the deprecated POST /resources/{mfid}/access_groups.",
-        "properties": {
-          "accessgroup_id": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Accessgroup Id"
-          },
-          "mfid": {
-            "title": "Mfid",
-            "type": "string"
-          },
-          "permission": {
-            "title": "Permission",
-            "type": "string"
-          },
-          "read": {
-            "title": "Read",
-            "type": "boolean"
-          },
-          "write": {
-            "title": "Write",
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "mfid",
-          "read",
-          "write",
-          "permission"
-        ],
-        "title": "ResourceAccessGroupRead",
-        "type": "object"
-      },
       "ResourceAffiliation": {
         "enum": [
           "owner",
@@ -7774,6 +7739,42 @@
           "unique_id"
         ],
         "title": "ResourceSearchResult",
+        "type": "object"
+      },
+      "ResourceSettingsRead": {
+        "properties": {
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          },
+          "schema_version": {
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "settings": {
+            "additionalProperties": true,
+            "title": "Settings",
+            "type": "object"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "required": [
+          "schema_version",
+          "revision",
+          "settings"
+        ],
+        "title": "ResourceSettingsRead",
         "type": "object"
       },
       "ResourceSort": {
@@ -8658,6 +8659,41 @@
         "title": "SortDirection",
         "type": "string"
       },
+      "StoreRead": {
+        "description": "A store files can be uploaded to. Endpoints, buckets and credentials stay on the server.",
+        "properties": {
+          "default": {
+            "title": "Default",
+            "type": "boolean"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "display_name",
+          "default"
+        ],
+        "title": "StoreRead",
+        "type": "object"
+      },
       "ThumbnailCreate": {
         "description": "Fields required to attach a thumbnail to a dataset.",
         "properties": {
@@ -9319,7 +9355,7 @@
   },
   "info": {
     "title": "FastAPI",
-    "version": "4.0.0"
+    "version": "4.1.0"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -9350,348 +9386,6 @@
         "summary": "Authorization Server Metadata",
         "tags": [
           "auth"
-        ]
-      }
-    },
-    "/access_groups": {
-      "post": {
-        "operationId": "create_access_group_access_groups_post",
-        "parameters": [
-          {
-            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
-            "in": "header",
-            "name": "Crucible-Privilege-Mode",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/PrivilegeMode"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
-              "title": "Crucible-Privilege-Mode"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AccessGroupCreate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AccessGroupRead"
-                }
-              }
-            },
-            "description": "Successful Response",
-            "headers": {
-              "Cache-Control": {
-                "$ref": "#/components/headers/PrivateCacheControl"
-              },
-              "Crucible-Privilege-Mode": {
-                "$ref": "#/components/headers/CruciblePrivilegeMode"
-              },
-              "Vary": {
-                "$ref": "#/components/headers/PrivilegeModeVary"
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "summary": "Create Access Group",
-        "tags": [
-          "access_groups"
-        ]
-      }
-    },
-    "/access_groups/{group_name}": {
-      "get": {
-        "operationId": "read_access_group_access_groups__group_name__get",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "group_name",
-            "required": true,
-            "schema": {
-              "title": "Group Name",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
-            "in": "header",
-            "name": "Crucible-Privilege-Mode",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/PrivilegeMode"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
-              "title": "Crucible-Privilege-Mode"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/AccessGroupRead"
-                    },
-                    {
-                      "type": "null"
-                    }
-                  ],
-                  "title": "Response Read Access Group Access Groups  Group Name  Get"
-                }
-              }
-            },
-            "description": "Successful Response",
-            "headers": {
-              "Cache-Control": {
-                "$ref": "#/components/headers/PrivateCacheControl"
-              },
-              "Crucible-Privilege-Mode": {
-                "$ref": "#/components/headers/CruciblePrivilegeMode"
-              },
-              "Vary": {
-                "$ref": "#/components/headers/PrivilegeModeVary"
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "summary": "Read Access Group",
-        "tags": [
-          "access_groups"
-        ]
-      }
-    },
-    "/access_groups/{group_name}/join": {
-      "post": {
-        "deprecated": true,
-        "description": "Deprecated: use POST /projects/{project_ref}/join_requests. group_name takes a project slug or MFID.",
-        "operationId": "request_to_join_access_group_access_groups__group_name__join_post",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "group_name",
-            "required": true,
-            "schema": {
-              "title": "Group Name",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
-            "in": "header",
-            "name": "Crucible-Privilege-Mode",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/PrivilegeMode"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
-              "title": "Crucible-Privilege-Mode"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/JoinRequestCreate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/JoinRequestRead"
-                }
-              }
-            },
-            "description": "Successful Response",
-            "headers": {
-              "Cache-Control": {
-                "$ref": "#/components/headers/PrivateCacheControl"
-              },
-              "Crucible-Privilege-Mode": {
-                "$ref": "#/components/headers/CruciblePrivilegeMode"
-              },
-              "Vary": {
-                "$ref": "#/components/headers/PrivilegeModeVary"
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "summary": "Request To Join Access Group",
-        "tags": [
-          "access_groups"
-        ]
-      }
-    },
-    "/access_groups/{group_name}/users": {
-      "get": {
-        "description": "List all users who are members of the given access group, with their role. Admin only.",
-        "operationId": "list_access_group_users_access_groups__group_name__users_get",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "group_name",
-            "required": true,
-            "schema": {
-              "title": "Group Name",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
-            "in": "header",
-            "name": "Crucible-Privilege-Mode",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/PrivilegeMode"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
-              "title": "Crucible-Privilege-Mode"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/AccessGroupMemberRead"
-                  },
-                  "title": "Response List Access Group Users Access Groups  Group Name  Users Get",
-                  "type": "array"
-                }
-              }
-            },
-            "description": "Successful Response",
-            "headers": {
-              "Cache-Control": {
-                "$ref": "#/components/headers/PrivateCacheControl"
-              },
-              "Crucible-Privilege-Mode": {
-                "$ref": "#/components/headers/CruciblePrivilegeMode"
-              },
-              "Vary": {
-                "$ref": "#/components/headers/PrivilegeModeVary"
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "summary": "List Access Group Users",
-        "tags": [
-          "access_groups"
         ]
       }
     },
@@ -9761,48 +9455,6 @@
           }
         ],
         "summary": "Get Account Info",
-        "tags": [
-          "account"
-        ]
-      }
-    },
-    "/account/apikey": {
-      "get": {
-        "deprecated": true,
-        "description": "Removed: API keys are stored hashed and cannot be read back. Use POST /account/apikeys.",
-        "operationId": "get_account_apikey_account_apikey_get",
-        "responses": {
-          "410": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "This route was removed: `{\"detail\": {\"code\": \"route_removed\", \"message\": ...}}` names the replacement"
-          }
-        },
-        "summary": "Get Account Apikey",
-        "tags": [
-          "account"
-        ]
-      }
-    },
-    "/account/apikey/regenerate": {
-      "post": {
-        "deprecated": true,
-        "description": "Removed: create keys with POST /account/apikeys and revoke them with DELETE /account/apikeys/{key_id}.",
-        "operationId": "regenerate_account_apikey_account_apikey_regenerate_post",
-        "responses": {
-          "410": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "This route was removed: `{\"detail\": {\"code\": \"route_removed\", \"message\": ...}}` names the replacement"
-          }
-        },
-        "summary": "Regenerate Account Apikey",
         "tags": [
           "account"
         ]
@@ -10528,117 +10180,6 @@
           }
         ],
         "summary": "Start Account Link",
-        "tags": [
-          "account"
-        ]
-      }
-    },
-    "/account/join_requests": {
-      "get": {
-        "deprecated": true,
-        "description": "Deprecated: use GET /join_requests?scope=submitted.",
-        "operationId": "get_account_join_requests_account_join_requests_get",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "status",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/JoinRequestStatus"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Status"
-            }
-          },
-          {
-            "in": "query",
-            "name": "limit",
-            "required": false,
-            "schema": {
-              "default": 100,
-              "maximum": 1000,
-              "minimum": 1,
-              "title": "Limit",
-              "type": "integer"
-            }
-          },
-          {
-            "in": "query",
-            "name": "offset",
-            "required": false,
-            "schema": {
-              "default": 0,
-              "minimum": 0,
-              "title": "Offset",
-              "type": "integer"
-            }
-          },
-          {
-            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
-            "in": "header",
-            "name": "Crucible-Privilege-Mode",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/PrivilegeMode"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
-              "title": "Crucible-Privilege-Mode"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PaginatedResponse_JoinRequestRead_"
-                }
-              }
-            },
-            "description": "Successful Response",
-            "headers": {
-              "Cache-Control": {
-                "$ref": "#/components/headers/PrivateCacheControl"
-              },
-              "Crucible-Privilege-Mode": {
-                "$ref": "#/components/headers/CruciblePrivilegeMode"
-              },
-              "Vary": {
-                "$ref": "#/components/headers/PrivilegeModeVary"
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "summary": "Get Account Join Requests",
         "tags": [
           "account"
         ]
@@ -11745,1258 +11286,6 @@
         "summary": "Verify Account Apikey",
         "tags": [
           "account"
-        ]
-      }
-    },
-    "/auth": {
-      "get": {
-        "deprecated": true,
-        "description": "Removed: the browser pages that signed in with ORCID and handed out a single API key.",
-        "operationId": "removed_browser_key_flow_auth_get",
-        "responses": {
-          "410": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "This route was removed: `{\"detail\": {\"code\": \"route_removed\", \"message\": ...}}` names the replacement"
-          }
-        },
-        "summary": "Removed Browser Key Flow",
-        "tags": [
-          "auth"
-        ]
-      }
-    },
-    "/auth/apikey": {
-      "get": {
-        "deprecated": true,
-        "description": "Removed: the browser pages that signed in with ORCID and handed out a single API key.",
-        "operationId": "removed_browser_key_flow_auth_apikey_get",
-        "responses": {
-          "410": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "This route was removed: `{\"detail\": {\"code\": \"route_removed\", \"message\": ...}}` names the replacement"
-          }
-        },
-        "summary": "Removed Browser Key Flow",
-        "tags": [
-          "auth"
-        ]
-      }
-    },
-    "/auth/apikey/regenerate": {
-      "post": {
-        "deprecated": true,
-        "description": "Removed: the browser pages that signed in with ORCID and handed out a single API key.",
-        "operationId": "removed_browser_key_flow_auth_apikey_regenerate_post",
-        "responses": {
-          "410": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "This route was removed: `{\"detail\": {\"code\": \"route_removed\", \"message\": ...}}` names the replacement"
-          }
-        },
-        "summary": "Removed Browser Key Flow",
-        "tags": [
-          "auth"
-        ]
-      }
-    },
-    "/auth/callback": {
-      "get": {
-        "deprecated": true,
-        "description": "Removed: the browser pages that signed in with ORCID and handed out a single API key.",
-        "operationId": "removed_browser_key_flow_auth_callback_get",
-        "responses": {
-          "410": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "This route was removed: `{\"detail\": {\"code\": \"route_removed\", \"message\": ...}}` names the replacement"
-          }
-        },
-        "summary": "Removed Browser Key Flow",
-        "tags": [
-          "auth"
-        ]
-      }
-    },
-    "/auth/hub/callback": {
-      "get": {
-        "deprecated": true,
-        "description": "Deprecated: the provider callback for an ORCID application registered with this address (`legacy_callback`). New registrations use GET /oauth/callback/{key}.",
-        "operationId": "finish_hub_login_auth_hub_callback_get",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "code",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "maxLength": 2048,
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Code"
-            }
-          },
-          {
-            "in": "query",
-            "name": "state",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "maxLength": 128,
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "State"
-            }
-          },
-          {
-            "in": "query",
-            "name": "error",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "maxLength": 256,
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Error"
-            }
-          },
-          {
-            "in": "query",
-            "name": "iss",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "maxLength": 512,
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Iss"
-            }
-          }
-        ],
-        "responses": {
-          "302": {
-            "description": "Redirect to the Hub with a sign-in code, or with state and an RFC 6749 error",
-            "headers": {
-              "Cache-Control": {
-                "schema": {
-                  "const": "no-store",
-                  "type": "string"
-                }
-              },
-              "Pragma": {
-                "schema": {
-                  "const": "no-cache",
-                  "type": "string"
-                }
-              },
-              "Referrer-Policy": {
-                "schema": {
-                  "const": "no-referrer",
-                  "type": "string"
-                }
-              },
-              "X-Content-Type-Options": {
-                "schema": {
-                  "const": "nosniff",
-                  "type": "string"
-                }
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "400": {
-            "description": "The sign-in cannot be matched to this browser, so nothing is trusted enough to redirect to",
-            "headers": {
-              "Cache-Control": {
-                "schema": {
-                  "const": "no-store",
-                  "type": "string"
-                }
-              },
-              "Pragma": {
-                "schema": {
-                  "const": "no-cache",
-                  "type": "string"
-                }
-              },
-              "Referrer-Policy": {
-                "schema": {
-                  "const": "no-referrer",
-                  "type": "string"
-                }
-              },
-              "X-Content-Type-Options": {
-                "schema": {
-                  "const": "nosniff",
-                  "type": "string"
-                }
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Invalid authentication request; submitted values and validation context are omitted",
-            "headers": {
-              "Cache-Control": {
-                "schema": {
-                  "const": "no-store",
-                  "type": "string"
-                }
-              },
-              "Pragma": {
-                "schema": {
-                  "const": "no-cache",
-                  "type": "string"
-                }
-              },
-              "Referrer-Policy": {
-                "schema": {
-                  "const": "no-referrer",
-                  "type": "string"
-                }
-              },
-              "X-Content-Type-Options": {
-                "schema": {
-                  "const": "nosniff",
-                  "type": "string"
-                }
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "500": {
-            "description": "Authentication request failed; response contains no internal error details",
-            "headers": {
-              "Cache-Control": {
-                "schema": {
-                  "const": "no-store",
-                  "type": "string"
-                }
-              },
-              "Pragma": {
-                "schema": {
-                  "const": "no-cache",
-                  "type": "string"
-                }
-              },
-              "Referrer-Policy": {
-                "schema": {
-                  "const": "no-referrer",
-                  "type": "string"
-                }
-              },
-              "X-Content-Type-Options": {
-                "schema": {
-                  "const": "nosniff",
-                  "type": "string"
-                }
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          }
-        },
-        "summary": "Finish Hub Login",
-        "tags": [
-          "auth"
-        ]
-      }
-    },
-    "/auth/hub/login": {
-      "get": {
-        "deprecated": true,
-        "description": "Deprecated: use GET /oauth/authorize with response_type=code, which this calls. Kept for Hub releases before 1.8.0.",
-        "operationId": "begin_hub_login_auth_hub_login_get",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "client_id",
-            "required": true,
-            "schema": {
-              "maxLength": 100,
-              "minLength": 1,
-              "title": "Client Id",
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "redirect_uri",
-            "required": true,
-            "schema": {
-              "maxLength": 512,
-              "minLength": 1,
-              "title": "Redirect Uri",
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "state",
-            "required": true,
-            "schema": {
-              "maxLength": 256,
-              "minLength": 16,
-              "title": "State",
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "code_challenge",
-            "required": true,
-            "schema": {
-              "maxLength": 43,
-              "minLength": 43,
-              "title": "Code Challenge",
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "code_challenge_method",
-            "required": true,
-            "schema": {
-              "pattern": "^S256$",
-              "title": "Code Challenge Method",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Maximum seconds since the user's last authentication at the provider. 0 forces the provider to re-authenticate; use it before credential-creating operations that require a recent sign-in.",
-            "in": "query",
-            "name": "max_age",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "maximum": 86400,
-                  "minimum": 0,
-                  "type": "integer"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Maximum seconds since the user's last authentication at the provider. 0 forces the provider to re-authenticate; use it before credential-creating operations that require a recent sign-in.",
-              "title": "Max Age"
-            }
-          },
-          {
-            "description": "The provider to use, a key from GET /auth/methods. When omitted, the only listed provider is used, or a page offers the choice.",
-            "in": "query",
-            "name": "provider",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "maxLength": 32,
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "The provider to use, a key from GET /auth/methods. When omitted, the only listed provider is used, or a page offers the choice.",
-              "title": "Provider"
-            }
-          },
-          {
-            "description": "The unique_id that must sign in. Any other account gets error=login_required and no code. It passes through the browser, so the Hub must still compare the account it receives.",
-            "in": "query",
-            "name": "required_user",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "maxLength": 255,
-                  "minLength": 1,
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "The unique_id that must sign in. Any other account gets error=login_required and no code. It passes through the browser, so the Hub must still compare the account it receives.",
-              "title": "Required User"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "text/html": {}
-            },
-            "description": "A page to choose how to sign in, when several providers are listed and none is named",
-            "headers": {
-              "Cache-Control": {
-                "schema": {
-                  "const": "no-store",
-                  "type": "string"
-                }
-              },
-              "Pragma": {
-                "schema": {
-                  "const": "no-cache",
-                  "type": "string"
-                }
-              },
-              "Referrer-Policy": {
-                "schema": {
-                  "const": "no-referrer",
-                  "type": "string"
-                }
-              },
-              "X-Content-Type-Options": {
-                "schema": {
-                  "const": "nosniff",
-                  "type": "string"
-                }
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "302": {
-            "description": "Redirect to the provider, or to the Hub with an error when the provider cannot be reached",
-            "headers": {
-              "Cache-Control": {
-                "schema": {
-                  "const": "no-store",
-                  "type": "string"
-                }
-              },
-              "Pragma": {
-                "schema": {
-                  "const": "no-cache",
-                  "type": "string"
-                }
-              },
-              "Referrer-Policy": {
-                "schema": {
-                  "const": "no-referrer",
-                  "type": "string"
-                }
-              },
-              "X-Content-Type-Options": {
-                "schema": {
-                  "const": "nosniff",
-                  "type": "string"
-                }
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid sign-in request",
-            "headers": {
-              "Cache-Control": {
-                "schema": {
-                  "const": "no-store",
-                  "type": "string"
-                }
-              },
-              "Pragma": {
-                "schema": {
-                  "const": "no-cache",
-                  "type": "string"
-                }
-              },
-              "Referrer-Policy": {
-                "schema": {
-                  "const": "no-referrer",
-                  "type": "string"
-                }
-              },
-              "X-Content-Type-Options": {
-                "schema": {
-                  "const": "nosniff",
-                  "type": "string"
-                }
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Invalid authentication request; submitted values and validation context are omitted",
-            "headers": {
-              "Cache-Control": {
-                "schema": {
-                  "const": "no-store",
-                  "type": "string"
-                }
-              },
-              "Pragma": {
-                "schema": {
-                  "const": "no-cache",
-                  "type": "string"
-                }
-              },
-              "Referrer-Policy": {
-                "schema": {
-                  "const": "no-referrer",
-                  "type": "string"
-                }
-              },
-              "X-Content-Type-Options": {
-                "schema": {
-                  "const": "nosniff",
-                  "type": "string"
-                }
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "500": {
-            "description": "Authentication request failed; response contains no internal error details",
-            "headers": {
-              "Cache-Control": {
-                "schema": {
-                  "const": "no-store",
-                  "type": "string"
-                }
-              },
-              "Pragma": {
-                "schema": {
-                  "const": "no-cache",
-                  "type": "string"
-                }
-              },
-              "Referrer-Policy": {
-                "schema": {
-                  "const": "no-referrer",
-                  "type": "string"
-                }
-              },
-              "X-Content-Type-Options": {
-                "schema": {
-                  "const": "nosniff",
-                  "type": "string"
-                }
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "503": {
-            "description": "Hub sign-in unavailable",
-            "headers": {
-              "Cache-Control": {
-                "schema": {
-                  "const": "no-store",
-                  "type": "string"
-                }
-              },
-              "Pragma": {
-                "schema": {
-                  "const": "no-cache",
-                  "type": "string"
-                }
-              },
-              "Referrer-Policy": {
-                "schema": {
-                  "const": "no-referrer",
-                  "type": "string"
-                }
-              },
-              "X-Content-Type-Options": {
-                "schema": {
-                  "const": "nosniff",
-                  "type": "string"
-                }
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          }
-        },
-        "summary": "Begin Hub Login",
-        "tags": [
-          "auth"
-        ]
-      }
-    },
-    "/auth/hub/refresh": {
-      "post": {
-        "deprecated": true,
-        "description": "Deprecated: use POST /oauth/token with grant_type=refresh_token, which this calls. Kept for Hub releases before 1.8.0.",
-        "operationId": "refresh_hub_credential_auth_hub_refresh_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/HubRefreshRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HubTokenResponse"
-                }
-              }
-            },
-            "description": "Successful Response",
-            "headers": {
-              "Cache-Control": {
-                "schema": {
-                  "const": "no-store",
-                  "type": "string"
-                }
-              },
-              "Pragma": {
-                "schema": {
-                  "const": "no-cache",
-                  "type": "string"
-                }
-              },
-              "Referrer-Policy": {
-                "schema": {
-                  "const": "no-referrer",
-                  "type": "string"
-                }
-              },
-              "X-Content-Type-Options": {
-                "schema": {
-                  "const": "nosniff",
-                  "type": "string"
-                }
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid client or refresh token",
-            "headers": {
-              "Cache-Control": {
-                "schema": {
-                  "const": "no-store",
-                  "type": "string"
-                }
-              },
-              "Pragma": {
-                "schema": {
-                  "const": "no-cache",
-                  "type": "string"
-                }
-              },
-              "Referrer-Policy": {
-                "schema": {
-                  "const": "no-referrer",
-                  "type": "string"
-                }
-              },
-              "X-Content-Type-Options": {
-                "schema": {
-                  "const": "nosniff",
-                  "type": "string"
-                }
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Invalid authentication request; submitted values and validation context are omitted",
-            "headers": {
-              "Cache-Control": {
-                "schema": {
-                  "const": "no-store",
-                  "type": "string"
-                }
-              },
-              "Pragma": {
-                "schema": {
-                  "const": "no-cache",
-                  "type": "string"
-                }
-              },
-              "Referrer-Policy": {
-                "schema": {
-                  "const": "no-referrer",
-                  "type": "string"
-                }
-              },
-              "X-Content-Type-Options": {
-                "schema": {
-                  "const": "nosniff",
-                  "type": "string"
-                }
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "500": {
-            "description": "Authentication request failed; response contains no internal error details",
-            "headers": {
-              "Cache-Control": {
-                "schema": {
-                  "const": "no-store",
-                  "type": "string"
-                }
-              },
-              "Pragma": {
-                "schema": {
-                  "const": "no-cache",
-                  "type": "string"
-                }
-              },
-              "Referrer-Policy": {
-                "schema": {
-                  "const": "no-referrer",
-                  "type": "string"
-                }
-              },
-              "X-Content-Type-Options": {
-                "schema": {
-                  "const": "nosniff",
-                  "type": "string"
-                }
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "503": {
-            "description": "Hub sign-in unavailable",
-            "headers": {
-              "Cache-Control": {
-                "schema": {
-                  "const": "no-store",
-                  "type": "string"
-                }
-              },
-              "Pragma": {
-                "schema": {
-                  "const": "no-cache",
-                  "type": "string"
-                }
-              },
-              "Referrer-Policy": {
-                "schema": {
-                  "const": "no-referrer",
-                  "type": "string"
-                }
-              },
-              "X-Content-Type-Options": {
-                "schema": {
-                  "const": "nosniff",
-                  "type": "string"
-                }
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBasic": []
-          }
-        ],
-        "summary": "Refresh Hub Credential",
-        "tags": [
-          "auth"
-        ]
-      }
-    },
-    "/auth/hub/revoke": {
-      "post": {
-        "deprecated": true,
-        "description": "Requires HTTP Basic Hub client authentication and JSON containing token. Revokes the entire login token family, including all access and refresh generations. A previously rotated refresh token can revoke the family. Repeated requests, unknown tokens, and tokens belonging to another client return 204 without disclosing token validity. Subsequent authentication checks reject revoked tokens; already-authorized requests may finish. Other login sessions, legacy API keys, and the ORCID session are unaffected. The Hub must also delete its own session and browser cookie.",
-        "operationId": "revoke_hub_credential_auth_hub_revoke_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/HubRevokeRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "204": {
-            "description": "Revocation processed; no-store response",
-            "headers": {
-              "Cache-Control": {
-                "schema": {
-                  "const": "no-store",
-                  "type": "string"
-                }
-              },
-              "Pragma": {
-                "schema": {
-                  "const": "no-cache",
-                  "type": "string"
-                }
-              },
-              "Referrer-Policy": {
-                "schema": {
-                  "const": "no-referrer",
-                  "type": "string"
-                }
-              },
-              "X-Content-Type-Options": {
-                "schema": {
-                  "const": "nosniff",
-                  "type": "string"
-                }
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid client",
-            "headers": {
-              "Cache-Control": {
-                "schema": {
-                  "const": "no-store",
-                  "type": "string"
-                }
-              },
-              "Pragma": {
-                "schema": {
-                  "const": "no-cache",
-                  "type": "string"
-                }
-              },
-              "Referrer-Policy": {
-                "schema": {
-                  "const": "no-referrer",
-                  "type": "string"
-                }
-              },
-              "X-Content-Type-Options": {
-                "schema": {
-                  "const": "nosniff",
-                  "type": "string"
-                }
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Invalid authentication request; submitted values and validation context are omitted",
-            "headers": {
-              "Cache-Control": {
-                "schema": {
-                  "const": "no-store",
-                  "type": "string"
-                }
-              },
-              "Pragma": {
-                "schema": {
-                  "const": "no-cache",
-                  "type": "string"
-                }
-              },
-              "Referrer-Policy": {
-                "schema": {
-                  "const": "no-referrer",
-                  "type": "string"
-                }
-              },
-              "X-Content-Type-Options": {
-                "schema": {
-                  "const": "nosniff",
-                  "type": "string"
-                }
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "500": {
-            "description": "Authentication request failed; response contains no internal error details",
-            "headers": {
-              "Cache-Control": {
-                "schema": {
-                  "const": "no-store",
-                  "type": "string"
-                }
-              },
-              "Pragma": {
-                "schema": {
-                  "const": "no-cache",
-                  "type": "string"
-                }
-              },
-              "Referrer-Policy": {
-                "schema": {
-                  "const": "no-referrer",
-                  "type": "string"
-                }
-              },
-              "X-Content-Type-Options": {
-                "schema": {
-                  "const": "nosniff",
-                  "type": "string"
-                }
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "503": {
-            "description": "Hub sign-in unavailable",
-            "headers": {
-              "Cache-Control": {
-                "schema": {
-                  "const": "no-store",
-                  "type": "string"
-                }
-              },
-              "Pragma": {
-                "schema": {
-                  "const": "no-cache",
-                  "type": "string"
-                }
-              },
-              "Referrer-Policy": {
-                "schema": {
-                  "const": "no-referrer",
-                  "type": "string"
-                }
-              },
-              "X-Content-Type-Options": {
-                "schema": {
-                  "const": "nosniff",
-                  "type": "string"
-                }
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBasic": []
-          }
-        ],
-        "summary": "Revoke Hub Credential",
-        "tags": [
-          "auth"
-        ]
-      }
-    },
-    "/auth/hub/token": {
-      "post": {
-        "deprecated": true,
-        "description": "Deprecated: use POST /oauth/token with grant_type=authorization_code, which this calls. Kept for Hub releases before 1.8.0.",
-        "operationId": "exchange_hub_code_auth_hub_token_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/HubCodeExchangeRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HubTokenResponse"
-                }
-              }
-            },
-            "description": "Successful Response",
-            "headers": {
-              "Cache-Control": {
-                "schema": {
-                  "const": "no-store",
-                  "type": "string"
-                }
-              },
-              "Pragma": {
-                "schema": {
-                  "const": "no-cache",
-                  "type": "string"
-                }
-              },
-              "Referrer-Policy": {
-                "schema": {
-                  "const": "no-referrer",
-                  "type": "string"
-                }
-              },
-              "X-Content-Type-Options": {
-                "schema": {
-                  "const": "nosniff",
-                  "type": "string"
-                }
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid client or sign-in code",
-            "headers": {
-              "Cache-Control": {
-                "schema": {
-                  "const": "no-store",
-                  "type": "string"
-                }
-              },
-              "Pragma": {
-                "schema": {
-                  "const": "no-cache",
-                  "type": "string"
-                }
-              },
-              "Referrer-Policy": {
-                "schema": {
-                  "const": "no-referrer",
-                  "type": "string"
-                }
-              },
-              "X-Content-Type-Options": {
-                "schema": {
-                  "const": "nosniff",
-                  "type": "string"
-                }
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Invalid authentication request; submitted values and validation context are omitted",
-            "headers": {
-              "Cache-Control": {
-                "schema": {
-                  "const": "no-store",
-                  "type": "string"
-                }
-              },
-              "Pragma": {
-                "schema": {
-                  "const": "no-cache",
-                  "type": "string"
-                }
-              },
-              "Referrer-Policy": {
-                "schema": {
-                  "const": "no-referrer",
-                  "type": "string"
-                }
-              },
-              "X-Content-Type-Options": {
-                "schema": {
-                  "const": "nosniff",
-                  "type": "string"
-                }
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "500": {
-            "description": "Authentication request failed; response contains no internal error details",
-            "headers": {
-              "Cache-Control": {
-                "schema": {
-                  "const": "no-store",
-                  "type": "string"
-                }
-              },
-              "Pragma": {
-                "schema": {
-                  "const": "no-cache",
-                  "type": "string"
-                }
-              },
-              "Referrer-Policy": {
-                "schema": {
-                  "const": "no-referrer",
-                  "type": "string"
-                }
-              },
-              "X-Content-Type-Options": {
-                "schema": {
-                  "const": "nosniff",
-                  "type": "string"
-                }
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "503": {
-            "description": "Hub sign-in unavailable",
-            "headers": {
-              "Cache-Control": {
-                "schema": {
-                  "const": "no-store",
-                  "type": "string"
-                }
-              },
-              "Pragma": {
-                "schema": {
-                  "const": "no-cache",
-                  "type": "string"
-                }
-              },
-              "Referrer-Policy": {
-                "schema": {
-                  "const": "no-referrer",
-                  "type": "string"
-                }
-              },
-              "X-Content-Type-Options": {
-                "schema": {
-                  "const": "nosniff",
-                  "type": "string"
-                }
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "HTTPBasic": []
-          }
-        ],
-        "summary": "Exchange Hub Code",
-        "tags": [
-          "auth"
-        ]
-      }
-    },
-    "/auth/login": {
-      "get": {
-        "deprecated": true,
-        "description": "Removed: the browser pages that signed in with ORCID and handed out a single API key.",
-        "operationId": "removed_browser_key_flow_auth_login_get",
-        "responses": {
-          "410": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "This route was removed: `{\"detail\": {\"code\": \"route_removed\", \"message\": ...}}` names the replacement"
-          }
-        },
-        "summary": "Removed Browser Key Flow",
-        "tags": [
-          "auth"
         ]
       }
     },
@@ -15266,11 +13555,10 @@
         ]
       }
     },
-    "/datasets/{dataset_mfid}/carrier_segmentation": {
-      "post": {
-        "deprecated": true,
-        "description": "Deprecated: use POST /datasets/{dataset_mfid}/postprocess with pipeline \"carrier_segmentation\".",
-        "operationId": "request_carrier_segmentation_datasets__dataset_mfid__carrier_segmentation_post",
+    "/datasets/{dataset_mfid}/deleted_files": {
+      "get": {
+        "description": "Deleted files of the dataset that can still be restored, newest first. Requires admin on the dataset.",
+        "operationId": "list_deleted_files_datasets__dataset_mfid__deleted_files_get",
         "parameters": [
           {
             "description": "Dataset MFID.",
@@ -15281,6 +13569,29 @@
               "description": "Dataset MFID.",
               "title": "Dataset Mfid",
               "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 1000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
             }
           },
           {
@@ -15307,7 +13618,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PostprocessingRunRead"
+                  "$ref": "#/components/schemas/PaginatedResponse_DeletedFileRead_"
                 }
               }
             },
@@ -15336,9 +13647,6 @@
               }
             },
             "description": "Validation Error"
-          },
-          "501": {
-            "description": "Ingestion is not enabled on this server: `{\"detail\": {\"code\": \"feature_disabled\", \"feature\": \"ingestion\", \"message\": ...}}`"
           }
         },
         "security": [
@@ -15346,9 +13654,206 @@
             "HTTPBearer": []
           }
         ],
-        "summary": "Request Carrier Segmentation",
+        "summary": "List Deleted Files",
         "tags": [
-          "datasets"
+          "files"
+        ]
+      }
+    },
+    "/datasets/{dataset_mfid}/deleted_files/{file_mfid}": {
+      "delete": {
+        "description": "Ends a deleted file's grace period now: it can no longer be restored, and the next storage cleanup removes its content. Requires admin on the dataset.",
+        "operationId": "purge_deleted_file_datasets__dataset_mfid__deleted_files__file_mfid__delete",
+        "parameters": [
+          {
+            "description": "Dataset MFID.",
+            "in": "path",
+            "name": "dataset_mfid",
+            "required": true,
+            "schema": {
+              "description": "Dataset MFID.",
+              "title": "Dataset Mfid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "file_mfid",
+            "required": true,
+            "schema": {
+              "title": "File Mfid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "404": {
+            "description": "Dataset not found, or no deleted file with this MFID is kept (`not_in_trash`)"
+          },
+          "409": {
+            "description": "The dataset is pending deletion (`pending_deletion`)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Purge Deleted File",
+        "tags": [
+          "files"
+        ]
+      }
+    },
+    "/datasets/{dataset_mfid}/deleted_files/{file_mfid}/restore": {
+      "post": {
+        "description": "Restores a deleted file with its MFID, filename, content and ingestion requests, while its content is kept. Requires admin on the dataset.",
+        "operationId": "restore_deleted_file_datasets__dataset_mfid__deleted_files__file_mfid__restore_post",
+        "parameters": [
+          {
+            "description": "Dataset MFID.",
+            "in": "path",
+            "name": "dataset_mfid",
+            "required": true,
+            "schema": {
+              "description": "Dataset MFID.",
+              "title": "Dataset Mfid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "file_mfid",
+            "required": true,
+            "schema": {
+              "title": "File Mfid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssociatedFileRead"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "404": {
+            "description": "Dataset not found, or no deleted file with this MFID is kept (`not_in_trash`)"
+          },
+          "409": {
+            "description": "`{\"detail\": {\"code\": ..., \"message\": ...}}` with one of `not_in_trash`, `version_expired`, `dataset_pending_deletion`, `filename_exists`, `filename_reserved`, `version_missing_in_storage`, `version_size_mismatch`, or `pending_deletion`"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "description": "The file's store is not configured on this server, or the file has no store recorded yet: `{\"detail\": {\"code\": \"store_unavailable\", \"store_id\": ..., \"message\": ...}}`"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Restore Deleted File",
+        "tags": [
+          "files"
         ]
       }
     },
@@ -15643,143 +14148,6 @@
         ]
       }
     },
-    "/datasets/{dataset_mfid}/files/{file_id}/ingest": {
-      "post": {
-        "deprecated": true,
-        "description": "Removed: use POST /files/{file_id}/ingest.",
-        "operationId": "create_ds_file_ingestion_request_datasets__dataset_mfid__files__file_id__ingest_post",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "dataset_mfid",
-            "required": true,
-            "schema": {
-              "title": "Dataset Mfid",
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "file_id",
-            "required": true,
-            "schema": {
-              "title": "File Id",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "410": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "This route was removed: `{\"detail\": {\"code\": \"route_removed\", \"message\": ...}}` names the replacement"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Create Ds File Ingestion Request",
-        "tags": [
-          "datasets"
-        ]
-      }
-    },
-    "/datasets/{dataset_mfid}/insitu_spec_aggregation": {
-      "post": {
-        "deprecated": true,
-        "description": "Deprecated: use POST /datasets/{dataset_mfid}/postprocess with pipeline \"insitu_aggregation\".",
-        "operationId": "request_insitu_aggregation_datasets__dataset_mfid__insitu_spec_aggregation_post",
-        "parameters": [
-          {
-            "description": "Dataset MFID.",
-            "in": "path",
-            "name": "dataset_mfid",
-            "required": true,
-            "schema": {
-              "description": "Dataset MFID.",
-              "title": "Dataset Mfid",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
-            "in": "header",
-            "name": "Crucible-Privilege-Mode",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/PrivilegeMode"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
-              "title": "Crucible-Privilege-Mode"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PostprocessingRunRead"
-                }
-              }
-            },
-            "description": "Successful Response",
-            "headers": {
-              "Cache-Control": {
-                "$ref": "#/components/headers/PrivateCacheControl"
-              },
-              "Crucible-Privilege-Mode": {
-                "$ref": "#/components/headers/CruciblePrivilegeMode"
-              },
-              "Vary": {
-                "$ref": "#/components/headers/PrivilegeModeVary"
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          },
-          "501": {
-            "description": "Ingestion is not enabled on this server: `{\"detail\": {\"code\": \"feature_disabled\", \"feature\": \"ingestion\", \"message\": ...}}`"
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "summary": "Request Insitu Aggregation",
-        "tags": [
-          "datasets"
-        ]
-      }
-    },
     "/datasets/{dataset_mfid}/instrument": {
       "put": {
         "description": "Assign or reassign the dataset's instrument, by slug or MFID.\n\nOnly instrument_mfid is stored; the instrument's slug and name in responses\nare read from the instrument row.\n\nThe instrument's access group is granted contributor on the dataset, the\nsame grant dataset creation makes. Reassignment removes the grant belonging\nto the outgoing instrument's group only — resourceacl records no provenance,\nso a broader sweep could not tell a derived grant from a deliberate one.\n\nResubmitting the dataset's current instrument changes no columns but still\nensures the ACL row exists, which repairs datasets whose instrument columns\nwere backfilled without the accompanying grant.",
@@ -16046,92 +14414,6 @@
         ]
       }
     },
-    "/datasets/{dataset_mfid}/mosaic_stitch": {
-      "post": {
-        "deprecated": true,
-        "description": "Deprecated: use POST /datasets/{dataset_mfid}/postprocess with pipeline \"mosaic_stitch\".",
-        "operationId": "request_mosaic_stitch_datasets__dataset_mfid__mosaic_stitch_post",
-        "parameters": [
-          {
-            "description": "Dataset MFID.",
-            "in": "path",
-            "name": "dataset_mfid",
-            "required": true,
-            "schema": {
-              "description": "Dataset MFID.",
-              "title": "Dataset Mfid",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
-            "in": "header",
-            "name": "Crucible-Privilege-Mode",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/PrivilegeMode"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
-              "title": "Crucible-Privilege-Mode"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PostprocessingRunRead"
-                }
-              }
-            },
-            "description": "Successful Response",
-            "headers": {
-              "Cache-Control": {
-                "$ref": "#/components/headers/PrivateCacheControl"
-              },
-              "Crucible-Privilege-Mode": {
-                "$ref": "#/components/headers/CruciblePrivilegeMode"
-              },
-              "Vary": {
-                "$ref": "#/components/headers/PrivilegeModeVary"
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          },
-          "501": {
-            "description": "Ingestion is not enabled on this server: `{\"detail\": {\"code\": \"feature_disabled\", \"feature\": \"ingestion\", \"message\": ...}}`"
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "summary": "Request Mosaic Stitch",
-        "tags": [
-          "datasets"
-        ]
-      }
-    },
     "/datasets/{dataset_mfid}/postprocess": {
       "post": {
         "description": "Queue a postprocessing run on a dataset. Requires contributor access. Each request starts a new run unless it repeats an Idempotency-Key.",
@@ -16249,134 +14531,6 @@
         "summary": "Postprocess Dataset",
         "tags": [
           "postprocessing"
-        ]
-      }
-    },
-    "/datasets/{dataset_mfid}/rga_analysis": {
-      "post": {
-        "deprecated": true,
-        "description": "Deprecated: use POST /datasets/{dataset_mfid}/postprocess with pipeline \"rga_analysis\".",
-        "operationId": "request_rga_analysis_datasets__dataset_mfid__rga_analysis_post",
-        "parameters": [
-          {
-            "description": "Dataset MFID.",
-            "in": "path",
-            "name": "dataset_mfid",
-            "required": true,
-            "schema": {
-              "description": "Dataset MFID.",
-              "title": "Dataset Mfid",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
-            "in": "header",
-            "name": "Crucible-Privilege-Mode",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/PrivilegeMode"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
-              "title": "Crucible-Privilege-Mode"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PostprocessingRunRead"
-                }
-              }
-            },
-            "description": "Successful Response",
-            "headers": {
-              "Cache-Control": {
-                "$ref": "#/components/headers/PrivateCacheControl"
-              },
-              "Crucible-Privilege-Mode": {
-                "$ref": "#/components/headers/CruciblePrivilegeMode"
-              },
-              "Vary": {
-                "$ref": "#/components/headers/PrivilegeModeVary"
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          },
-          "501": {
-            "description": "Ingestion is not enabled on this server: `{\"detail\": {\"code\": \"feature_disabled\", \"feature\": \"ingestion\", \"message\": ...}}`"
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "summary": "Request Rga Analysis",
-        "tags": [
-          "datasets"
-        ]
-      }
-    },
-    "/datasets/{dataset_mfid}/samples": {
-      "get": {
-        "deprecated": true,
-        "description": "Removed: use GET /samples?dataset_mfid={dataset_mfid}.",
-        "operationId": "read_samples_in_dataset_datasets__dataset_mfid__samples_get",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "dataset_mfid",
-            "required": true,
-            "schema": {
-              "title": "Dataset Mfid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "410": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "This route was removed: `{\"detail\": {\"code\": \"route_removed\", \"message\": ...}}` names the replacement"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Read Samples In Dataset",
-        "tags": [
-          "datasets"
         ]
       }
     },
@@ -16929,132 +15083,6 @@
         "summary": "Update Thumbnail",
         "tags": [
           "datasets"
-        ]
-      }
-    },
-    "/datasets/{dataset_mfid}/upload/complete": {
-      "post": {
-        "deprecated": true,
-        "description": "Removed: the resumable and token uploads. Use the signed multipart routes under /datasets/{dataset_mfid}/upload/multipart.",
-        "operationId": "removed_legacy_upload_datasets__dataset_mfid__upload_complete_post",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "dataset_mfid",
-            "required": true,
-            "schema": {
-              "title": "Dataset Mfid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "410": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "This route was removed: `{\"detail\": {\"code\": \"route_removed\", \"message\": ...}}` names the replacement"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Removed Legacy Upload",
-        "tags": [
-          "storage"
-        ]
-      }
-    },
-    "/datasets/{dataset_mfid}/upload/initiate": {
-      "post": {
-        "deprecated": true,
-        "description": "Removed: the resumable and token uploads. Use the signed multipart routes under /datasets/{dataset_mfid}/upload/multipart.",
-        "operationId": "removed_legacy_upload_datasets__dataset_mfid__upload_initiate_post",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "dataset_mfid",
-            "required": true,
-            "schema": {
-              "title": "Dataset Mfid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "410": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "This route was removed: `{\"detail\": {\"code\": \"route_removed\", \"message\": ...}}` names the replacement"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Removed Legacy Upload",
-        "tags": [
-          "storage"
-        ]
-      }
-    },
-    "/datasets/{dataset_mfid}/upload/initiate/multipart": {
-      "post": {
-        "deprecated": true,
-        "description": "Removed: the resumable and token uploads. Use the signed multipart routes under /datasets/{dataset_mfid}/upload/multipart.",
-        "operationId": "removed_legacy_upload_datasets__dataset_mfid__upload_initiate_multipart_post",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "dataset_mfid",
-            "required": true,
-            "schema": {
-              "title": "Dataset Mfid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "410": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "This route was removed: `{\"detail\": {\"code\": \"route_removed\", \"message\": ...}}` names the replacement"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Removed Legacy Upload",
-        "tags": [
-          "storage"
         ]
       }
     },
@@ -19158,7 +17186,7 @@
     },
     "/files/{file_id}": {
       "delete": {
-        "description": "Deletes a file and its ingestion requests. Requires admin on the parent dataset.",
+        "description": "Deletes a file and its ingestion requests. Requires admin on the parent dataset. Stored content\nis kept for FILE_VERSION_RETENTION_DAYS, during which the file can be restored with its ingestion\nrequests (`POST /datasets/{dataset_mfid}/deleted_files/{file_mfid}/restore`).",
         "operationId": "delete_file_files__file_id__delete",
         "parameters": [
           {
@@ -19213,6 +17241,9 @@
                 "$ref": "#/components/headers/CrucibleRequestId"
               }
             }
+          },
+          "409": {
+            "description": "The dataset is pending deletion (`pending_deletion`), or a replacement of the file is in progress (`replace_in_progress`, with its `upload_id`)"
           },
           "422": {
             "content": {
@@ -19497,6 +17528,9 @@
           },
           "501": {
             "description": "File storage is not configured on this server: `{\"detail\": {\"code\": \"storage_not_configured\", \"message\": ...}}`"
+          },
+          "503": {
+            "description": "The file's store is not configured on this server, or the file has no store recorded yet: `{\"detail\": {\"code\": \"store_unavailable\", \"store_id\": ..., \"message\": ...}}`"
           }
         },
         "security": [
@@ -19618,7 +17652,7 @@
             "description": "Ingestion is not enabled on this server (`feature_disabled`, only for `status=requested`) or file storage is not configured (`storage_not_configured`)"
           },
           "503": {
-            "description": "The request could not be queued (`ingestion_unavailable`); it is recorded as failed"
+            "description": "The request could not be queued (`ingestion_unavailable`, recorded as failed), or the file's store is not available (`store_unavailable`, with `store_id`)"
           }
         },
         "security": [
@@ -19755,6 +17789,9 @@
           },
           "501": {
             "description": "Uploads is not enabled on this server: `{\"detail\": {\"code\": \"feature_disabled\", \"feature\": \"uploads\", \"message\": ...}}`"
+          },
+          "503": {
+            "description": "The file's store is not configured on this server, or the file has no store recorded yet: `{\"detail\": {\"code\": \"store_unavailable\", \"store_id\": ..., \"message\": ...}}`"
           }
         },
         "security": [
@@ -21479,6 +19516,198 @@
         ]
       }
     },
+    "/instruments/{instrument_ref}/settings": {
+      "get": {
+        "description": "The instrument's settings: `default_store_id`, the store uploads to its datasets use when neither the upload nor the dataset's project names one. Members read them.",
+        "operationId": "read_instrument_settings_instruments__instrument_ref__settings_get",
+        "parameters": [
+          {
+            "description": "Instrument MFID or instrument_id slug (case-insensitive).",
+            "in": "path",
+            "name": "instrument_ref",
+            "required": true,
+            "schema": {
+              "description": "Instrument MFID or instrument_id slug (case-insensitive).",
+              "title": "Instrument Ref",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceSettingsRead"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "ETag": {
+                "description": "Current settings revision; send it as `If-Match` on PATCH",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "412": {
+            "description": "If-Match does not match the current revision: `{\"detail\": {\"code\": \"etag_mismatch\", \"etag\": ..., \"message\": ...}}`"
+          },
+          "422": {
+            "description": "The patch is not an object, or the merged document has an unknown key, an unknown store (`unknown_store`), an invalid value, or exceeds 16 KiB"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Read Instrument Settings",
+        "tags": [
+          "instruments"
+        ]
+      },
+      "patch": {
+        "description": "Merge a JSON Merge Patch (RFC 7396) into the instrument's settings; `null` removes a key. Requires admin on the instrument. Send `If-Match` with the ETag from GET to refuse the change when another write happened first.",
+        "operationId": "update_instrument_settings_instruments__instrument_ref__settings_patch",
+        "parameters": [
+          {
+            "description": "Instrument MFID or instrument_id slug (case-insensitive).",
+            "in": "path",
+            "name": "instrument_ref",
+            "required": true,
+            "schema": {
+              "description": "Instrument MFID or instrument_id slug (case-insensitive).",
+              "title": "Instrument Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "if-match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          },
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "Patch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceSettingsRead"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "ETag": {
+                "description": "Current settings revision; send it as `If-Match` on PATCH",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "412": {
+            "description": "If-Match does not match the current revision: `{\"detail\": {\"code\": \"etag_mismatch\", \"etag\": ..., \"message\": ...}}`"
+          },
+          "422": {
+            "description": "The patch is not an object, or the merged document has an unknown key, an unknown store (`unknown_store`), an invalid value, or exceeds 16 KiB"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update Instrument Settings",
+        "tags": [
+          "instruments"
+        ]
+      }
+    },
     "/instruments/{instrument_ref}/status": {
       "post": {
         "description": "Change an instrument's lifecycle status.\n\nIts own route rather than a field on PATCH: decommissioning is a lifecycle\ntransition, not a metadata edit, and carries a higher bar. An instrument with\ndatasets cannot be deleted, so this is how one is retired.",
@@ -23025,27 +21254,6 @@
         ]
       }
     },
-    "/login": {
-      "get": {
-        "deprecated": true,
-        "description": "Removed: the browser pages that signed in with ORCID and handed out a single API key.",
-        "operationId": "removed_browser_key_flow_login_get",
-        "responses": {
-          "410": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "This route was removed: `{\"detail\": {\"code\": \"route_removed\", \"message\": ...}}` names the replacement"
-          }
-        },
-        "summary": "Removed Browser Key Flow",
-        "tags": [
-          "auth"
-        ]
-      }
-    },
     "/metrics": {
       "get": {
         "description": "Endpoint that serves Prometheus metrics.",
@@ -23501,6 +21709,79 @@
           }
         },
         "summary": "Finish Provider Login",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/oauth/code": {
+      "get": {
+        "description": "Where a public client's sign-in ends when it asked for `redirect_uri` set to this page, because\nthe browser cannot reach the program on its computer (Chrome's local network rules, WSL, SSH).\nThe person copies the code into the program, which redeems it with its PKCE verifier; without\nthat verifier the code is useless.",
+        "operationId": "show_sign_in_code_oauth_code_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "code",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 128,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Code"
+            }
+          },
+          {
+            "in": "query",
+            "name": "error",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 64,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Error"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "The sign-in code to copy, or why there is none",
+            "headers": {
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Show Sign In Code",
         "tags": [
           "auth"
         ]
@@ -25971,6 +24252,198 @@
         ]
       }
     },
+    "/projects/{project_ref}/settings": {
+      "get": {
+        "description": "The project's settings: `default_store_id`, the store uploads to its datasets use unless an upload names one. Members read them.",
+        "operationId": "read_project_settings_projects__project_ref__settings_get",
+        "parameters": [
+          {
+            "description": "Project MFID or project_id slug (case-insensitive).",
+            "in": "path",
+            "name": "project_ref",
+            "required": true,
+            "schema": {
+              "description": "Project MFID or project_id slug (case-insensitive).",
+              "title": "Project Ref",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceSettingsRead"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "ETag": {
+                "description": "Current settings revision; send it as `If-Match` on PATCH",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "412": {
+            "description": "If-Match does not match the current revision: `{\"detail\": {\"code\": \"etag_mismatch\", \"etag\": ..., \"message\": ...}}`"
+          },
+          "422": {
+            "description": "The patch is not an object, or the merged document has an unknown key, an unknown store (`unknown_store`), an invalid value, or exceeds 16 KiB"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Read Project Settings",
+        "tags": [
+          "projects"
+        ]
+      },
+      "patch": {
+        "description": "Merge a JSON Merge Patch (RFC 7396) into the project's settings; `null` removes a key. Requires admin on the project. Send `If-Match` with the ETag from GET to refuse the change when another write happened first.",
+        "operationId": "update_project_settings_projects__project_ref__settings_patch",
+        "parameters": [
+          {
+            "description": "Project MFID or project_id slug (case-insensitive).",
+            "in": "path",
+            "name": "project_ref",
+            "required": true,
+            "schema": {
+              "description": "Project MFID or project_id slug (case-insensitive).",
+              "title": "Project Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "if-match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-Match"
+            }
+          },
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "title": "Patch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResourceSettingsRead"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "ETag": {
+                "description": "Current settings revision; send it as `If-Match` on PATCH",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "412": {
+            "description": "If-Match does not match the current revision: `{\"detail\": {\"code\": \"etag_mismatch\", \"etag\": ..., \"message\": ...}}`"
+          },
+          "422": {
+            "description": "The patch is not an object, or the merged document has an unknown key, an unknown store (`unknown_store`), an invalid value, or exceeds 16 KiB"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Update Project Settings",
+        "tags": [
+          "projects"
+        ]
+      }
+    },
     "/projects/{project_ref}/users": {
       "get": {
         "description": "Returns a paginated list of users associated with the project ID.\nAccessible by admins and members of the project.",
@@ -27291,195 +25764,6 @@
           }
         ],
         "summary": "Set Resource Access",
-        "tags": [
-          "resources"
-        ]
-      }
-    },
-    "/resources/{mfid}/access_groups": {
-      "get": {
-        "deprecated": true,
-        "operationId": "read_resource_acl_resources__mfid__access_groups_get",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "mfid",
-            "required": true,
-            "schema": {
-              "title": "Mfid",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
-            "in": "header",
-            "name": "Crucible-Privilege-Mode",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/PrivilegeMode"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
-              "title": "Crucible-Privilege-Mode"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/AccessGroupRead"
-                  },
-                  "title": "Response Read Resource Acl Resources  Mfid  Access Groups Get",
-                  "type": "array"
-                }
-              }
-            },
-            "description": "Successful Response",
-            "headers": {
-              "Cache-Control": {
-                "$ref": "#/components/headers/PrivateCacheControl"
-              },
-              "Crucible-Privilege-Mode": {
-                "$ref": "#/components/headers/CruciblePrivilegeMode"
-              },
-              "Vary": {
-                "$ref": "#/components/headers/PrivilegeModeVary"
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "summary": "Read Resource Acl",
-        "tags": [
-          "resources"
-        ]
-      },
-      "post": {
-        "deprecated": true,
-        "operationId": "create_resource_acl_resources__mfid__access_groups_post",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "mfid",
-            "required": true,
-            "schema": {
-              "title": "Mfid",
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "group_name",
-            "required": true,
-            "schema": {
-              "title": "Group Name",
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "read",
-            "required": true,
-            "schema": {
-              "title": "Read",
-              "type": "boolean"
-            }
-          },
-          {
-            "in": "query",
-            "name": "write",
-            "required": true,
-            "schema": {
-              "title": "Write",
-              "type": "boolean"
-            }
-          },
-          {
-            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
-            "in": "header",
-            "name": "Crucible-Privilege-Mode",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/PrivilegeMode"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
-              "title": "Crucible-Privilege-Mode"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ResourceAccessGroupRead"
-                }
-              }
-            },
-            "description": "Successful Response",
-            "headers": {
-              "Cache-Control": {
-                "$ref": "#/components/headers/PrivateCacheControl"
-              },
-              "Crucible-Privilege-Mode": {
-                "$ref": "#/components/headers/CruciblePrivilegeMode"
-              },
-              "Vary": {
-                "$ref": "#/components/headers/PrivilegeModeVary"
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "summary": "Create Resource Acl",
         "tags": [
           "resources"
         ]
@@ -30978,24 +29262,78 @@
         ]
       }
     },
-    "/user_apikey": {
+    "/storage/stores": {
       "get": {
-        "deprecated": true,
-        "description": "Removed: the browser pages that signed in with ORCID and handed out a single API key.",
-        "operationId": "removed_browser_key_flow_user_apikey_get",
+        "description": "The stores this server can keep files in, with the one uploads use unless another is chosen.",
+        "operationId": "list_stores_storage_stores_get",
+        "parameters": [
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
         "responses": {
-          "410": {
+          "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StoreRead"
+                  },
+                  "title": "Response List Stores Storage Stores Get",
+                  "type": "array"
+                }
               }
             },
-            "description": "This route was removed: `{\"detail\": {\"code\": \"route_removed\", \"message\": ...}}` names the replacement"
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
-        "summary": "Removed Browser Key Flow",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Stores",
         "tags": [
-          "auth"
+          "storage"
         ]
       }
     },
@@ -31501,48 +29839,6 @@
         ]
       }
     },
-    "/users/by-username/{username}": {
-      "get": {
-        "deprecated": true,
-        "description": "Removed: use GET /users/{user_ref}, which takes a username.",
-        "operationId": "get_user_by_username_users_by_username__username__get",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "username",
-            "required": true,
-            "schema": {
-              "title": "Username",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "410": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "This route was removed: `{\"detail\": {\"code\": \"route_removed\", \"message\": ...}}` names the replacement"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Get User By Username",
-        "tags": [
-          "users"
-        ]
-      }
-    },
     "/users/resolve": {
       "post": {
         "deprecated": true,
@@ -32009,188 +30305,6 @@
         ]
       }
     },
-    "/users/{user_ref}/access_groups/{group_name}": {
-      "delete": {
-        "deprecated": true,
-        "description": "Remove a user from an access group. Not for project groups. Use\nDELETE /projects/{project_ref}/users/{user_ref}, which keeps membership records\nin step instead of only revoking access-group standing.",
-        "operationId": "remove_user_from_access_group_users__user_ref__access_groups__group_name__delete",
-        "parameters": [
-          {
-            "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
-            "in": "path",
-            "name": "user_ref",
-            "required": true,
-            "schema": {
-              "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
-              "title": "User Ref",
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "group_name",
-            "required": true,
-            "schema": {
-              "title": "Group Name",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
-            "in": "header",
-            "name": "Crucible-Privilege-Mode",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/PrivilegeMode"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
-              "title": "Crucible-Privilege-Mode"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DetailResponse"
-                }
-              }
-            },
-            "description": "Successful Response",
-            "headers": {
-              "Cache-Control": {
-                "$ref": "#/components/headers/PrivateCacheControl"
-              },
-              "Crucible-Privilege-Mode": {
-                "$ref": "#/components/headers/CruciblePrivilegeMode"
-              },
-              "Vary": {
-                "$ref": "#/components/headers/PrivilegeModeVary"
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "summary": "Remove User From Access Group",
-        "tags": [
-          "users"
-        ]
-      },
-      "post": {
-        "deprecated": true,
-        "description": "Add a user to an access group. Not for project groups. Use\nPOST /projects/{project_ref}/users/{user_ref}, which applies the project's own\nrole cap instead of platform-admin-only.",
-        "operationId": "add_user_to_access_group_users__user_ref__access_groups__group_name__post",
-        "parameters": [
-          {
-            "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
-            "in": "path",
-            "name": "user_ref",
-            "required": true,
-            "schema": {
-              "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
-              "title": "User Ref",
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "group_name",
-            "required": true,
-            "schema": {
-              "title": "Group Name",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
-            "in": "header",
-            "name": "Crucible-Privilege-Mode",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/PrivilegeMode"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
-              "title": "Crucible-Privilege-Mode"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AccessGroupRead"
-                }
-              }
-            },
-            "description": "Successful Response",
-            "headers": {
-              "Cache-Control": {
-                "$ref": "#/components/headers/PrivateCacheControl"
-              },
-              "Crucible-Privilege-Mode": {
-                "$ref": "#/components/headers/CruciblePrivilegeMode"
-              },
-              "Vary": {
-                "$ref": "#/components/headers/PrivilegeModeVary"
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "summary": "Add User To Access Group",
-        "tags": [
-          "users"
-        ]
-      }
-    },
     "/users/{user_ref}/apikey": {
       "delete": {
         "description": "Revoke every API key held by the user. Platform administrators only; another human administrator's keys need a Hub session with a recent sign-in. 204 on success.",
@@ -32261,171 +30375,6 @@
           }
         ],
         "summary": "Delete User Apikey",
-        "tags": [
-          "users"
-        ]
-      },
-      "post": {
-        "deprecated": true,
-        "description": "Removed: people create their own keys with POST /account/apikeys.",
-        "operationId": "get_or_provision_user_apikey_users__user_ref__apikey_post",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "user_ref",
-            "required": true,
-            "schema": {
-              "title": "User Ref",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "410": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "This route was removed: `{\"detail\": {\"code\": \"route_removed\", \"message\": ...}}` names the replacement"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Get Or Provision User Apikey",
-        "tags": [
-          "users"
-        ]
-      }
-    },
-    "/users/{user_ref}/apikey/regenerate": {
-      "post": {
-        "deprecated": true,
-        "description": "Removed: administrators revoke keys with DELETE /users/{user_ref}/apikeys/{key_id}.",
-        "operationId": "regenerate_user_apikey_users__user_ref__apikey_regenerate_post",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "user_ref",
-            "required": true,
-            "schema": {
-              "title": "User Ref",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "410": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "This route was removed: `{\"detail\": {\"code\": \"route_removed\", \"message\": ...}}` names the replacement"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Regenerate User Apikey",
-        "tags": [
-          "users"
-        ]
-      }
-    },
-    "/users/{user_ref}/apikey/verify": {
-      "get": {
-        "deprecated": true,
-        "description": "Returns validity and expiry info for the given user's API key. Admin only.\n\nDeprecated: administrators get the same status as `api_key_status` from GET /users/{user_ref}.",
-        "operationId": "verify_user_apikey_users__user_ref__apikey_verify_get",
-        "parameters": [
-          {
-            "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
-            "in": "path",
-            "name": "user_ref",
-            "required": true,
-            "schema": {
-              "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
-              "title": "User Ref",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
-            "in": "header",
-            "name": "Crucible-Privilege-Mode",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/PrivilegeMode"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
-              "title": "Crucible-Privilege-Mode"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiKeyVerify"
-                }
-              }
-            },
-            "description": "Successful Response",
-            "headers": {
-              "Cache-Control": {
-                "$ref": "#/components/headers/PrivateCacheControl"
-              },
-              "Crucible-Privilege-Mode": {
-                "$ref": "#/components/headers/CruciblePrivilegeMode"
-              },
-              "Vary": {
-                "$ref": "#/components/headers/PrivilegeModeVary"
-              },
-              "X-Request-ID": {
-                "$ref": "#/components/headers/CrucibleRequestId"
-              }
-            }
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "summary": "Verify User Apikey",
         "tags": [
           "users"
         ]
@@ -32842,48 +30791,6 @@
         "summary": "List User Auth Events",
         "tags": [
           "account"
-        ]
-      }
-    },
-    "/users/{user_ref}/datasets": {
-      "get": {
-        "deprecated": true,
-        "description": "Removed: use GET /datasets?accessible_to_user={user_ref}.",
-        "operationId": "read_user_datasets_users__user_ref__datasets_get",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "user_ref",
-            "required": true,
-            "schema": {
-              "title": "User Ref",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "410": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "This route was removed: `{\"detail\": {\"code\": \"route_removed\", \"message\": ...}}` names the replacement"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Read User Datasets",
-        "tags": [
-          "users"
         ]
       }
     },
@@ -33908,48 +31815,6 @@
           }
         ],
         "summary": "Reject User",
-        "tags": [
-          "users"
-        ]
-      }
-    },
-    "/users/{user_ref}/samples": {
-      "get": {
-        "deprecated": true,
-        "description": "Removed: use GET /samples?accessible_to_user={user_ref}.",
-        "operationId": "read_user_samples_users__user_ref__samples_get",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "user_ref",
-            "required": true,
-            "schema": {
-              "title": "User Ref",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "410": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "This route was removed: `{\"detail\": {\"code\": \"route_removed\", \"message\": ...}}` names the replacement"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Read User Samples",
         "tags": [
           "users"
         ]

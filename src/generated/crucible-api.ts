@@ -25,81 +25,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/access_groups": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Create Access Group */
-        post: operations["create_access_group_access_groups_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/access_groups/{group_name}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Read Access Group */
-        get: operations["read_access_group_access_groups__group_name__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/access_groups/{group_name}/join": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Request To Join Access Group
-         * @deprecated
-         * @description Deprecated: use POST /projects/{project_ref}/join_requests. group_name takes a project slug or MFID.
-         */
-        post: operations["request_to_join_access_group_access_groups__group_name__join_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/access_groups/{group_name}/users": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Access Group Users
-         * @description List all users who are members of the given access group, with their role. Admin only.
-         */
-        get: operations["list_access_group_users_access_groups__group_name__users_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/account": {
         parameters: {
             query?: never;
@@ -114,48 +39,6 @@ export interface paths {
         get: operations["get_account_info_account_get"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/account/apikey": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Account Apikey
-         * @deprecated
-         * @description Removed: API keys are stored hashed and cannot be read back. Use POST /account/apikeys.
-         */
-        get: operations["get_account_apikey_account_apikey_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/account/apikey/regenerate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Regenerate Account Apikey
-         * @deprecated
-         * @description Removed: create keys with POST /account/apikeys and revoke them with DELETE /account/apikeys/{key_id}.
-         */
-        post: operations["regenerate_account_apikey_account_apikey_regenerate_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -290,27 +173,6 @@ export interface paths {
          *     the link with POST /oauth/link/preview and /oauth/link/confirm.
          */
         post: operations["start_account_link_account_identities__provider_key__link_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/account/join_requests": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Account Join Requests
-         * @deprecated
-         * @description Deprecated: use GET /join_requests?scope=submitted.
-         */
-        get: operations["get_account_join_requests_account_join_requests_get"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -522,216 +384,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/auth": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Removed Browser Key Flow
-         * @deprecated
-         * @description Removed: the browser pages that signed in with ORCID and handed out a single API key.
-         */
-        get: operations["removed_browser_key_flow_auth_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/apikey": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Removed Browser Key Flow
-         * @deprecated
-         * @description Removed: the browser pages that signed in with ORCID and handed out a single API key.
-         */
-        get: operations["removed_browser_key_flow_auth_apikey_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/apikey/regenerate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Removed Browser Key Flow
-         * @deprecated
-         * @description Removed: the browser pages that signed in with ORCID and handed out a single API key.
-         */
-        post: operations["removed_browser_key_flow_auth_apikey_regenerate_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/callback": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Removed Browser Key Flow
-         * @deprecated
-         * @description Removed: the browser pages that signed in with ORCID and handed out a single API key.
-         */
-        get: operations["removed_browser_key_flow_auth_callback_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/hub/callback": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Finish Hub Login
-         * @deprecated
-         * @description Deprecated: the provider callback for an ORCID application registered with this address (`legacy_callback`). New registrations use GET /oauth/callback/{key}.
-         */
-        get: operations["finish_hub_login_auth_hub_callback_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/hub/login": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Begin Hub Login
-         * @deprecated
-         * @description Deprecated: use GET /oauth/authorize with response_type=code, which this calls. Kept for Hub releases before 1.8.0.
-         */
-        get: operations["begin_hub_login_auth_hub_login_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/hub/refresh": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Refresh Hub Credential
-         * @deprecated
-         * @description Deprecated: use POST /oauth/token with grant_type=refresh_token, which this calls. Kept for Hub releases before 1.8.0.
-         */
-        post: operations["refresh_hub_credential_auth_hub_refresh_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/hub/revoke": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Revoke Hub Credential
-         * @deprecated
-         * @description Requires HTTP Basic Hub client authentication and JSON containing token. Revokes the entire login token family, including all access and refresh generations. A previously rotated refresh token can revoke the family. Repeated requests, unknown tokens, and tokens belonging to another client return 204 without disclosing token validity. Subsequent authentication checks reject revoked tokens; already-authorized requests may finish. Other login sessions, legacy API keys, and the ORCID session are unaffected. The Hub must also delete its own session and browser cookie.
-         */
-        post: operations["revoke_hub_credential_auth_hub_revoke_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/hub/token": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Exchange Hub Code
-         * @deprecated
-         * @description Deprecated: use POST /oauth/token with grant_type=authorization_code, which this calls. Kept for Hub releases before 1.8.0.
-         */
-        post: operations["exchange_hub_code_auth_hub_token_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/login": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Removed Browser Key Flow
-         * @deprecated
-         * @description Removed: the browser pages that signed in with ORCID and handed out a single API key.
-         */
-        get: operations["removed_browser_key_flow_auth_login_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/auth/methods": {
         parameters: {
             query?: never;
@@ -912,7 +564,47 @@ export interface paths {
         patch: operations["update_dataset_datasets__dataset_mfid__patch"];
         trace?: never;
     };
-    "/datasets/{dataset_mfid}/carrier_segmentation": {
+    "/datasets/{dataset_mfid}/deleted_files": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Deleted Files
+         * @description Deleted files of the dataset that can still be restored, newest first. Requires admin on the dataset.
+         */
+        get: operations["list_deleted_files_datasets__dataset_mfid__deleted_files_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/datasets/{dataset_mfid}/deleted_files/{file_mfid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Purge Deleted File
+         * @description Ends a deleted file's grace period now: it can no longer be restored, and the next storage cleanup removes its content. Requires admin on the dataset.
+         */
+        delete: operations["purge_deleted_file_datasets__dataset_mfid__deleted_files__file_mfid__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/datasets/{dataset_mfid}/deleted_files/{file_mfid}/restore": {
         parameters: {
             query?: never;
             header?: never;
@@ -922,11 +614,10 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Request Carrier Segmentation
-         * @deprecated
-         * @description Deprecated: use POST /datasets/{dataset_mfid}/postprocess with pipeline "carrier_segmentation".
+         * Restore Deleted File
+         * @description Restores a deleted file with its MFID, filename, content and ingestion requests, while its content is kept. Requires admin on the dataset.
          */
-        post: operations["request_carrier_segmentation_datasets__dataset_mfid__carrier_segmentation_post"];
+        post: operations["restore_deleted_file_datasets__dataset_mfid__deleted_files__file_mfid__restore_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -978,48 +669,6 @@ export interface paths {
          *     Requires contributor access.
          */
         post: operations["add_associated_file_datasets__dataset_mfid__files_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/datasets/{dataset_mfid}/files/{file_id}/ingest": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Create Ds File Ingestion Request
-         * @deprecated
-         * @description Removed: use POST /files/{file_id}/ingest.
-         */
-        post: operations["create_ds_file_ingestion_request_datasets__dataset_mfid__files__file_id__ingest_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/datasets/{dataset_mfid}/insitu_spec_aggregation": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Request Insitu Aggregation
-         * @deprecated
-         * @description Deprecated: use POST /datasets/{dataset_mfid}/postprocess with pipeline "insitu_aggregation".
-         */
-        post: operations["request_insitu_aggregation_datasets__dataset_mfid__insitu_spec_aggregation_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1081,27 +730,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/datasets/{dataset_mfid}/mosaic_stitch": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Request Mosaic Stitch
-         * @deprecated
-         * @description Deprecated: use POST /datasets/{dataset_mfid}/postprocess with pipeline "mosaic_stitch".
-         */
-        post: operations["request_mosaic_stitch_datasets__dataset_mfid__mosaic_stitch_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/datasets/{dataset_mfid}/postprocess": {
         parameters: {
             query?: never;
@@ -1116,48 +744,6 @@ export interface paths {
          * @description Queue a postprocessing run on a dataset. Requires contributor access. Each request starts a new run unless it repeats an Idempotency-Key.
          */
         post: operations["postprocess_dataset_datasets__dataset_mfid__postprocess_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/datasets/{dataset_mfid}/rga_analysis": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Request Rga Analysis
-         * @deprecated
-         * @description Deprecated: use POST /datasets/{dataset_mfid}/postprocess with pipeline "rga_analysis".
-         */
-        post: operations["request_rga_analysis_datasets__dataset_mfid__rga_analysis_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/datasets/{dataset_mfid}/samples": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Read Samples In Dataset
-         * @deprecated
-         * @description Removed: use GET /samples?dataset_mfid={dataset_mfid}.
-         */
-        get: operations["read_samples_in_dataset_datasets__dataset_mfid__samples_get"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1234,69 +820,6 @@ export interface paths {
         head?: never;
         /** Update Thumbnail */
         patch: operations["update_thumbnail_datasets__dataset_mfid__thumbnails__thumbnail_id__patch"];
-        trace?: never;
-    };
-    "/datasets/{dataset_mfid}/upload/complete": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Removed Legacy Upload
-         * @deprecated
-         * @description Removed: the resumable and token uploads. Use the signed multipart routes under /datasets/{dataset_mfid}/upload/multipart.
-         */
-        post: operations["removed_legacy_upload_datasets__dataset_mfid__upload_complete_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/datasets/{dataset_mfid}/upload/initiate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Removed Legacy Upload
-         * @deprecated
-         * @description Removed: the resumable and token uploads. Use the signed multipart routes under /datasets/{dataset_mfid}/upload/multipart.
-         */
-        post: operations["removed_legacy_upload_datasets__dataset_mfid__upload_initiate_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/datasets/{dataset_mfid}/upload/initiate/multipart": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Removed Legacy Upload
-         * @deprecated
-         * @description Removed: the resumable and token uploads. Use the signed multipart routes under /datasets/{dataset_mfid}/upload/multipart.
-         */
-        post: operations["removed_legacy_upload_datasets__dataset_mfid__upload_initiate_multipart_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
         trace?: never;
     };
     "/datasets/{dataset_mfid}/upload/multipart/complete": {
@@ -1628,7 +1151,9 @@ export interface paths {
         post?: never;
         /**
          * Delete File
-         * @description Deletes a file and its ingestion requests. Requires admin on the parent dataset.
+         * @description Deletes a file and its ingestion requests. Requires admin on the parent dataset. Stored content
+         *     is kept for FILE_VERSION_RETENTION_DAYS, during which the file can be restored with its ingestion
+         *     requests (`POST /datasets/{dataset_mfid}/deleted_files/{file_mfid}/restore`).
          */
         delete: operations["delete_file_files__file_id__delete"];
         options?: never;
@@ -1968,6 +1493,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/instruments/{instrument_ref}/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Instrument Settings
+         * @description The instrument's settings: `default_store_id`, the store uploads to its datasets use when neither the upload nor the dataset's project names one. Members read them.
+         */
+        get: operations["read_instrument_settings_instruments__instrument_ref__settings_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Instrument Settings
+         * @description Merge a JSON Merge Patch (RFC 7396) into the instrument's settings; `null` removes a key. Requires admin on the instrument. Send `If-Match` with the ETag from GET to refuse the change when another write happened first.
+         */
+        patch: operations["update_instrument_settings_instruments__instrument_ref__settings_patch"];
+        trace?: never;
+    };
     "/instruments/{instrument_ref}/status": {
         parameters: {
             query?: never;
@@ -2172,27 +1721,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/login": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Removed Browser Key Flow
-         * @deprecated
-         * @description Removed: the browser pages that signed in with ORCID and handed out a single API key.
-         */
-        get: operations["removed_browser_key_flow_login_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/metrics": {
         parameters: {
             query?: never;
@@ -2247,6 +1775,29 @@ export interface paths {
          * @description Where a provider sends the browser back after sign-in: register `<API address>/oauth/callback/{key}` with the provider.
          */
         get: operations["finish_provider_login_oauth_callback__key__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/oauth/code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Show Sign In Code
+         * @description Where a public client's sign-in ends when it asked for `redirect_uri` set to this page, because
+         *     the browser cannot reach the program on its computer (Chrome's local network rules, WSL, SSH).
+         *     The person copies the code into the program, which redeems it with its PKCE verifier; without
+         *     that verifier the code is useless.
+         */
+        get: operations["show_sign_in_code_oauth_code_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2774,6 +2325,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/projects/{project_ref}/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Read Project Settings
+         * @description The project's settings: `default_store_id`, the store uploads to its datasets use unless an upload names one. Members read them.
+         */
+        get: operations["read_project_settings_projects__project_ref__settings_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Project Settings
+         * @description Merge a JSON Merge Patch (RFC 7396) into the project's settings; `null` removes a key. Requires admin on the project. Send `If-Match` with the ETag from GET to refuse the change when another write happened first.
+         */
+        patch: operations["update_project_settings_projects__project_ref__settings_patch"];
+        trace?: never;
+    };
     "/projects/{project_ref}/users": {
         parameters: {
             query?: never;
@@ -2971,30 +2546,6 @@ export interface paths {
          *     nobody able to transfer it or manage its ACL again. Use transfer_ownership.
          */
         delete: operations["revoke_resource_access_resources__mfid__access__kind___principal__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/resources/{mfid}/access_groups": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Read Resource Acl
-         * @deprecated
-         */
-        get: operations["read_resource_acl_resources__mfid__access_groups_get"];
-        put?: never;
-        /**
-         * Create Resource Acl
-         * @deprecated
-         */
-        post: operations["create_resource_acl_resources__mfid__access_groups_post"];
-        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -3400,7 +2951,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/user_apikey": {
+    "/storage/stores": {
         parameters: {
             query?: never;
             header?: never;
@@ -3408,11 +2959,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Removed Browser Key Flow
-         * @deprecated
-         * @description Removed: the browser pages that signed in with ORCID and handed out a single API key.
+         * List Stores
+         * @description The stores this server can keep files in, with the one uploads use unless another is chosen.
          */
-        get: operations["removed_browser_key_flow_user_apikey_get"];
+        get: operations["list_stores_storage_stores_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3442,27 +2992,6 @@ export interface paths {
         put?: never;
         /** Create User */
         post: operations["create_user_users_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/users/by-username/{username}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get User By Username
-         * @deprecated
-         * @description Removed: use GET /users/{user_ref}, which takes a username.
-         */
-        get: operations["get_user_by_username_users_by_username__username__get"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -3554,36 +3083,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/users/{user_ref}/access_groups/{group_name}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Add User To Access Group
-         * @deprecated
-         * @description Add a user to an access group. Not for project groups. Use
-         *     POST /projects/{project_ref}/users/{user_ref}, which applies the project's own
-         *     role cap instead of platform-admin-only.
-         */
-        post: operations["add_user_to_access_group_users__user_ref__access_groups__group_name__post"];
-        /**
-         * Remove User From Access Group
-         * @deprecated
-         * @description Remove a user from an access group. Not for project groups. Use
-         *     DELETE /projects/{project_ref}/users/{user_ref}, which keeps membership records
-         *     in step instead of only revoking access-group standing.
-         */
-        delete: operations["remove_user_from_access_group_users__user_ref__access_groups__group_name__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/users/{user_ref}/apikey": {
         parameters: {
             query?: never;
@@ -3593,61 +3092,12 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /**
-         * Get Or Provision User Apikey
-         * @deprecated
-         * @description Removed: people create their own keys with POST /account/apikeys.
-         */
-        post: operations["get_or_provision_user_apikey_users__user_ref__apikey_post"];
+        post?: never;
         /**
          * Delete User Apikey
          * @description Revoke every API key held by the user. Platform administrators only; another human administrator's keys need a Hub session with a recent sign-in. 204 on success.
          */
         delete: operations["delete_user_apikey_users__user_ref__apikey_delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/users/{user_ref}/apikey/regenerate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Regenerate User Apikey
-         * @deprecated
-         * @description Removed: administrators revoke keys with DELETE /users/{user_ref}/apikeys/{key_id}.
-         */
-        post: operations["regenerate_user_apikey_users__user_ref__apikey_regenerate_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/users/{user_ref}/apikey/verify": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Verify User Apikey
-         * @deprecated
-         * @description Returns validity and expiry info for the given user's API key. Admin only.
-         *
-         *     Deprecated: administrators get the same status as `api_key_status` from GET /users/{user_ref}.
-         */
-        get: operations["verify_user_apikey_users__user_ref__apikey_verify_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -3726,27 +3176,6 @@ export interface paths {
          *     only; waiting accounts included.
          */
         get: operations["list_user_auth_events_users__user_ref__auth_events_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/users/{user_ref}/datasets": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Read User Datasets
-         * @deprecated
-         * @description Removed: use GET /datasets?accessible_to_user={user_ref}.
-         */
-        get: operations["read_user_datasets_users__user_ref__datasets_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3971,27 +3400,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/users/{user_ref}/samples": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Read User Samples
-         * @deprecated
-         * @description Removed: use GET /samples?accessible_to_user={user_ref}.
-         */
-        get: operations["read_user_samples_users__user_ref__samples_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/users/{user_ref}/sessions": {
         parameters: {
             query?: never;
@@ -4063,14 +3471,6 @@ export interface components {
             permission: components["schemas"]["AccessPermission"];
         };
         /**
-         * AccessGroupCreate
-         * @description Fields required to create a new access group.
-         */
-        AccessGroupCreate: {
-            /** Group Name */
-            group_name: string;
-        };
-        /**
          * AccessGroupMemberRead
          * @description A public-safe group member profile plus their standing role.
          */
@@ -4102,16 +3502,6 @@ export interface components {
             user_capabilities?: components["schemas"]["UserCapabilities"] | null;
             /** Username */
             username?: string | null;
-        };
-        /**
-         * AccessGroupRead
-         * @description Response model for AccessGroup.
-         */
-        AccessGroupRead: {
-            /** Group Name */
-            group_name: string;
-            /** Id */
-            id: number;
         };
         /**
          * AccessPermission
@@ -4297,13 +3687,6 @@ export interface components {
             last_used_at?: string | null;
             /** Name */
             name?: string | null;
-            /**
-             * Older Routes
-             * @deprecated
-             * @description Deprecated: always false, since the single-key routes are gone. Removed in a later release.
-             * @default false
-             */
-            older_routes: boolean;
             /** Revoked At */
             revoked_at?: string | null;
             /**
@@ -4332,13 +3715,6 @@ export interface components {
             last_used_at?: string | null;
             /** Name */
             name?: string | null;
-            /**
-             * Older Routes
-             * @deprecated
-             * @description Deprecated: always false, since the single-key routes are gone. Removed in a later release.
-             * @default false
-             */
-            older_routes: boolean;
             /** Revoked At */
             revoked_at?: string | null;
             /**
@@ -4419,6 +3795,11 @@ export interface components {
             storage_backend: string;
             /** Storage Path */
             storage_path?: string | null;
+            /**
+             * Store Id
+             * @description The store holding a stored file (see GET /storage/stores); null for a catalog-only record, or a stored file whose store has not been recorded yet.
+             */
+            store_id?: string | null;
         };
         /**
          * AssociatedFileUpdate
@@ -4942,6 +4323,34 @@ export interface components {
          */
         DeletableResourceType: "dataset" | "sample" | "project" | "instrument";
         /**
+         * DeletedFileRead
+         * @description A deleted file whose content is still kept and can be restored until restorable_until.
+         */
+        DeletedFileRead: {
+            /** Dataset Mfid */
+            dataset_mfid: string;
+            /**
+             * Deleted At
+             * Format: date-time
+             */
+            deleted_at: string;
+            /** File Mfid */
+            file_mfid: string;
+            /** Filename */
+            filename: string;
+            /**
+             * Restorable Until
+             * Format: date-time
+             */
+            restorable_until: string;
+            /** Sha256 Hash */
+            sha256_hash: string;
+            /** Size */
+            size: number;
+            /** Store Id */
+            store_id?: string | null;
+        };
+        /**
          * DeletionAuditLogRead
          * @description Response model for DeletionAuditLog.
          */
@@ -5294,51 +4703,6 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
-        };
-        /** HubCodeExchangeRequest */
-        HubCodeExchangeRequest: {
-            /** Code */
-            code: string;
-            /** Code Verifier */
-            code_verifier: string;
-            /** Redirect Uri */
-            redirect_uri: string;
-        };
-        /** HubRefreshRequest */
-        HubRefreshRequest: {
-            /** Refresh Token */
-            refresh_token: string;
-        };
-        /** HubRevokeRequest */
-        HubRevokeRequest: {
-            /** Token */
-            token: string;
-        };
-        /** HubTokenResponse */
-        HubTokenResponse: {
-            /**
-             * Access Expires At
-             * Format: date-time
-             */
-            access_expires_at: string;
-            /** Access Token */
-            access_token: string;
-            /** Auth Time */
-            auth_time?: string | null;
-            /**
-             * Refresh Expires At
-             * Format: date-time
-             */
-            refresh_expires_at: string;
-            /** Refresh Token */
-            refresh_token: string;
-            /**
-             * Token Type
-             * @default Bearer
-             */
-            token_type: string;
-            /** User Unique Id */
-            user_unique_id: string;
         };
         /**
          * IdentityRead
@@ -5805,6 +5169,11 @@ export interface components {
             sha256_hash?: string | null;
             /** Size */
             size: number;
+            /**
+             * Store Id
+             * @description The store to upload to (see GET /storage/stores); by default the project's, then the instrument's, then the server's default store.
+             */
+            store_id?: string | null;
         };
         /** MultipartPart */
         MultipartPart: {
@@ -5824,6 +5193,11 @@ export interface components {
             sha256_hash?: string | null;
             /** Size */
             size: number;
+            /**
+             * Store Id
+             * @description The store to upload the new content to; by default the file's current store.
+             */
+            store_id?: string | null;
         };
         /** MultipartStatus */
         MultipartStatus: {
@@ -5842,6 +5216,11 @@ export interface components {
             parts?: components["schemas"]["UploadedPart"][];
             /** State */
             state: string;
+            /**
+             * Store Id
+             * @description The store this upload goes to (see GET /storage/stores)
+             */
+            store_id?: string | null;
             /** Upload Id */
             upload_id?: string | null;
             /**
@@ -5920,6 +5299,19 @@ export interface components {
         PaginatedResponse_DatasetResponse_: {
             /** Items */
             items: components["schemas"]["DatasetResponse"][];
+            /** Limit */
+            limit: number;
+            /** Next Cursor */
+            next_cursor?: string | null;
+            /** Offset */
+            offset?: number | null;
+            /** Total */
+            total?: number | null;
+        };
+        /** PaginatedResponse[DeletedFileRead] */
+        PaginatedResponse_DeletedFileRead_: {
+            /** Items */
+            items: components["schemas"]["DeletedFileRead"][];
             /** Limit */
             limit: number;
             /** Next Cursor */
@@ -6537,22 +5929,6 @@ export interface components {
             value: string | null;
         };
         /**
-         * ResourceAccessGroupRead
-         * @description The reply of the deprecated POST /resources/{mfid}/access_groups.
-         */
-        ResourceAccessGroupRead: {
-            /** Accessgroup Id */
-            accessgroup_id?: number | null;
-            /** Mfid */
-            mfid: string;
-            /** Permission */
-            permission: string;
-            /** Read */
-            read: boolean;
-            /** Write */
-            write: boolean;
-        };
-        /**
          * ResourceAffiliation
          * @enum {string}
          */
@@ -6673,6 +6049,19 @@ export interface components {
             scientific_metadata?: unknown | null;
             /** Unique Id */
             unique_id: string;
+        };
+        /** ResourceSettingsRead */
+        ResourceSettingsRead: {
+            /** Revision */
+            revision: number;
+            /** Schema Version */
+            schema_version: number;
+            /** Settings */
+            settings: {
+                [key: string]: unknown;
+            };
+            /** Updated At */
+            updated_at?: string | null;
         };
         /**
          * ResourceSort
@@ -7006,6 +6395,20 @@ export interface components {
          */
         SortDirection: "asc" | "desc";
         /**
+         * StoreRead
+         * @description A store files can be uploaded to. Endpoints, buckets and credentials stay on the server.
+         */
+        StoreRead: {
+            /** Default */
+            default: boolean;
+            /** Description */
+            description?: string | null;
+            /** Display Name */
+            display_name: string;
+            /** Id */
+            id: string;
+        };
+        /**
          * ThumbnailCreate
          * @description Fields required to attach a thumbnail to a dataset.
          */
@@ -7316,164 +6719,6 @@ export interface operations {
             };
         };
     };
-    create_access_group_access_groups_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AccessGroupCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccessGroupRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    read_access_group_access_groups__group_name__get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                group_name: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccessGroupRead"] | null;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    request_to_join_access_group_access_groups__group_name__join_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                group_name: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["JoinRequestCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["JoinRequestRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_access_group_users_access_groups__group_name__users_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                group_name: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccessGroupMemberRead"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     get_account_info_account_get: {
         parameters: {
             query?: never;
@@ -7506,46 +6751,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_account_apikey_account_apikey_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description This route was removed: `{"detail": {"code": "route_removed", "message": ...}}` names the replacement */
-            410: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    regenerate_account_apikey_account_apikey_regenerate_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description This route was removed: `{"detail": {"code": "route_removed", "message": ...}}` names the replacement */
-            410: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
                 };
             };
         };
@@ -7960,46 +7165,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
-            };
-        };
-    };
-    get_account_join_requests_account_join_requests_get: {
-        parameters: {
-            query?: {
-                status?: components["schemas"]["JoinRequestStatus"] | null;
-                limit?: number;
-                offset?: number;
-            };
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedResponse_JoinRequestRead_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
             };
         };
     };
@@ -8632,506 +7797,6 @@ export interface operations {
             };
         };
     };
-    removed_browser_key_flow_auth_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description This route was removed: `{"detail": {"code": "route_removed", "message": ...}}` names the replacement */
-            410: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    removed_browser_key_flow_auth_apikey_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description This route was removed: `{"detail": {"code": "route_removed", "message": ...}}` names the replacement */
-            410: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    removed_browser_key_flow_auth_apikey_regenerate_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description This route was removed: `{"detail": {"code": "route_removed", "message": ...}}` names the replacement */
-            410: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    removed_browser_key_flow_auth_callback_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description This route was removed: `{"detail": {"code": "route_removed", "message": ...}}` names the replacement */
-            410: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    finish_hub_login_auth_hub_callback_get: {
-        parameters: {
-            query?: {
-                code?: string | null;
-                state?: string | null;
-                error?: string | null;
-                iss?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Redirect to the Hub with a sign-in code, or with state and an RFC 6749 error */
-            302: {
-                headers: {
-                    "Cache-Control"?: "no-store";
-                    Pragma?: "no-cache";
-                    "Referrer-Policy"?: "no-referrer";
-                    "X-Content-Type-Options"?: "nosniff";
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description The sign-in cannot be matched to this browser, so nothing is trusted enough to redirect to */
-            400: {
-                headers: {
-                    "Cache-Control"?: "no-store";
-                    Pragma?: "no-cache";
-                    "Referrer-Policy"?: "no-referrer";
-                    "X-Content-Type-Options"?: "nosniff";
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Invalid authentication request; submitted values and validation context are omitted */
-            422: {
-                headers: {
-                    "Cache-Control"?: "no-store";
-                    Pragma?: "no-cache";
-                    "Referrer-Policy"?: "no-referrer";
-                    "X-Content-Type-Options"?: "nosniff";
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-            /** @description Authentication request failed; response contains no internal error details */
-            500: {
-                headers: {
-                    "Cache-Control"?: "no-store";
-                    Pragma?: "no-cache";
-                    "Referrer-Policy"?: "no-referrer";
-                    "X-Content-Type-Options"?: "nosniff";
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    begin_hub_login_auth_hub_login_get: {
-        parameters: {
-            query: {
-                client_id: string;
-                redirect_uri: string;
-                state: string;
-                code_challenge: string;
-                code_challenge_method: string;
-                /** @description Maximum seconds since the user's last authentication at the provider. 0 forces the provider to re-authenticate; use it before credential-creating operations that require a recent sign-in. */
-                max_age?: number | null;
-                /** @description The provider to use, a key from GET /auth/methods. When omitted, the only listed provider is used, or a page offers the choice. */
-                provider?: string | null;
-                /** @description The unique_id that must sign in. Any other account gets error=login_required and no code. It passes through the browser, so the Hub must still compare the account it receives. */
-                required_user?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description A page to choose how to sign in, when several providers are listed and none is named */
-            200: {
-                headers: {
-                    "Cache-Control"?: "no-store";
-                    Pragma?: "no-cache";
-                    "Referrer-Policy"?: "no-referrer";
-                    "X-Content-Type-Options"?: "nosniff";
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "text/html": unknown;
-                };
-            };
-            /** @description Redirect to the provider, or to the Hub with an error when the provider cannot be reached */
-            302: {
-                headers: {
-                    "Cache-Control"?: "no-store";
-                    Pragma?: "no-cache";
-                    "Referrer-Policy"?: "no-referrer";
-                    "X-Content-Type-Options"?: "nosniff";
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Invalid sign-in request */
-            400: {
-                headers: {
-                    "Cache-Control"?: "no-store";
-                    Pragma?: "no-cache";
-                    "Referrer-Policy"?: "no-referrer";
-                    "X-Content-Type-Options"?: "nosniff";
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Invalid authentication request; submitted values and validation context are omitted */
-            422: {
-                headers: {
-                    "Cache-Control"?: "no-store";
-                    Pragma?: "no-cache";
-                    "Referrer-Policy"?: "no-referrer";
-                    "X-Content-Type-Options"?: "nosniff";
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-            /** @description Authentication request failed; response contains no internal error details */
-            500: {
-                headers: {
-                    "Cache-Control"?: "no-store";
-                    Pragma?: "no-cache";
-                    "Referrer-Policy"?: "no-referrer";
-                    "X-Content-Type-Options"?: "nosniff";
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Hub sign-in unavailable */
-            503: {
-                headers: {
-                    "Cache-Control"?: "no-store";
-                    Pragma?: "no-cache";
-                    "Referrer-Policy"?: "no-referrer";
-                    "X-Content-Type-Options"?: "nosniff";
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    refresh_hub_credential_auth_hub_refresh_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["HubRefreshRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "Cache-Control"?: "no-store";
-                    Pragma?: "no-cache";
-                    "Referrer-Policy"?: "no-referrer";
-                    "X-Content-Type-Options"?: "nosniff";
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HubTokenResponse"];
-                };
-            };
-            /** @description Invalid client or refresh token */
-            401: {
-                headers: {
-                    "Cache-Control"?: "no-store";
-                    Pragma?: "no-cache";
-                    "Referrer-Policy"?: "no-referrer";
-                    "X-Content-Type-Options"?: "nosniff";
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Invalid authentication request; submitted values and validation context are omitted */
-            422: {
-                headers: {
-                    "Cache-Control"?: "no-store";
-                    Pragma?: "no-cache";
-                    "Referrer-Policy"?: "no-referrer";
-                    "X-Content-Type-Options"?: "nosniff";
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-            /** @description Authentication request failed; response contains no internal error details */
-            500: {
-                headers: {
-                    "Cache-Control"?: "no-store";
-                    Pragma?: "no-cache";
-                    "Referrer-Policy"?: "no-referrer";
-                    "X-Content-Type-Options"?: "nosniff";
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Hub sign-in unavailable */
-            503: {
-                headers: {
-                    "Cache-Control"?: "no-store";
-                    Pragma?: "no-cache";
-                    "Referrer-Policy"?: "no-referrer";
-                    "X-Content-Type-Options"?: "nosniff";
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    revoke_hub_credential_auth_hub_revoke_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["HubRevokeRequest"];
-            };
-        };
-        responses: {
-            /** @description Revocation processed; no-store response */
-            204: {
-                headers: {
-                    "Cache-Control"?: "no-store";
-                    Pragma?: "no-cache";
-                    "Referrer-Policy"?: "no-referrer";
-                    "X-Content-Type-Options"?: "nosniff";
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Invalid client */
-            401: {
-                headers: {
-                    "Cache-Control"?: "no-store";
-                    Pragma?: "no-cache";
-                    "Referrer-Policy"?: "no-referrer";
-                    "X-Content-Type-Options"?: "nosniff";
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Invalid authentication request; submitted values and validation context are omitted */
-            422: {
-                headers: {
-                    "Cache-Control"?: "no-store";
-                    Pragma?: "no-cache";
-                    "Referrer-Policy"?: "no-referrer";
-                    "X-Content-Type-Options"?: "nosniff";
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-            /** @description Authentication request failed; response contains no internal error details */
-            500: {
-                headers: {
-                    "Cache-Control"?: "no-store";
-                    Pragma?: "no-cache";
-                    "Referrer-Policy"?: "no-referrer";
-                    "X-Content-Type-Options"?: "nosniff";
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Hub sign-in unavailable */
-            503: {
-                headers: {
-                    "Cache-Control"?: "no-store";
-                    Pragma?: "no-cache";
-                    "Referrer-Policy"?: "no-referrer";
-                    "X-Content-Type-Options"?: "nosniff";
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    exchange_hub_code_auth_hub_token_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["HubCodeExchangeRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "Cache-Control"?: "no-store";
-                    Pragma?: "no-cache";
-                    "Referrer-Policy"?: "no-referrer";
-                    "X-Content-Type-Options"?: "nosniff";
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HubTokenResponse"];
-                };
-            };
-            /** @description Invalid client or sign-in code */
-            401: {
-                headers: {
-                    "Cache-Control"?: "no-store";
-                    Pragma?: "no-cache";
-                    "Referrer-Policy"?: "no-referrer";
-                    "X-Content-Type-Options"?: "nosniff";
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Invalid authentication request; submitted values and validation context are omitted */
-            422: {
-                headers: {
-                    "Cache-Control"?: "no-store";
-                    Pragma?: "no-cache";
-                    "Referrer-Policy"?: "no-referrer";
-                    "X-Content-Type-Options"?: "nosniff";
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-            /** @description Authentication request failed; response contains no internal error details */
-            500: {
-                headers: {
-                    "Cache-Control"?: "no-store";
-                    Pragma?: "no-cache";
-                    "Referrer-Policy"?: "no-referrer";
-                    "X-Content-Type-Options"?: "nosniff";
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Hub sign-in unavailable */
-            503: {
-                headers: {
-                    "Cache-Control"?: "no-store";
-                    Pragma?: "no-cache";
-                    "Referrer-Policy"?: "no-referrer";
-                    "X-Content-Type-Options"?: "nosniff";
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    removed_browser_key_flow_auth_login_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description This route was removed: `{"detail": {"code": "route_removed", "message": ...}}` names the replacement */
-            410: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
     list_sign_in_methods_auth_methods_get: {
         parameters: {
             query?: never;
@@ -9647,9 +8312,12 @@ export interface operations {
             };
         };
     };
-    request_carrier_segmentation_datasets__dataset_mfid__carrier_segmentation_post: {
+    list_deleted_files_datasets__dataset_mfid__deleted_files_get: {
         parameters: {
-            query?: never;
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
             header?: {
                 /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
                 "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
@@ -9672,7 +8340,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PostprocessingRunRead"];
+                    "application/json": components["schemas"]["PaginatedResponse_DeletedFileRead_"];
                 };
             };
             /** @description Validation Error */
@@ -9684,8 +8352,116 @@ export interface operations {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
-            /** @description Ingestion is not enabled on this server: `{"detail": {"code": "feature_disabled", "feature": "ingestion", "message": ...}}` */
-            501: {
+        };
+    };
+    purge_deleted_file_datasets__dataset_mfid__deleted_files__file_mfid__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Dataset MFID. */
+                dataset_mfid: string;
+                file_mfid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MessageResponse"];
+                };
+            };
+            /** @description Dataset not found, or no deleted file with this MFID is kept (`not_in_trash`) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The dataset is pending deletion (`pending_deletion`) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    restore_deleted_file_datasets__dataset_mfid__deleted_files__file_mfid__restore_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Dataset MFID. */
+                dataset_mfid: string;
+                file_mfid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssociatedFileRead"];
+                };
+            };
+            /** @description Dataset not found, or no deleted file with this MFID is kept (`not_in_trash`) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `{"detail": {"code": ..., "message": ...}}` with one of `not_in_trash`, `version_expired`, `dataset_pending_deletion`, `filename_exists`, `filename_reserved`, `version_missing_in_storage`, `version_size_mismatch`, or `pending_deletion` */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description The file's store is not configured on this server, or the file has no store recorded yet: `{"detail": {"code": "store_unavailable", "store_id": ..., "message": ...}}` */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -9833,84 +8609,6 @@ export interface operations {
             };
         };
     };
-    create_ds_file_ingestion_request_datasets__dataset_mfid__files__file_id__ingest_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                dataset_mfid: string;
-                file_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description This route was removed: `{"detail": {"code": "route_removed", "message": ...}}` names the replacement */
-            410: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    request_insitu_aggregation_datasets__dataset_mfid__insitu_spec_aggregation_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Dataset MFID. */
-                dataset_mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PostprocessingRunRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-            /** @description Ingestion is not enabled on this server: `{"detail": {"code": "feature_disabled", "feature": "ingestion", "message": ...}}` */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     assign_dataset_instrument_datasets__dataset_mfid__instrument_put: {
         parameters: {
             query?: never;
@@ -10034,52 +8732,6 @@ export interface operations {
             };
         };
     };
-    request_mosaic_stitch_datasets__dataset_mfid__mosaic_stitch_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Dataset MFID. */
-                dataset_mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PostprocessingRunRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-            /** @description Ingestion is not enabled on this server: `{"detail": {"code": "feature_disabled", "feature": "ingestion", "message": ...}}` */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     postprocess_dataset_datasets__dataset_mfid__postprocess_post: {
         parameters: {
             query?: never;
@@ -10155,83 +8807,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
-            };
-        };
-    };
-    request_rga_analysis_datasets__dataset_mfid__rga_analysis_post: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description Dataset MFID. */
-                dataset_mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PostprocessingRunRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-            /** @description Ingestion is not enabled on this server: `{"detail": {"code": "feature_disabled", "feature": "ingestion", "message": ...}}` */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    read_samples_in_dataset_datasets__dataset_mfid__samples_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                dataset_mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description This route was removed: `{"detail": {"code": "route_removed", "message": ...}}` names the replacement */
-            410: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
             };
         };
     };
@@ -10472,99 +9047,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ThumbnailRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    removed_legacy_upload_datasets__dataset_mfid__upload_complete_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                dataset_mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description This route was removed: `{"detail": {"code": "route_removed", "message": ...}}` names the replacement */
-            410: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    removed_legacy_upload_datasets__dataset_mfid__upload_initiate_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                dataset_mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description This route was removed: `{"detail": {"code": "route_removed", "message": ...}}` names the replacement */
-            410: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    removed_legacy_upload_datasets__dataset_mfid__upload_initiate_multipart_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                dataset_mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description This route was removed: `{"detail": {"code": "route_removed", "message": ...}}` names the replacement */
-            410: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -11434,6 +9916,13 @@ export interface operations {
                     "application/json": components["schemas"]["MessageResponse"];
                 };
             };
+            /** @description The dataset is pending deletion (`pending_deletion`), or a replacement of the file is in progress (`replace_in_progress`, with its `upload_id`) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             /** @description Validation Error */
             422: {
                 headers: {
@@ -11540,6 +10029,13 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description The file's store is not configured on this server, or the file has no store recorded yet: `{"detail": {"code": "store_unavailable", "store_id": ..., "message": ...}}` */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     create_file_ingestion_request_files__file_id__ingest_post: {
@@ -11596,7 +10092,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description The request could not be queued (`ingestion_unavailable`); it is recorded as failed */
+            /** @description The request could not be queued (`ingestion_unavailable`, recorded as failed), or the file's store is not available (`store_unavailable`, with `store_id`) */
             503: {
                 headers: {
                     [name: string]: unknown;
@@ -11670,6 +10166,13 @@ export interface operations {
             };
             /** @description Uploads is not enabled on this server: `{"detail": {"code": "feature_disabled", "feature": "uploads", "message": ...}}` */
             501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The file's store is not configured on this server, or the file has no store recorded yet: `{"detail": {"code": "store_unavailable", "store_id": ..., "message": ...}}` */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -12291,6 +10794,103 @@ export interface operations {
             };
         };
     };
+    read_instrument_settings_instruments__instrument_ref__settings_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Instrument MFID or instrument_id slug (case-insensitive). */
+                instrument_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    /** @description Current settings revision; send it as `If-Match` on PATCH */
+                    ETag?: string;
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResourceSettingsRead"];
+                };
+            };
+            /** @description If-Match does not match the current revision: `{"detail": {"code": "etag_mismatch", "etag": ..., "message": ...}}` */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The patch is not an object, or the merged document has an unknown key, an unknown store (`unknown_store`), an invalid value, or exceeds 16 KiB */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    update_instrument_settings_instruments__instrument_ref__settings_patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                "if-match"?: string | null;
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Instrument MFID or instrument_id slug (case-insensitive). */
+                instrument_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": unknown;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    /** @description Current settings revision; send it as `If-Match` on PATCH */
+                    ETag?: string;
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResourceSettingsRead"];
+                };
+            };
+            /** @description If-Match does not match the current revision: `{"detail": {"code": "etag_mismatch", "etag": ..., "message": ...}}` */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The patch is not an object, or the merged document has an unknown key, an unknown store (`unknown_store`), an invalid value, or exceeds 16 KiB */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     set_instrument_status_instruments__instrument_ref__status_post: {
         parameters: {
             query: {
@@ -12847,26 +11447,6 @@ export interface operations {
             };
         };
     };
-    removed_browser_key_flow_login_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description This route was removed: `{"detail": {"code": "route_removed", "message": ...}}` names the replacement */
-            410: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
     metrics_metrics_get: {
         parameters: {
             query?: never;
@@ -13019,6 +11599,39 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    show_sign_in_code_oauth_code_get: {
+        parameters: {
+            query?: {
+                code?: string | null;
+                error?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The sign-in code to copy, or why there is none */
+            200: {
+                headers: {
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": string;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };
@@ -14391,6 +13004,103 @@ export interface operations {
             };
         };
     };
+    read_project_settings_projects__project_ref__settings_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Project MFID or project_id slug (case-insensitive). */
+                project_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    /** @description Current settings revision; send it as `If-Match` on PATCH */
+                    ETag?: string;
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResourceSettingsRead"];
+                };
+            };
+            /** @description If-Match does not match the current revision: `{"detail": {"code": "etag_mismatch", "etag": ..., "message": ...}}` */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The patch is not an object, or the merged document has an unknown key, an unknown store (`unknown_store`), an invalid value, or exceeds 16 KiB */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    update_project_settings_projects__project_ref__settings_patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                "if-match"?: string | null;
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description Project MFID or project_id slug (case-insensitive). */
+                project_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": unknown;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    /** @description Current settings revision; send it as `If-Match` on PATCH */
+                    ETag?: string;
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResourceSettingsRead"];
+                };
+            };
+            /** @description If-Match does not match the current revision: `{"detail": {"code": "etag_mismatch", "etag": ..., "message": ...}}` */
+            412: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The patch is not an object, or the merged document has an unknown key, an unknown store (`unknown_store`), an invalid value, or exceeds 16 KiB */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     read_users_on_project_projects__project_ref__users_get: {
         parameters: {
             query?: {
@@ -14899,86 +13609,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DetailResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    read_resource_acl_resources__mfid__access_groups_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccessGroupRead"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_resource_acl_resources__mfid__access_groups_post: {
-        parameters: {
-            query: {
-                group_name: string;
-                read: boolean;
-                write: boolean;
-            };
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                mfid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ResourceAccessGroupRead"];
                 };
             };
             /** @description Validation Error */
@@ -16135,22 +14765,38 @@ export interface operations {
             };
         };
     };
-    removed_browser_key_flow_user_apikey_get: {
+    list_stores_storage_stores_get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
             path?: never;
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description This route was removed: `{"detail": {"code": "route_removed", "message": ...}}` names the replacement */
-            410: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StoreRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -16264,37 +14910,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_user_by_username_users_by_username__username__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                username: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description This route was removed: `{"detail": {"code": "route_removed", "message": ...}}` names the replacement */
-            410: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
             };
             /** @description Validation Error */
             422: {
@@ -16519,117 +15134,6 @@ export interface operations {
             };
         };
     };
-    add_user_to_access_group_users__user_ref__access_groups__group_name__post: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
-                user_ref: string;
-                group_name: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccessGroupRead"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    remove_user_from_access_group_users__user_ref__access_groups__group_name__delete: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
-                user_ref: string;
-                group_name: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DetailResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_or_provision_user_apikey_users__user_ref__apikey_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                user_ref: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description This route was removed: `{"detail": {"code": "route_removed", "message": ...}}` names the replacement */
-            410: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     delete_user_apikey_users__user_ref__apikey_delete: {
         parameters: {
             query?: never;
@@ -16655,76 +15159,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    regenerate_user_apikey_users__user_ref__apikey_regenerate_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                user_ref: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description This route was removed: `{"detail": {"code": "route_removed", "message": ...}}` names the replacement */
-            410: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    verify_user_apikey_users__user_ref__apikey_verify_get: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
-                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
-            };
-            path: {
-                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
-                user_ref: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    "Cache-Control": components["headers"]["PrivateCacheControl"];
-                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
-                    Vary: components["headers"]["PrivilegeModeVary"];
-                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiKeyVerify"];
-                };
             };
             /** @description Validation Error */
             422: {
@@ -16937,37 +15371,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
-            };
-        };
-    };
-    read_user_datasets_users__user_ref__datasets_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                user_ref: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description This route was removed: `{"detail": {"code": "route_removed", "message": ...}}` names the replacement */
-            410: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
             };
         };
     };
@@ -17511,37 +15914,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    read_user_samples_users__user_ref__samples_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                user_ref: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description This route was removed: `{"detail": {"code": "route_removed", "message": ...}}` names the replacement */
-            410: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
             };
             /** @description Validation Error */
             422: {

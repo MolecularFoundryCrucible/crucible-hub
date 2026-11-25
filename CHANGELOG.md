@@ -6,6 +6,7 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- The Hub is built against the Crucible API 4.1.0 contract and needs API 4.1.0 or later.
 - Adding a relationship that would create a lineage cycle, or that touches a resource awaiting deletion, now says so instead of suggesting the relationship already exists.
 - `/hub/fixtures/design-system` and `/hub/fixtures/scenarios` return 404 unless the server runs on fixture data, so deployments on live data no longer serve them.
 - Pages download less code before they open: sign-in loads about 29% less JavaScript and CSS (284 kB instead of 399 kB gzipped) and Home about 6% less, and graph styles load only with the graph view.
