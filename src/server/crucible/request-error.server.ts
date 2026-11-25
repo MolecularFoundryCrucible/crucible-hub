@@ -54,6 +54,8 @@ const hubConflictCodes = new Set<string>([
   "project_not_found",
   "filename_exists",
   "store_unavailable",
+  "etag_mismatch",
+  "unknown_store",
   "not_in_trash",
   "version_expired",
   "dataset_pending_deletion",
@@ -134,7 +136,7 @@ export class CrucibleResponseError extends Error {
       source.status === 405 ||
       (source.status === 404 && isFrameworkNotFound(body))
     if (source.status === 409) this.conflictFields = readConflictFields(body)
-    if ([403, 404, 409, 429, 501, 503].includes(source.status)) {
+    if ([403, 404, 409, 412, 429, 501, 503].includes(source.status)) {
       this.conflictCode = readConflictCode(body)
     }
     if (source.status === 422) {

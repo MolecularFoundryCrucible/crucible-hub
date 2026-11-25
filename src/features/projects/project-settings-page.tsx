@@ -18,6 +18,7 @@ import { OwnershipTransferCard } from "@/features/resource-ownership/ownership-t
 import { ResourceForcedDeletionCard } from "@/features/resource-deletion/resource-forced-deletion"
 import { DeletionRequestQueue } from "@/features/deletion-requests/deletion-request-queue"
 import { ProjectJoinRequestsCard } from "@/features/join-requests/join-request-review"
+import { DefaultStoreCard } from "@/features/storage-settings/default-store-card"
 
 const route = getRouteApi("/_app/projects/$projectMfid/settings/")
 
@@ -90,6 +91,11 @@ export function ProjectManagePage() {
             scope={scope}
             title="Deletion requests"
           />
+        </ContentBoundary>
+      ) : null}
+      {canManageAccess ? (
+        <ContentBoundary width="reading">
+          <DefaultStoreCard kind="project" mfid={projectMfid} />
         </ContentBoundary>
       ) : null}
       {hasResourceManagement ? (

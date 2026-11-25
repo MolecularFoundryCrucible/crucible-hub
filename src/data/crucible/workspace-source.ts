@@ -581,6 +581,14 @@ export type WorkspaceFileDisposition = "attachment" | "inline"
 
 export type WorkspaceStore = Schema<"StoreRead">
 
+export type WorkspaceSettingsKind = "project" | "instrument"
+
+export type WorkspaceResourceSettings = {
+  defaultStoreId: string | null
+  etag: string
+  revision: number
+}
+
 export type WorkspaceDeletedFile = {
   datasetMfid: string
   deletedAt: string

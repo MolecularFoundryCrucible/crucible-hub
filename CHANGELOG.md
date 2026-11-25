@@ -6,6 +6,7 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- Project and instrument managers choose a default store for new uploads on the Manage tab when the server has more than one store; a save refused because the settings changed elsewhere asks to review and save again.
 - Dataset admins can restore or permanently delete removed files from a Recently deleted section on the Files tab while Crucible API 4.1.0 still keeps their content.
 - The Storage column on a dataset's Files tab names the store holding each file (Crucible API 4.1.0 stores), and a file whose store isn't configured on the server shows its download as unavailable instead of failing.
 - The Hub is built against the Crucible API 4.1.0 contract and needs API 4.1.0 or later.
