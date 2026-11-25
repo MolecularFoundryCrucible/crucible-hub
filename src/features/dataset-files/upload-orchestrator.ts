@@ -163,9 +163,18 @@ export async function uploadDatasetFile(options: {
   replace?: { etag: string; fileMfid: string }
   scenario?: FixtureScenario
   signal: AbortSignal
+  storeId?: string
 }): Promise<WorkspaceDatasetFile> {
-  const { datasetMfid, file, filename, onProgress, replace, scenario, signal } =
-    options
+  const {
+    datasetMfid,
+    file,
+    filename,
+    onProgress,
+    replace,
+    scenario,
+    signal,
+    storeId,
+  } = options
 
   const filenameIssues = validateUploadFilename(filename)
   if (filenameIssues.length > 0) {
@@ -198,7 +207,7 @@ export async function uploadDatasetFile(options: {
         datasetMfid,
         filename,
         idempotencyKey: crypto.randomUUID(),
-        ...(replace ? { replace } : {}),
+        ...(replace ? { replace } : storeId ? { storeId } : {}),
         scenario,
         size: file.size,
       },
