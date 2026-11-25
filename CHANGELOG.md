@@ -6,6 +6,7 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- Administrators create API keys for any person or service account from its Security tab, including keys that never expire; the account keeps its other keys, so a service account's key can be replaced without downtime.
 - Add files and Request ingestion choose ingestors with a searchable picker that describes each ingestor, suggests the ones matching a file's extension, and says when no ingestor is available; one choice applies to every file and each file can be changed on its own line. New uploads default to Auto-detect, and No ingestion is now Don't ingest.
 - Add files warns when the dataset's project or instrument names a default store that is no longer configured on the server, so the files went to the next default store.
 - Administrators see the ingestion workers registered in the last day under Ingestion workers in Administrator view: whether each is live, when it was last seen, its versions, the stores it reads and the ingestors it offers.

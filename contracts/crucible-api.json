@@ -658,6 +658,12 @@
             "minLength": 1,
             "title": "Name",
             "type": "string"
+          },
+          "never_expires": {
+            "default": false,
+            "description": "The key works until it is revoked; not with expires_at.",
+            "title": "Never Expires",
+            "type": "boolean"
           }
         },
         "required": [
@@ -10187,7 +10193,7 @@
             "description": "`too_many_keys`: at most 10 active keys"
           },
           "422": {
-            "description": "expires_at in the past or more than a year away"
+            "description": "expires_at in the past or more than a year away, or given with never_expires"
           }
         },
         "security": [
@@ -31108,6 +31114,98 @@
           }
         ],
         "summary": "List User Apikeys",
+        "tags": [
+          "account"
+        ]
+      },
+      "post": {
+        "description": "Create an API key for a person or a service account, which keeps its other keys, so a key can be\nreplaced without downtime. The key is shown only in this response. Platform administrators only,\nwith a Hub session and a recent sign-in; the sign-in history records the administrator.",
+        "operationId": "create_user_apikey_users__user_ref__apikeys_post",
+        "parameters": [
+          {
+            "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
+            "in": "path",
+            "name": "user_ref",
+            "required": true,
+            "schema": {
+              "description": "User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths.",
+              "title": "User Ref",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiKeyCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyCreated"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "401": {
+            "description": "A Hub session needs a recent sign-in (`insufficient_user_authentication`)"
+          },
+          "403": {
+            "description": "`hub_session_required`: an API key cannot create keys; `browser_sign_in_required`: nor can a session approved with a device code"
+          },
+          "409": {
+            "description": "`too_many_keys`: at most 10 active keys"
+          },
+          "422": {
+            "description": "expires_at in the past or more than a year away, or given with never_expires"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create User Apikey",
         "tags": [
           "account"
         ]

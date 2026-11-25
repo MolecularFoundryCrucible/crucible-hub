@@ -56,7 +56,7 @@ Entity pages put their name in the browser title and a `RefreshButton` at the ri
 | `/users/:userId`, `/users/:userId/security`                    | A person's profile, and their Security tab for administrators                             |
 | `/admin/users`                                                 | User directory, accounts awaiting approval, and user creation                             |
 | `/admin/service-accounts`                                      | Service-account directory and creation                                                    |
-| `/admin/service-accounts/:serviceAccountMfid`, `.../security`  | Service-account profile, and its API keys, key rotation, and sign-in history              |
+| `/admin/service-accounts/:serviceAccountMfid`, `.../security`  | Service-account profile, and its API keys, key creation and rotation, and sign-in history |
 | `/admin/workers`                                               | Ingestion workers registered in the last day, with status, versions, stores and ingestors |
 
 ### Redirects

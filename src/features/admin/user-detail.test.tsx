@@ -408,7 +408,7 @@ describe("UserDetailView API keys", () => {
     fireEvent.click(await screen.findByRole("tab", { name: /API keys/ }))
     const table = await screen.findByRole("table", { name: "Active API keys" })
     expect(within(table).getByText("Beamline laptop")).toBeTruthy()
-    expect(screen.queryByRole("button", { name: "New key" })).toBeNull()
+    expect(screen.getByRole("button", { name: "New key" })).toBeTruthy()
     fireEvent.click(
       within(table).getByRole("button", { name: "Actions for Beamline laptop" })
     )

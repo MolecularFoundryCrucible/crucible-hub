@@ -133,7 +133,8 @@ export async function readWorkspaceApiKeys(
 }
 
 export async function createWorkspaceApiKey(
-  input: { expiresAt: string | null; name: string },
+  owner: ApiKeyOwner,
+  input: { expiresAt: string | null; name: string; neverExpires: boolean },
   scenario?: FixtureScenario,
   requestSignal?: AbortSignal
 ): Promise<WorkspaceCreatedApiKey> {
@@ -143,7 +144,9 @@ export async function createWorkspaceApiKey(
     return {
       api_key: `crucible_fixture${crypto.randomUUID().replaceAll("-", "")}`,
       created_at: at(reference, 0),
-      expires_at: input.expiresAt ?? at(reference, 365),
+      expires_at: input.neverExpires
+        ? null
+        : (input.expiresAt ?? at(reference, 365)),
       id: 4,
       last4: "f1x7",
       last_used_at: null,
@@ -152,16 +155,26 @@ export async function createWorkspaceApiKey(
       status: "active",
     }
   }
-  const result = await createCrucibleClient(configuration).POST(
-    "/account/apikeys",
-    {
-      body: {
-        name: input.name,
-        ...(input.expiresAt ? { expires_at: input.expiresAt } : {}),
-      },
-      signal: crucibleRequestSignal(requestSignal),
-    }
-  )
+  const body = {
+    name: input.name,
+    never_expires: input.neverExpires,
+    ...(input.expiresAt && !input.neverExpires
+      ? { expires_at: input.expiresAt }
+      : {}),
+  }
+  const result =
+    owner.kind === "self"
+      ? await createCrucibleClient(configuration).POST("/account/apikeys", {
+          body,
+          signal: crucibleRequestSignal(requestSignal),
+        })
+      : await createCrucibleClient(configuration, {
+          privilegeMode: requireAdministratorView(),
+        }).POST("/users/{user_ref}/apikeys", {
+          body,
+          params: { path: { user_ref: owner.userId } },
+          signal: crucibleRequestSignal(requestSignal),
+        })
   if (!result.data) {
     throw new CrucibleResponseError(result.response, result.error)
   }

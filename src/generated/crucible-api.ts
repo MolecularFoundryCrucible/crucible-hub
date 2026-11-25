@@ -3138,7 +3138,13 @@ export interface paths {
          */
         get: operations["list_user_apikeys_users__user_ref__apikeys_get"];
         put?: never;
-        post?: never;
+        /**
+         * Create User Apikey
+         * @description Create an API key for a person or a service account, which keeps its other keys, so a key can be
+         *     replaced without downtime. The key is shown only in this response. Platform administrators only,
+         *     with a Hub session and a recent sign-in; the sign-in history records the administrator.
+         */
+        post: operations["create_user_apikey_users__user_ref__apikeys_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3727,6 +3733,12 @@ export interface components {
              * @description What the key is for, such as the machine or script that uses it.
              */
             name: string;
+            /**
+             * Never Expires
+             * @description The key works until it is revoked; not with expires_at.
+             * @default false
+             */
+            never_expires: boolean;
         };
         /** ApiKeyCreated */
         ApiKeyCreated: {
@@ -7122,7 +7134,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description expires_at in the past or more than a year away */
+            /** @description expires_at in the past or more than a year away, or given with never_expires */
             422: {
                 headers: {
                     [name: string]: unknown;
@@ -15516,6 +15528,68 @@ export interface operations {
                 };
             };
             /** @description Invalid cursor */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    create_user_apikey_users__user_ref__apikeys_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                /** @description User ORCID, service-account MFID, or username. Email still resolves but is deprecated in paths. */
+                user_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApiKeyCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiKeyCreated"];
+                };
+            };
+            /** @description A Hub session needs a recent sign-in (`insufficient_user_authentication`) */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `hub_session_required`: an API key cannot create keys; `browser_sign_in_required`: nor can a session approved with a device code */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description `too_many_keys`: at most 10 active keys */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description expires_at in the past or more than a year away, or given with never_expires */
             422: {
                 headers: {
                     [name: string]: unknown;

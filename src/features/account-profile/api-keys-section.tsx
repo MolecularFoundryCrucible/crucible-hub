@@ -83,6 +83,8 @@ const stateOptions = [
   { label: "Inactive", value: "inactive" },
 ] as const
 
+const NEVER = 0
+
 const expiryOptions = [
   { days: 30, label: "30 days" },
   { days: 90, label: "90 days" },
@@ -140,8 +142,8 @@ export function ApiKeysSection({
             options={stateOptions}
             value={state}
           />
-          {owner.kind === "self" && owner.canCreate ? (
-            <NewApiKeyAction scope={scope} />
+          {owner.kind === "person" || owner.canCreate ? (
+            <NewApiKeyAction owner={owner} scope={scope} />
           ) : null}
           {action}
         </>
@@ -492,7 +494,14 @@ function RevokeApiKeyDialog({
   )
 }
 
-function NewApiKeyAction({ scope }: { scope: IdentityScope }) {
+function NewApiKeyAction({
+  owner,
+  scope,
+}: {
+  owner: ApiKeyOwner
+  scope: IdentityScope
+}) {
+  const person = owner.kind === "person" ? owner : undefined
   const queryClient = useQueryClient()
   const account = useQuery(accountQueryOptions(scope)).data
   const nameId = useId()
@@ -510,11 +519,13 @@ function NewApiKeyAction({ scope }: { scope: IdentityScope }) {
           await createWorkspaceApiKeyFn({
             data: {
               expiresAt:
-                days === 365
+                days === 365 || days === NEVER
                   ? null
                   : new Date(Date.now() + days * 86_400_000).toISOString(),
               name: trimmed,
+              ...(days === NEVER ? { neverExpires: true } : {}),
               scenario: fixtureScenarioFromScope(scope),
+              ...(person ? { userId: person.userId } : {}),
             },
           })
         )
@@ -523,7 +534,9 @@ function NewApiKeyAction({ scope }: { scope: IdentityScope }) {
       const code = conflictCode(cause)
       setError(
         code === "too_many_keys"
-          ? "You already have 10 active API keys. Revoke one before creating another."
+          ? person
+            ? `${person.name} already has 10 active API keys. Revoke one before creating another.`
+            : "You already have 10 active API keys. Revoke one before creating another."
           : code === "hub_session_required"
             ? "API keys can only be created from a Hub sign-in."
             : hubActionError(
@@ -541,7 +554,7 @@ function NewApiKeyAction({ scope }: { scope: IdentityScope }) {
       setOpen(false)
       setApiKey(created.api_key)
       void queryClient.invalidateQueries({
-        queryKey: apiKeyQueriesKey(scope, undefined),
+        queryKey: apiKeyQueriesKey(scope, person?.userId),
       })
     },
   })
@@ -567,14 +580,18 @@ function NewApiKeyAction({ scope }: { scope: IdentityScope }) {
       <ConfirmationDialog
         confirmDisabled={!trimmed}
         confirmLabel="Create key"
-        description="The key is shown once, right after you create it."
+        description={
+          person
+            ? "The key is shown once, right after you create it. The account keeps its other keys, so you can deploy the new key before revoking the old one."
+            : "The key is shown once, right after you create it."
+        }
         error={error}
         onConfirm={submit}
         onOpenChange={setOpen}
         open={open}
         pending={mutation.isPending}
         pendingLabel="Creating key"
-        title="New API key"
+        title={person ? `New API key for ${person.name}` : "New API key"}
       >
         <form
           onSubmit={(event) => {
@@ -600,7 +617,10 @@ function NewApiKeyAction({ scope }: { scope: IdentityScope }) {
                 onChange={(event) => setDays(Number(event.target.value))}
                 value={String(days)}
               >
-                {expiryOptions.map((option) => (
+                {(person
+                  ? [...expiryOptions, { days: NEVER, label: "Never" }]
+                  : expiryOptions
+                ).map((option) => (
                   <NativeSelectOption
                     key={option.days}
                     value={String(option.days)}
@@ -615,15 +635,17 @@ function NewApiKeyAction({ scope }: { scope: IdentityScope }) {
       </ConfirmationDialog>
       <OneTimeCredentialDialog
         credential={
-          apiKey && account
-            ? {
-                api_key: apiKey,
-                unique_id: account.unique_id,
-                username: account.username ?? null,
-              }
-            : undefined
+          apiKey && person
+            ? { api_key: apiKey, unique_id: person.userId, username: null }
+            : apiKey && account
+              ? {
+                  api_key: apiKey,
+                  unique_id: account.unique_id,
+                  username: account.username ?? null,
+                }
+              : undefined
         }
-        keyLabel="Your API key"
+        keyLabel={person ? `API key for ${person.name}` : "Your API key"}
         onClose={() => setApiKey(undefined)}
         title="API key created"
       />
