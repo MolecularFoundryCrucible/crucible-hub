@@ -11,6 +11,7 @@ import {
   RenameUploadIcon,
   ReplaceFileIcon,
   RetryIngestionIcon,
+  StoreWarningIcon,
   UploadCompleteIcon,
   UploadFailureIcon,
 } from "@/components/crucible/icons"
@@ -46,6 +47,13 @@ import type {
 } from "./upload-batch"
 
 const EMPTY_CLASSES: readonly string[] = []
+
+function defaultStoreNotice(storeIds: readonly string[]) {
+  const names = storeIds.map((id) => `"${id}"`).join(" and ")
+  return storeIds.length === 1
+    ? `The default store ${names} of this dataset's project or instrument is not configured on this server, so files went to the next default store. A manager can choose another on the project's or instrument's Manage tab.`
+    : `The default stores ${names} of this dataset's project and instrument are not configured on this server, so files went to the server's default store. A manager can choose others on their Manage tabs.`
+}
 
 function readFileEntry(entry: FileSystemFileEntry) {
   return new Promise<File>((resolve, reject) => entry.file(resolve, reject))
@@ -353,6 +361,18 @@ export function UploadFileList({
           </div>
         </div>
       )}
+      {batch.unavailableDefaultStores.length ? (
+        <p
+          className="flex items-start gap-2 text-supporting text-warning-text"
+          role="status"
+        >
+          <StoreWarningIcon
+            aria-hidden="true"
+            className="mt-0.5 size-4 shrink-0"
+          />
+          <span>{defaultStoreNotice(batch.unavailableDefaultStores)}</span>
+        </p>
+      ) : null}
       <ul
         aria-label="Selected files"
         className="flex max-h-96 min-h-0 flex-col divide-y overflow-y-auto overscroll-contain rounded-lg border"

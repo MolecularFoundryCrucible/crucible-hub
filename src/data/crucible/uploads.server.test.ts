@@ -38,6 +38,38 @@ describe("dataset upload transport", () => {
     ).rejects.toThrow("Dataset uploads are not enabled")
   })
 
+  it("reports default stores the API skipped because they are not configured", async () => {
+    stubApiMode()
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        crucibleApiResponse({
+          part_size: 9 * 1024 * 1024,
+          parts: [],
+          state: "uploading",
+          store_id: "foundry",
+          upload_id: "upload-1",
+          warnings: [
+            {
+              code: "default_store_unavailable",
+              message: "Default store retired-nas is not configured",
+              record_mfid: "project-1",
+              store_id: "retired-nas",
+            },
+          ],
+        })
+      )
+    )
+
+    await expect(
+      initializeWorkspaceUploadSession({
+        datasetMfid,
+        filename: "data.csv",
+        size: 1,
+      })
+    ).resolves.toMatchObject({ unavailableDefaultStores: ["retired-nas"] })
+  })
+
   it("initiates an API session with an idempotency key", async () => {
     stubApiMode()
     const requests: Request[] = []

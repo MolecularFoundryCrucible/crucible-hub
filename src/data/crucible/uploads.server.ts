@@ -124,6 +124,10 @@ const apiMultipartStatusSchema = z
       .default([]),
     state: z.string().min(1),
     upload_id: z.string().min(1).max(255).nullable().optional(),
+    warnings: z
+      .array(z.object({ code: z.string(), store_id: z.string() }).passthrough())
+      .optional()
+      .default([]),
   })
   .passthrough()
 
@@ -251,9 +255,13 @@ export async function initializeWorkspaceUploadSession(
         { code: "missing_upload_id", path: ["upload_id"] },
       ])
     }
+    const unavailableDefaultStores = status.warnings
+      .filter((warning) => warning.code === "default_store_unavailable")
+      .map((warning) => warning.store_id)
     return {
       partSize: status.part_size ?? UPLOAD_PART_SIZE,
       state: apiUploadState(status.state),
+      ...(unavailableDefaultStores.length ? { unavailableDefaultStores } : {}),
       uploadId: status.upload_id,
     }
   }
