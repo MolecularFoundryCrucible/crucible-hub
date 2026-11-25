@@ -82,7 +82,7 @@ docker compose pull hub hub-setup
 docker compose up -d
 ```
 
-The image's `gov.lbl.crucible.api.min-version` label names the oldest Crucible API release it works with, and `gov.lbl.crucible.api.revision` the exact API revision it was built against (`docker inspect --format '{{ index .Config.Labels "gov.lbl.crucible.api.min-version" }}' <image>`). Hub releases after 1.8.2 need Crucible API 4.1.0 or later, 1.8.0 to 1.8.2 need 4.0.0 (1.7.2 and 1.7.3 need 3.3.0, and 1.7.0 and 1.7.1 need 3.2.0). Pre-release images such as 1.8.0-alpha.1 are built against an unreleased API revision and carry no `min-version` label.
+The image's `gov.lbl.crucible.api.min-version` label names the oldest Crucible API release it works with, and `gov.lbl.crucible.api.revision` the exact API revision it was built against (`docker inspect --format '{{ index .Config.Labels "gov.lbl.crucible.api.min-version" }}' <image>`). Hub releases after 1.8.2 need Crucible API 4.1.1 or later, 1.8.0 to 1.8.2 need 4.0.0 (1.7.2 and 1.7.3 need 3.3.0, and 1.7.0 and 1.7.1 need 3.2.0). Pre-release images such as 1.8.0-alpha.1 are built against an unreleased API revision and carry no `min-version` label.
 
 ## Stable interface
 

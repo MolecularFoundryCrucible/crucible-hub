@@ -1351,9 +1351,31 @@ export interface paths {
         };
         /**
          * List Ingestors
-         * @description Returns a list of all ingestor options to use when making an ingestion request.
+         * @description The ingestors live ingestion workers offer (see PUT /workers/{worker_id}), for an ingestion request.
+         *     Empty when ingestion is not enabled or no worker is live.
          */
         get: operations["list_ingestors_ingestors_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/ingestors/details": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Ingestor Details
+         * @description The ingestors live ingestion workers offer, with their description and the file extensions they handle, sorted by name.
+         *     Empty when ingestion is not enabled or no worker is live.
+         */
+        get: operations["list_ingestor_details_ingestors_details_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3444,6 +3466,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/workers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Workers
+         * @description Registered workers, live or seen in the last day, sorted by worker_id, with what they can do and their versions. Requires a platform administrator or support.
+         */
+        get: operations["list_workers_workers_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/workers/{worker_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Register Worker
+         * @description Register a worker, or renew its registration: send it at startup and every `heartbeat_seconds`. It counts as live until `expires_at`. Requires a service account, of any platform role.
+         */
+        put: operations["register_worker_workers__worker_id__put"];
+        post?: never;
+        /**
+         * Deregister Worker
+         * @description Remove a worker's registration, as on a clean shutdown; succeeds when there is none. Requires a service account.
+         */
+        delete: operations["deregister_worker_workers__worker_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -4003,6 +4069,21 @@ export interface components {
             branch: string | null;
             /** Git Commit */
             git_commit: string | null;
+        };
+        /**
+         * Capability
+         * @description One thing a worker can do: for kind ingestion, an ingestor.
+         */
+        Capability: {
+            /** Description */
+            description?: string | null;
+            /**
+             * File Extensions
+             * @description File name endings it handles, with the leading dot, such as .mrc or .tar.gz; compared without case
+             */
+            file_extensions?: string[];
+            /** Name */
+            name: string;
         };
         /** ChunkHit */
         ChunkHit: {
@@ -4738,6 +4819,58 @@ export interface components {
              */
             verified_at?: string | null;
         };
+        /** IgnoredEntry */
+        IgnoredEntry: {
+            /** Field */
+            field: string;
+            /**
+             * Name
+             * @description The capability the entry belongs to
+             */
+            name?: string | null;
+            /** Reason */
+            reason: string;
+        };
+        /** IngestWarning */
+        IngestWarning: {
+            /** Bucket */
+            bucket?: string | null;
+            /**
+             * Code
+             * @enum {string}
+             */
+            code: "no_live_worker" | "store_not_read";
+            /** Ingestion Class */
+            ingestion_class?: string | null;
+            /** Message */
+            message: string;
+        };
+        /** IngestionRequestCreated */
+        IngestionRequestCreated: {
+            /** Dataset Mfid */
+            dataset_mfid?: string | null;
+            /** File Mfid */
+            file_mfid?: string | null;
+            /** File To Upload */
+            file_to_upload?: string | null;
+            /** Id */
+            id: number;
+            /** Ingestion Class */
+            ingestion_class?: string | null;
+            /** Ingestion Githash */
+            ingestion_githash?: string | null;
+            /** Status */
+            status?: string | null;
+            /** Time Completed */
+            time_completed?: string | null;
+            /** Time Created */
+            time_created?: string | null;
+            /**
+             * Warnings
+             * @description The request is queued either way: no_live_worker (no live worker offers the ingestor, or none is live), store_not_read (no live worker reads the file's bucket)
+             */
+            warnings?: components["schemas"]["IngestWarning"][];
+        };
         /** IngestionRequestRead */
         IngestionRequestRead: {
             /** Dataset Mfid */
@@ -4776,6 +4909,15 @@ export interface components {
             status?: string | null;
             /** Time Completed */
             time_completed?: string | null;
+        };
+        /** IngestorDetail */
+        IngestorDetail: {
+            /** Description */
+            description?: string | null;
+            /** File Extensions */
+            file_extensions?: string[];
+            /** Name */
+            name: string;
         };
         /**
          * InstrumentAffiliation
@@ -5229,6 +5371,11 @@ export interface components {
              * @constant
              */
             upload_protocol: "xml-multipart-signed-v1";
+            /**
+             * Warnings
+             * @description On initiation: a project or instrument default store that is not configured any more and was skipped (default_store_unavailable)
+             */
+            warnings?: components["schemas"]["StoreWarning"][];
         };
         /** OwnerFacetBucket */
         OwnerFacetBucket: {
@@ -6062,6 +6209,11 @@ export interface components {
             };
             /** Updated At */
             updated_at?: string | null;
+            /**
+             * Warnings
+             * @description Settings this server cannot honour, such as a default_store_id no longer configured (default_store_unavailable)
+             */
+            warnings?: components["schemas"]["StoreWarning"][];
         };
         /**
          * ResourceSort
@@ -6408,6 +6560,20 @@ export interface components {
             /** Id */
             id: string;
         };
+        /** StoreWarning */
+        StoreWarning: {
+            /**
+             * Code
+             * @constant
+             */
+            code: "default_store_unavailable";
+            /** Message */
+            message: string;
+            /** Record Mfid */
+            record_mfid?: string | null;
+            /** Store Id */
+            store_id: string;
+        };
         /**
          * ThumbnailCreate
          * @description Fields required to attach a thumbnail to a dataset.
@@ -6672,6 +6838,117 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+        };
+        /** WorkerRead */
+        WorkerRead: {
+            /** Buckets */
+            buckets: string[];
+            /** Capabilities */
+            capabilities: components["schemas"]["Capability"][];
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /** Kind */
+            kind: string;
+            /**
+             * Last Seen At
+             * Format: date-time
+             */
+            last_seen_at: string;
+            /** Live */
+            live: boolean;
+            /** Package Version */
+            package_version?: string | null;
+            /**
+             * Registered At
+             * Format: date-time
+             */
+            registered_at: string;
+            /**
+             * Store Ids
+             * @description The stores whose bucket the worker reads
+             */
+            store_ids: string[];
+            /** Worker Id */
+            worker_id: string;
+            /** Worker Version */
+            worker_version?: string | null;
+        };
+        /**
+         * WorkerRegister
+         * @description What a worker can do. capabilities: for kind ingestion, the ingestors it runs. buckets: the buckets it can read.
+         */
+        WorkerRegister: {
+            /** Buckets */
+            buckets?: string[];
+            /**
+             * Capabilities
+             * @description One object per capability: name, and optionally description (up to 2000 characters) and file_extensions (up to 50, such as .mrc). Invalid parts are dropped and listed in the response's ignored, not refused
+             */
+            capabilities?: {
+                [key: string]: unknown;
+            }[];
+            /**
+             * Kind
+             * @constant
+             */
+            kind: "ingestion";
+            /**
+             * Package Version
+             * @description For kind ingestion, the crucible-ingestion version
+             */
+            package_version?: string | null;
+            /** Worker Version */
+            worker_version?: string | null;
+        };
+        /** WorkerRegistered */
+        WorkerRegistered: {
+            /** Buckets */
+            buckets: string[];
+            /** Capabilities */
+            capabilities: components["schemas"]["Capability"][];
+            /**
+             * Expires At
+             * Format: date-time
+             */
+            expires_at: string;
+            /**
+             * Heartbeat Seconds
+             * @description Renew the registration this often; it expires at expires_at
+             */
+            heartbeat_seconds: number;
+            /**
+             * Ignored
+             * @description Parts of the capabilities that were invalid and left out; log them
+             */
+            ignored?: components["schemas"]["IgnoredEntry"][];
+            /** Kind */
+            kind: string;
+            /**
+             * Last Seen At
+             * Format: date-time
+             */
+            last_seen_at: string;
+            /** Live */
+            live: boolean;
+            /** Package Version */
+            package_version?: string | null;
+            /**
+             * Registered At
+             * Format: date-time
+             */
+            registered_at: string;
+            /**
+             * Store Ids
+             * @description The stores whose bucket the worker reads
+             */
+            store_ids: string[];
+            /** Worker Id */
+            worker_id: string;
+            /** Worker Version */
+            worker_version?: string | null;
         };
     };
     responses: never;
@@ -10066,7 +10343,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["IngestionRequestRead"];
+                    "application/json": components["schemas"]["IngestionRequestCreated"];
                 };
             };
             /** @description Stored file location is outside the file's own dataset or an allowed bucket: `{"detail": {"code": "storage_location_invalid", "reason": ..., "message": ...}}` */
@@ -10409,6 +10686,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": string[];
+                };
+            };
+        };
+    };
+    list_ingestor_details_ingestors_details_get: {
+        parameters: {
+            query?: {
+                /** @description Only the ingestors whose file_extensions match the end of this file name, without case: suggestions for a file */
+                file_name?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IngestorDetail"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -16055,6 +16365,131 @@ export interface operations {
             /** @description Not one of this person's active sessions */
             404: {
                 headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_workers_workers_get: {
+        parameters: {
+            query?: {
+                kind?: "ingestion" | null;
+                /** @description Only live workers (true), or only expired ones still kept (false) */
+                live?: boolean | null;
+            };
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkerRead"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    register_worker_workers__worker_id__put: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                worker_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkerRegister"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkerRegistered"];
+                };
+            };
+            /** @description A live worker registered by another account has this id: `{"detail": {"code": "worker_id_taken", "worker_id": ..., "message": ...}}` */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deregister_worker_workers__worker_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal. */
+                "Crucible-Privilege-Mode"?: components["schemas"]["PrivilegeMode"] | null;
+            };
+            path: {
+                worker_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    "Cache-Control": components["headers"]["PrivateCacheControl"];
+                    "Crucible-Privilege-Mode": components["headers"]["CruciblePrivilegeMode"];
+                    Vary: components["headers"]["PrivilegeModeVary"];
+                    "X-Request-ID": components["headers"]["CrucibleRequestId"];
                     [name: string]: unknown;
                 };
                 content?: never;

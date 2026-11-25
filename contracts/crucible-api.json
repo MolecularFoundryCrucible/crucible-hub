@@ -1560,6 +1560,39 @@
         "title": "BuildInfoResponse",
         "type": "object"
       },
+      "Capability": {
+        "description": "One thing a worker can do: for kind ingestion, an ingestor.",
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "file_extensions": {
+            "description": "File name endings it handles, with the leading dot, such as .mrc or .tar.gz; compared without case",
+            "items": {
+              "type": "string"
+            },
+            "title": "File Extensions",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "Capability",
+        "type": "object"
+      },
       "ChunkHit": {
         "properties": {
           "chunk_index": {
@@ -3577,6 +3610,189 @@
         "title": "IdentityRead",
         "type": "object"
       },
+      "IgnoredEntry": {
+        "properties": {
+          "field": {
+            "title": "Field",
+            "type": "string"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The capability the entry belongs to",
+            "title": "Name"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "field",
+          "reason"
+        ],
+        "title": "IgnoredEntry",
+        "type": "object"
+      },
+      "IngestWarning": {
+        "properties": {
+          "bucket": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bucket"
+          },
+          "code": {
+            "enum": [
+              "no_live_worker",
+              "store_not_read"
+            ],
+            "title": "Code",
+            "type": "string"
+          },
+          "ingestion_class": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ingestion Class"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "IngestWarning",
+        "type": "object"
+      },
+      "IngestionRequestCreated": {
+        "properties": {
+          "dataset_mfid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dataset Mfid"
+          },
+          "file_mfid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Mfid"
+          },
+          "file_to_upload": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File To Upload"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "ingestion_class": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ingestion Class"
+          },
+          "ingestion_githash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ingestion Githash"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "time_completed": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time Completed"
+          },
+          "time_created": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time Created"
+          },
+          "warnings": {
+            "description": "The request is queued either way: no_live_worker (no live worker offers the ingestor, or none is live), store_not_read (no live worker reads the file's bucket)",
+            "items": {
+              "$ref": "#/components/schemas/IngestWarning"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "IngestionRequestCreated",
+        "type": "object"
+      },
       "IngestionRequestRead": {
         "properties": {
           "dataset_mfid": {
@@ -3752,6 +3968,37 @@
           }
         },
         "title": "IngestionRequestUpdate",
+        "type": "object"
+      },
+      "IngestorDetail": {
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "file_extensions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "File Extensions",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "IngestorDetail",
         "type": "object"
       },
       "InstrumentAffiliation": {
@@ -5158,6 +5405,14 @@
             "default": "xml-multipart-signed-v1",
             "title": "Upload Protocol",
             "type": "string"
+          },
+          "warnings": {
+            "description": "On initiation: a project or instrument default store that is not configured any more and was skipped (default_store_unavailable)",
+            "items": {
+              "$ref": "#/components/schemas/StoreWarning"
+            },
+            "title": "Warnings",
+            "type": "array"
           }
         },
         "required": [
@@ -7767,6 +8022,14 @@
               }
             ],
             "title": "Updated At"
+          },
+          "warnings": {
+            "description": "Settings this server cannot honour, such as a default_store_id no longer configured (default_store_unavailable)",
+            "items": {
+              "$ref": "#/components/schemas/StoreWarning"
+            },
+            "title": "Warnings",
+            "type": "array"
           }
         },
         "required": [
@@ -8694,6 +8957,41 @@
         "title": "StoreRead",
         "type": "object"
       },
+      "StoreWarning": {
+        "properties": {
+          "code": {
+            "const": "default_store_unavailable",
+            "title": "Code",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "record_mfid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Record Mfid"
+          },
+          "store_id": {
+            "title": "Store Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "store_id",
+          "message"
+        ],
+        "title": "StoreWarning",
+        "type": "object"
+      },
       "ThumbnailCreate": {
         "description": "Fields required to attach a thumbnail to a dataset.",
         "properties": {
@@ -9340,6 +9638,256 @@
         ],
         "title": "ValidationError",
         "type": "object"
+      },
+      "WorkerRead": {
+        "properties": {
+          "buckets": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Buckets",
+            "type": "array"
+          },
+          "capabilities": {
+            "items": {
+              "$ref": "#/components/schemas/Capability"
+            },
+            "title": "Capabilities",
+            "type": "array"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "last_seen_at": {
+            "format": "date-time",
+            "title": "Last Seen At",
+            "type": "string"
+          },
+          "live": {
+            "title": "Live",
+            "type": "boolean"
+          },
+          "package_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Package Version"
+          },
+          "registered_at": {
+            "format": "date-time",
+            "title": "Registered At",
+            "type": "string"
+          },
+          "store_ids": {
+            "description": "The stores whose bucket the worker reads",
+            "items": {
+              "type": "string"
+            },
+            "title": "Store Ids",
+            "type": "array"
+          },
+          "worker_id": {
+            "title": "Worker Id",
+            "type": "string"
+          },
+          "worker_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Worker Version"
+          }
+        },
+        "required": [
+          "worker_id",
+          "kind",
+          "capabilities",
+          "buckets",
+          "store_ids",
+          "registered_at",
+          "last_seen_at",
+          "expires_at",
+          "live"
+        ],
+        "title": "WorkerRead",
+        "type": "object"
+      },
+      "WorkerRegister": {
+        "additionalProperties": false,
+        "description": "What a worker can do. capabilities: for kind ingestion, the ingestors it runs. buckets: the buckets it can read.",
+        "properties": {
+          "buckets": {
+            "items": {
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,221}$",
+              "type": "string"
+            },
+            "maxItems": 50,
+            "title": "Buckets",
+            "type": "array"
+          },
+          "capabilities": {
+            "description": "One object per capability: name, and optionally description (up to 2000 characters) and file_extensions (up to 50, such as .mrc). Invalid parts are dropped and listed in the response's ignored, not refused",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "maxItems": 500,
+            "title": "Capabilities",
+            "type": "array"
+          },
+          "kind": {
+            "const": "ingestion",
+            "title": "Kind",
+            "type": "string"
+          },
+          "package_version": {
+            "anyOf": [
+              {
+                "maxLength": 128,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "For kind ingestion, the crucible-ingestion version",
+            "title": "Package Version"
+          },
+          "worker_version": {
+            "anyOf": [
+              {
+                "maxLength": 128,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Worker Version"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "WorkerRegister",
+        "type": "object"
+      },
+      "WorkerRegistered": {
+        "properties": {
+          "buckets": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Buckets",
+            "type": "array"
+          },
+          "capabilities": {
+            "items": {
+              "$ref": "#/components/schemas/Capability"
+            },
+            "title": "Capabilities",
+            "type": "array"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "heartbeat_seconds": {
+            "description": "Renew the registration this often; it expires at expires_at",
+            "title": "Heartbeat Seconds",
+            "type": "integer"
+          },
+          "ignored": {
+            "description": "Parts of the capabilities that were invalid and left out; log them",
+            "items": {
+              "$ref": "#/components/schemas/IgnoredEntry"
+            },
+            "title": "Ignored",
+            "type": "array"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "last_seen_at": {
+            "format": "date-time",
+            "title": "Last Seen At",
+            "type": "string"
+          },
+          "live": {
+            "title": "Live",
+            "type": "boolean"
+          },
+          "package_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Package Version"
+          },
+          "registered_at": {
+            "format": "date-time",
+            "title": "Registered At",
+            "type": "string"
+          },
+          "store_ids": {
+            "description": "The stores whose bucket the worker reads",
+            "items": {
+              "type": "string"
+            },
+            "title": "Store Ids",
+            "type": "array"
+          },
+          "worker_id": {
+            "title": "Worker Id",
+            "type": "string"
+          },
+          "worker_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Worker Version"
+          }
+        },
+        "required": [
+          "worker_id",
+          "kind",
+          "capabilities",
+          "buckets",
+          "store_ids",
+          "registered_at",
+          "last_seen_at",
+          "expires_at",
+          "live",
+          "heartbeat_seconds"
+        ],
+        "title": "WorkerRegistered",
+        "type": "object"
       }
     },
     "securitySchemes": {
@@ -9355,7 +9903,7 @@
   },
   "info": {
     "title": "FastAPI",
-    "version": "4.1.0"
+    "version": "4.1.1"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -17615,7 +18163,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/IngestionRequestRead"
+                  "$ref": "#/components/schemas/IngestionRequestCreated"
                 }
               }
             },
@@ -18242,7 +18790,7 @@
     },
     "/ingestors": {
       "get": {
-        "description": "Returns a list of all ingestor options to use when making an ingestion request.",
+        "description": "The ingestors live ingestion workers offer (see PUT /workers/{worker_id}), for an ingestion request.\nEmpty when ingestion is not enabled or no worker is live.",
         "operationId": "list_ingestors_ingestors_get",
         "responses": {
           "200": {
@@ -18266,6 +18814,68 @@
           }
         },
         "summary": "List Ingestors",
+        "tags": [
+          "misc"
+        ]
+      }
+    },
+    "/ingestors/details": {
+      "get": {
+        "description": "The ingestors live ingestion workers offer, with their description and the file extensions they handle, sorted by name.\nEmpty when ingestion is not enabled or no worker is live.",
+        "operationId": "list_ingestor_details_ingestors_details_get",
+        "parameters": [
+          {
+            "description": "Only the ingestors whose file_extensions match the end of this file name, without case: suggestions for a file",
+            "in": "query",
+            "name": "file_name",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 1024,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only the ingestors whose file_extensions match the end of this file name, without case: suggestions for a file",
+              "title": "File Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/IngestorDetail"
+                  },
+                  "title": "Response List Ingestor Details Ingestors Details Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Ingestor Details",
         "tags": [
           "misc"
         ]
@@ -32093,6 +32703,282 @@
         "summary": "End User Session",
         "tags": [
           "account"
+        ]
+      }
+    },
+    "/workers": {
+      "get": {
+        "description": "Registered workers, live or seen in the last day, sorted by worker_id, with what they can do and their versions. Requires a platform administrator or support.",
+        "operationId": "list_workers_workers_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "const": "ingestion",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Kind"
+            }
+          },
+          {
+            "description": "Only live workers (true), or only expired ones still kept (false)",
+            "in": "query",
+            "name": "live",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only live workers (true), or only expired ones still kept (false)",
+              "title": "Live"
+            }
+          },
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/WorkerRead"
+                  },
+                  "title": "Response List Workers Workers Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Workers",
+        "tags": [
+          "workers"
+        ]
+      }
+    },
+    "/workers/{worker_id}": {
+      "delete": {
+        "description": "Remove a worker's registration, as on a clean shutdown; succeeds when there is none. Requires a service account.",
+        "operationId": "deregister_worker_workers__worker_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "worker_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+              "title": "Worker Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Deregister Worker",
+        "tags": [
+          "workers"
+        ]
+      },
+      "put": {
+        "description": "Register a worker, or renew its registration: send it at startup and every `heartbeat_seconds`. It counts as live until `expires_at`. Requires a service account, of any platform role.",
+        "operationId": "register_worker_workers__worker_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "worker_id",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$",
+              "title": "Worker Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
+            "in": "header",
+            "name": "Crucible-Privilege-Mode",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/PrivilegeMode"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Select normal ACL-derived authorization or explicit platform-administrator elevation. When omitted, an administrator's API key is elevated and a browser session is normal.",
+              "title": "Crucible-Privilege-Mode"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkerRegister"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkerRegistered"
+                }
+              }
+            },
+            "description": "Successful Response",
+            "headers": {
+              "Cache-Control": {
+                "$ref": "#/components/headers/PrivateCacheControl"
+              },
+              "Crucible-Privilege-Mode": {
+                "$ref": "#/components/headers/CruciblePrivilegeMode"
+              },
+              "Vary": {
+                "$ref": "#/components/headers/PrivilegeModeVary"
+              },
+              "X-Request-ID": {
+                "$ref": "#/components/headers/CrucibleRequestId"
+              }
+            }
+          },
+          "409": {
+            "description": "A live worker registered by another account has this id: `{\"detail\": {\"code\": \"worker_id_taken\", \"worker_id\": ..., \"message\": ...}}`"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Register Worker",
+        "tags": [
+          "workers"
         ]
       }
     }

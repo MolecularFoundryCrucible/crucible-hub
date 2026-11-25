@@ -4,7 +4,7 @@ This document owns the order of remaining Hub work and the external dependencies
 
 ## Current position
 
-Hub 1.8.2 consumes the Crucible API 4.1.0 contract recorded in `contracts/crucible-api.lock.json`. It is released as a container image, signs people in through the API's standard OAuth routes, and keeps sessions in Postgres. Discovery, resource workspaces, management, account security, people and service-account administration, deletion and join-request review, uploads, ingestion, and post-processing are in place.
+Hub 1.8.2 consumes the Crucible API 4.1.1 contract recorded in `contracts/crucible-api.lock.json`. It is released as a container image, signs people in through the API's standard OAuth routes, and keeps sessions in Postgres. Discovery, resource workspaces, management, account security, people and service-account administration, deletion and join-request review, uploads, ingestion, and post-processing are in place.
 
 ## Delivery rules
 
