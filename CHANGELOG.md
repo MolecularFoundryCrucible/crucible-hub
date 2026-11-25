@@ -6,6 +6,7 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- An MFID too long for its column wraps instead of running under its copy button, which happened in Firefox at some window widths.
 - When the server has more than one store, Add files offers a Store choice, defaulting to the project's, then the instrument's, then the server's default store.
 - Project and instrument managers choose a default store for new uploads on the Manage tab when the server has more than one store; a save refused because the settings changed elsewhere asks to review and save again.
 - Dataset admins can restore or permanently delete removed files from a Recently deleted section on the Files tab while Crucible API 4.1.0 still keeps their content.
