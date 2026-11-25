@@ -404,7 +404,7 @@ export function RotateServiceAccountKeyAction({
       <ConfirmationDialog
         kind="alert"
         confirmLabel="Rotate key"
-        description="The current key will stop working immediately. Existing integrations must be updated with the replacement key."
+        description="The current key will stop working immediately. Existing integrations must be updated with the replacement key. To switch without downtime, create a new key instead, deploy it, then revoke the old one."
         error={error}
         onConfirm={() => void rotateKey()}
         onOpenChange={setConfirming}

@@ -49,7 +49,9 @@ export const createWorkspaceApiKeyFn = createServerFn({ method: "POST" })
       .object({
         expiresAt: z.string().datetime().nullable(),
         name: keyNameSchema,
+        neverExpires: z.boolean().optional(),
         scenario: fixtureScenarioSchema.optional(),
+        userId: z.string().trim().min(1).max(255).optional(),
       })
       .strict()
   )
@@ -57,7 +59,12 @@ export const createWorkspaceApiKeyFn = createServerFn({ method: "POST" })
     setResponseHeader("Cache-Control", "no-store")
     return safeCrucibleCall(context.correlationId, () =>
       createWorkspaceApiKey(
-        { expiresAt: data.expiresAt, name: data.name },
+        data.userId ? { kind: "user", userId: data.userId } : { kind: "self" },
+        {
+          expiresAt: data.expiresAt,
+          name: data.name,
+          neverExpires: data.neverExpires ?? false,
+        },
         data.scenario,
         context.requestSignal
       )
