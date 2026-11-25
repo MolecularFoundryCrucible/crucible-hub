@@ -31,6 +31,7 @@ import { Route as FixturesDesignSystemRouteImport } from './routes/fixtures.desi
 import { Route as FixturesScenariosRouteImport } from './routes/fixtures.scenarios'
 import { Route as AppAccountIndexRouteImport } from './routes/_app.account.index'
 import { Route as AppAccountSecurityRouteImport } from './routes/_app.account.security'
+import { Route as AppAdminWorkersRouteImport } from './routes/_app.admin.workers'
 import { Route as AppDatasetsDatasetMfidRouteImport } from './routes/_app.datasets.$datasetMfid'
 import { Route as AppDatasetsNewRouteImport } from './routes/_app.datasets.new'
 import { Route as AppInstrumentsIndexRouteImport } from './routes/_app.instruments.index'
@@ -185,6 +186,11 @@ const AppAccountSecurityRoute = AppAccountSecurityRouteImport.update({
   id: '/security',
   path: '/security',
   getParentRoute: () => AppAccountRoute,
+} as any)
+const AppAdminWorkersRoute = AppAdminWorkersRouteImport.update({
+  id: '/admin/workers',
+  path: '/admin/workers',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppDatasetsDatasetMfidRoute = AppDatasetsDatasetMfidRouteImport.update({
   id: '/datasets/$datasetMfid',
@@ -463,6 +469,7 @@ export interface FileRoutesByFullPath {
   '/fixtures/design-system': typeof FixturesDesignSystemRoute
   '/fixtures/scenarios': typeof FixturesScenariosRoute
   '/account/security': typeof AppAccountSecurityRoute
+  '/admin/workers': typeof AppAdminWorkersRoute
   '/datasets/$datasetMfid': typeof AppDatasetsDatasetMfidRouteWithChildren
   '/datasets/new': typeof AppDatasetsNewRoute
   '/instruments/$instrumentMfid': typeof AppInstrumentsInstrumentMfidRouteWithChildren
@@ -530,6 +537,7 @@ export interface FileRoutesByTo {
   '/fixtures/scenarios': typeof FixturesScenariosRoute
   '/': typeof AppIndexRoute
   '/account/security': typeof AppAccountSecurityRoute
+  '/admin/workers': typeof AppAdminWorkersRoute
   '/datasets/new': typeof AppDatasetsNewRoute
   '/instruments/new': typeof AppInstrumentsNewRoute
   '/projects/new': typeof AppProjectsNewRoute
@@ -592,6 +600,7 @@ export interface FileRoutesById {
   '/fixtures/scenarios': typeof FixturesScenariosRoute
   '/_app/': typeof AppIndexRoute
   '/_app/account/security': typeof AppAccountSecurityRoute
+  '/_app/admin/workers': typeof AppAdminWorkersRoute
   '/_app/datasets/$datasetMfid': typeof AppDatasetsDatasetMfidRouteWithChildren
   '/_app/datasets/new': typeof AppDatasetsNewRoute
   '/_app/instruments/$instrumentMfid': typeof AppInstrumentsInstrumentMfidRouteWithChildren
@@ -662,6 +671,7 @@ export interface FileRouteTypes {
     | '/fixtures/design-system'
     | '/fixtures/scenarios'
     | '/account/security'
+    | '/admin/workers'
     | '/datasets/$datasetMfid'
     | '/datasets/new'
     | '/instruments/$instrumentMfid'
@@ -729,6 +739,7 @@ export interface FileRouteTypes {
     | '/fixtures/scenarios'
     | '/'
     | '/account/security'
+    | '/admin/workers'
     | '/datasets/new'
     | '/instruments/new'
     | '/projects/new'
@@ -790,6 +801,7 @@ export interface FileRouteTypes {
     | '/fixtures/scenarios'
     | '/_app/'
     | '/_app/account/security'
+    | '/_app/admin/workers'
     | '/_app/datasets/$datasetMfid'
     | '/_app/datasets/new'
     | '/_app/instruments/$instrumentMfid'
@@ -1011,6 +1023,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/account/security'
       preLoaderRoute: typeof AppAccountSecurityRouteImport
       parentRoute: typeof AppAccountRoute
+    }
+    '/_app/admin/workers': {
+      id: '/_app/admin/workers'
+      path: '/admin/workers'
+      fullPath: '/admin/workers'
+      preLoaderRoute: typeof AppAdminWorkersRouteImport
+      parentRoute: typeof AppRoute
     }
     '/_app/datasets/$datasetMfid': {
       id: '/_app/datasets/$datasetMfid'
@@ -1514,6 +1533,7 @@ interface AppRouteChildren {
   AppPreferencesRoute: typeof AppPreferencesRoute
   AppSearchRoute: typeof AppSearchRoute
   AppIndexRoute: typeof AppIndexRoute
+  AppAdminWorkersRoute: typeof AppAdminWorkersRoute
   AppDatasetsDatasetMfidRoute: typeof AppDatasetsDatasetMfidRouteWithChildren
   AppDatasetsNewRoute: typeof AppDatasetsNewRoute
   AppInstrumentsInstrumentMfidRoute: typeof AppInstrumentsInstrumentMfidRouteWithChildren
@@ -1539,6 +1559,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppPreferencesRoute: AppPreferencesRoute,
   AppSearchRoute: AppSearchRoute,
   AppIndexRoute: AppIndexRoute,
+  AppAdminWorkersRoute: AppAdminWorkersRoute,
   AppDatasetsDatasetMfidRoute: AppDatasetsDatasetMfidRouteWithChildren,
   AppDatasetsNewRoute: AppDatasetsNewRoute,
   AppInstrumentsInstrumentMfidRoute:

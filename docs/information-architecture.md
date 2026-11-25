@@ -14,12 +14,12 @@ This document owns Hub routes, navigation, shell behavior, and URL-backed workfl
 
 The sidebar holds, in order:
 
-| Group          | Items                                                                                                                                                                                                                            |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Destinations   | Home; Data with Samples and Datasets sub-items and their create actions; Projects with a create action; Instruments with a register action.                                                                                      |
-| Administration | Administrator view switch (eligible human administrators only); Users and Service accounts (only while Administrator view is on); Deletion requests and Join requests, each with a count badge of requests awaiting your review. |
-| Recent         | The newest four recently viewed projects, instruments, samples, and datasets.                                                                                                                                                    |
-| Footer         | Shortcuts, Theme, and the collapse control (not in the compact drawer).                                                                                                                                                          |
+| Group          | Items                                                                                                                                                                                                                                               |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Destinations   | Home; Data with Samples and Datasets sub-items and their create actions; Projects with a create action; Instruments with a register action.                                                                                                         |
+| Administration | Administrator view switch (eligible human administrators only); Users, Service accounts and Ingestion workers (only while Administrator view is on); Deletion requests and Join requests, each with a count badge of requests awaiting your review. |
+| Recent         | The newest four recently viewed projects, instruments, samples, and datasets.                                                                                                                                                                       |
+| Footer         | Shortcuts, Theme, and the collapse control (not in the compact drawer).                                                                                                                                                                             |
 
 Sidebar create actions appear on hover or focus; touch devices use the top-bar Create menu instead. Wide and expanded windows show the saved sidebar choice, medium windows an icon rail, and compact windows a drawer with the same items (window classes are in [design-system-reference.md](design-system-reference.md#responsive-layout)).
 
@@ -57,6 +57,7 @@ Entity pages put their name in the browser title and a `RefreshButton` at the ri
 | `/admin/users`                                                 | User directory, accounts awaiting approval, and user creation                             |
 | `/admin/service-accounts`                                      | Service-account directory and creation                                                    |
 | `/admin/service-accounts/:serviceAccountMfid`, `.../security`  | Service-account profile, and its API keys, key rotation, and sign-in history              |
+| `/admin/workers`                                               | Ingestion workers registered in the last day, with status, versions, stores and ingestors |
 
 ### Redirects
 
@@ -119,7 +120,7 @@ Tabs: Overview, Processing (datasets only), Graph, and Manage, under a persisten
 
 ### People and service accounts
 
-`/users/:userId` shows a public-safe profile; administrators in Administrator view also see projects, a Security tab, platform-role editing, and account disabling. Service-account pages use the same layout. Users and Service accounts require an eligible human administrator with Administrator view on; otherwise the route offers to turn it on or redirects to Home, and their server functions refuse with `403`.
+`/users/:userId` shows a public-safe profile; administrators in Administrator view also see projects, a Security tab, platform-role editing, and account disabling. Service-account pages use the same layout. Users, Service accounts and Ingestion workers require an eligible human administrator with Administrator view on; otherwise the route offers to turn it on or redirects to Home, and their server functions refuse with `403`.
 
 ### Deletion and join requests
 

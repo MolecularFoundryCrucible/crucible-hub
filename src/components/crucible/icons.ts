@@ -159,6 +159,7 @@ export {
   ChevronsUpDown as SortUnselectedIcon,
   Database as DatabaseIcon,
   Server as ServerIcon,
+  Cog as IngestionWorkersIcon,
   AppWindow as HubApplicationIcon,
   ExternalLink as ExternalLinkIcon,
   X as CloseIcon,

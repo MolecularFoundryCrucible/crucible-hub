@@ -6,6 +6,7 @@ The public surface that versions protect is shareable URLs and their search para
 
 ## Unreleased
 
+- Administrators see the ingestion workers registered in the last day under Ingestion workers in Administrator view: whether each is live, when it was last seen, its versions, the stores it reads and the ingestors it offers.
 - An MFID too long for its column wraps instead of running under its copy button, which happened in Firefox at some window widths.
 - When the server has more than one store, Add files offers a Store choice, defaulting to the project's, then the instrument's, then the server's default store.
 - Project and instrument managers choose a default store for new uploads on the Manage tab when the server has more than one store; a save refused because the settings changed elsewhere asks to review and save again.
