@@ -8,7 +8,7 @@ import { CrucibleResponseError } from "@/server/crucible/request-error.server"
 import {
   createWorkspaceFileDownload,
   readWorkspaceDatasetIngestionRequests,
-  readWorkspaceIngestionClasses,
+  readWorkspaceIngestors,
 } from "./dataset-files.server"
 
 describe("dataset file sources", () => {
@@ -204,21 +204,32 @@ describe("dataset file sources", () => {
     })
   })
 
-  it("reads the public ingestor list without a privilege-mode echo", async () => {
+  it("reads the public ingestor details without a privilege-mode echo", async () => {
     vi.stubEnv("NODE_ENV", "development")
     vi.stubEnv("HUB_DATA_SOURCE", "api")
     vi.stubEnv("CRUCIBLE_API_BASE_URL", "https://api.example.test")
     vi.stubEnv("CRUCIBLE_API_KEY", "local-test-key")
     const fetchMock = vi.fn(async (request: Request) => {
-      expect(new URL(request.url).pathname).toBe("/ingestors")
+      expect(new URL(request.url).pathname).toBe("/ingestors/details")
       expect(request.headers.has("Crucible-Privilege-Mode")).toBe(false)
-      return Response.json([" AFMIngestor ", "BioGlowIngestor", "AFMIngestor"])
+      return Response.json([
+        {
+          description: " MRC maps ",
+          file_extensions: [".MRC"],
+          name: "MrcIngestor",
+        },
+        { name: "H5Ingestor" },
+      ])
     })
     vi.stubGlobal("fetch", fetchMock)
 
-    await expect(readWorkspaceIngestionClasses()).resolves.toEqual([
-      "AFMIngestor",
-      "BioGlowIngestor",
+    await expect(readWorkspaceIngestors()).resolves.toEqual([
+      {
+        description: "MRC maps",
+        fileExtensions: [".mrc"],
+        name: "MrcIngestor",
+      },
+      { description: null, fileExtensions: [], name: "H5Ingestor" },
     ])
   })
 })

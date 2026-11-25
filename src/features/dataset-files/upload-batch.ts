@@ -13,10 +13,10 @@ import { HubApiClientError, unwrapHubResult } from "@/data/crucible/result"
 import { validateUploadFilename } from "@/data/crucible/uploads"
 import type { WorkspaceDatasetFile } from "@/data/crucible/workspace-source"
 import {
+  AUTO_INGESTOR,
   ingestorClassName,
-  NO_INGESTOR,
-} from "@/features/ingestion/ingestor-select"
-import type { IngestorChoice } from "@/features/ingestion/ingestor-select"
+} from "@/features/ingestion/ingestor-picker"
+import type { IngestorChoice } from "@/features/ingestion/ingestor-picker"
 import { createTransferRate } from "@/lib/transfer-rate"
 import type { TransferEstimate } from "@/lib/transfer-rate"
 
@@ -169,7 +169,7 @@ export function useUploadBatch({
         file: source.file,
         filename: source.path,
         id: crypto.randomUUID(),
-        ingestor: NO_INGESTOR,
+        ingestor: AUTO_INGESTOR,
         state: { status: "staged" } as const,
       })),
     ])

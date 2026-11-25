@@ -242,8 +242,8 @@ export const crucibleKeys = {
     [...scope, "join-requests"] as const,
   joinRequests: (scope: IdentityScope, filters: ListFilters) =>
     [...scope, "join-requests", normalizeFilters(filters)] as const,
-  ingestionClasses: (scope: IdentityScope) =>
-    [...scope, "ingestion", "classes"] as const,
+  ingestors: (scope: IdentityScope) =>
+    [...scope, "ingestion", "ingestors"] as const,
   stores: (scope: IdentityScope) => [...scope, "storage", "stores"] as const,
   workers: (scope: IdentityScope) => [...scope, "workers"] as const,
   resourceSettings: (scope: IdentityScope, mfid: string) =>

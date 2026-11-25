@@ -52,12 +52,13 @@ test("uploads files, requests ingestion, and starts empty when reopened", async 
     { name: uploadedFilename, text: "measured potential values for cycle 05" },
     { name: secondFilename, text: "measured values for cycle 06" },
   ])
-  await dialog(page)
-    .getByLabel("Ingestor for all")
-    .selectOption({ label: "Auto-detect" })
+  await expect(dialog(page).getByLabel("Ingestor for all")).toHaveText(
+    "Auto-detect"
+  )
   await dialog(page)
     .getByRole("combobox", { name: `Ingestor for ${secondFilename}` })
-    .selectOption({ label: "No ingestion" })
+    .click()
+  await page.getByRole("option", { name: /^Don't ingest/ }).click()
 
   await dialog(page).getByRole("button", { name: "Upload 2 files" }).click()
   await expect(dialog(page).getByText("Ingestion requested")).toHaveCount(1, {

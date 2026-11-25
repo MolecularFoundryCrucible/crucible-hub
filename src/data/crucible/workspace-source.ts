@@ -810,6 +810,12 @@ export type WorkspaceJoinRequest = Schema<"JoinRequestRead">
 
 export type WorkspaceWorker = Schema<"WorkerRead">
 
+export type WorkspaceIngestor = {
+  description: string | null
+  fileExtensions: readonly string[]
+  name: string
+}
+
 export type WorkspaceJoinRequestRole = Schema<"JoinRequestRole">
 
 export type WorkspaceJoinRequestStatus = Schema<"JoinRequestStatus">

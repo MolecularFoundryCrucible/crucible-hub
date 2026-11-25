@@ -8,7 +8,7 @@ import {
   getWorkspaceDatasetIngestionRequests,
   getWorkspaceDatasetThumbnailPreviews,
   getWorkspaceDatasetThumbnails,
-  getWorkspaceIngestionClasses,
+  getWorkspaceIngestors,
   getWorkspaceStores,
   getWorkspaceResource,
   getWorkspaceResourceGraph,
@@ -155,12 +155,12 @@ export function storesQueryOptions(scope: IdentityScope) {
   })
 }
 
-export function ingestionClassesQueryOptions(scope: IdentityScope) {
+export function ingestorsQueryOptions(scope: IdentityScope) {
   return queryOptions({
-    queryKey: crucibleKeys.ingestionClasses(scope),
+    queryKey: crucibleKeys.ingestors(scope),
     queryFn: async ({ signal }) =>
       unwrapHubResult(
-        await getWorkspaceIngestionClasses({
+        await getWorkspaceIngestors({
           data: { scenario: fixtureScenarioFromScope(scope) },
           signal,
         })

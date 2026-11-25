@@ -12,11 +12,13 @@ import { lazyNamed } from "@/lib/lazy-named"
 import { AddFilesIcon, RequestIngestionIcon } from "@/components/crucible/icons"
 import {
   AUTO_INGESTOR,
-  IngestorSelect,
+  IngestorPicker,
+  NO_INGESTORS_AVAILABLE,
   ingestorClassName,
-  useIngestorClasses,
-} from "@/features/ingestion/ingestor-select"
-import type { IngestorChoice } from "@/features/ingestion/ingestor-select"
+  sharedIngestorChoice,
+  useIngestors,
+} from "@/features/ingestion/ingestor-picker"
+import type { IngestorChoice } from "@/features/ingestion/ingestor-picker"
 import { LocalDateTime } from "@/components/crucible/local-date-time"
 import { MfidText } from "@/components/crucible/mfid-text"
 import { PendingIcon } from "@/components/crucible/pending-icon"
@@ -519,15 +521,19 @@ function IngestionRequestDialog({
     [eligibleFiles]
   )
   const [selectedMfids, setSelectedMfids] = useState<readonly string[]>([])
-  const [ingestor, setIngestor] = useState<IngestorChoice>(AUTO_INGESTOR)
+  const [choices, setChoices] = useState<
+    Readonly<Record<string, IngestorChoice>>
+  >({})
   const [error, setError] = useState<string>()
-  const classesResult = useIngestorClasses(open)
+  const ingestorsResult = useIngestors(open)
+  const ingestors = ingestorsResult.data ?? []
+  const choiceFor = (fileMfid: string) => choices[fileMfid] ?? AUTO_INGESTOR
   const mutation = useMutation({
     mutationFn: async (fileMfids: readonly string[]) => {
-      const ingestionClass = ingestorClassName(ingestor)
       const results = await Promise.allSettled(
-        fileMfids.map(async (fileMfid) =>
-          unwrapHubResult(
+        fileMfids.map(async (fileMfid) => {
+          const ingestionClass = ingestorClassName(choiceFor(fileMfid))
+          return unwrapHubResult(
             await requestWorkspaceIngestion({
               data: {
                 fileMfid,
@@ -536,7 +542,7 @@ function IngestionRequestDialog({
               },
             })
           )
-        )
+        })
       )
       return results.map((result, index) => ({
         fileMfid: fileMfids[index]!,
@@ -548,7 +554,7 @@ function IngestionRequestDialog({
   useEffect(() => {
     if (!open) return
     setSelectedMfids(eligibleMfids)
-    setIngestor(AUTO_INGESTOR)
+    setChoices({})
     setError(undefined)
   }, [eligibleMfids, open])
 
@@ -597,6 +603,9 @@ function IngestionRequestDialog({
     )
   }
 
+  const selectedFiles = eligibleFiles.filter((file) =>
+    selectedMfids.includes(file.mfid)
+  )
   const allSelected =
     eligibleMfids.length > 0 &&
     eligibleMfids.every((fileMfid) => selectedMfids.includes(fileMfid))
@@ -613,20 +622,33 @@ function IngestionRequestDialog({
           </DialogHeader>
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="ingestion-class">Ingestion class</FieldLabel>
-              <IngestorSelect
+              <FieldLabel htmlFor="ingestion-ingestor">Ingestor</FieldLabel>
+              <IngestorPicker
                 allowNone={false}
                 className="w-full"
-                classes={classesResult.data ?? []}
                 disabled={mutation.isPending}
-                id="ingestion-class"
-                onChange={setIngestor}
-                value={ingestor}
+                filenames={selectedFiles.map((file) => file.filename)}
+                id="ingestion-ingestor"
+                ingestors={ingestors}
+                label="Ingestor"
+                onChange={(choice) =>
+                  setChoices(
+                    Object.fromEntries(
+                      eligibleMfids.map((fileMfid) => [fileMfid, choice])
+                    )
+                  )
+                }
+                value={sharedIngestorChoice(
+                  selectedMfids.map((fileMfid) => choiceFor(fileMfid))
+                )}
               />
-              {classesResult.isError ? (
+              {ingestorsResult.isError ? (
                 <p className="text-supporting text-muted-foreground">
-                  Ingestion classes could not be loaded; only Auto-detect is
-                  available.
+                  Ingestors could not be loaded; only Auto-detect is available.
+                </p>
+              ) : ingestorsResult.isSuccess && ingestors.length === 0 ? (
+                <p className="text-supporting text-muted-foreground">
+                  {NO_INGESTORS_AVAILABLE}
                 </p>
               ) : null}
             </Field>
@@ -683,6 +705,24 @@ function IngestionRequestDialog({
                             </FieldContent>
                           </span>
                         </FieldLabel>
+                        {eligible ? (
+                          <IngestorPicker
+                            allowNone={false}
+                            className="max-w-40 shrink-0"
+                            disabled={mutation.isPending}
+                            filenames={[file.filename]}
+                            ingestors={ingestors}
+                            label={`Ingestor for ${file.filename}`}
+                            onChange={(choice) =>
+                              setChoices((current) => ({
+                                ...current,
+                                [file.mfid]: choice,
+                              }))
+                            }
+                            presentation="inline"
+                            value={choiceFor(file.mfid)}
+                          />
+                        ) : null}
                       </Field>
                     )
                   })}
