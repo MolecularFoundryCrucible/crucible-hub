@@ -58,24 +58,24 @@ Write each Markdown paragraph or list item on one unwrapped line. Use no emojis 
 
 ## Commands
 
-| Command                                    | Purpose                                                                                                           |
-| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
-| `npm run validate`                         | Full gate: formatting, lint, types, unused code, unit tests, contract, boundary, tokens, docs, secrets, and build |
-| `npm run validate:static`                  | The same checks without the production build                                                                      |
-| `npm run test:e2e`                         | Production build and runtime check, then Chromium workflow, accessibility, and server-function checks on fixtures |
-| `npm run api:fetch -- vX.Y.Z`              | Pin a published API release: download and verify its contract, update the lock, regenerate types                  |
-| `npm run api:generate`                     | Regenerate TypeScript from the pinned contract                                                                    |
-| `npm run api:check`                        | Verify the contract digest and that generated output is current                                                   |
-| `npm run boundary:check`                   | Verify browser-reachable code cannot import server-only modules                                                   |
-| `npm run unused:check`                     | Find unused files, exports, and dependencies with knip                                                            |
-| `npm run docs:check`                       | Verify local documentation links and heading anchors                                                              |
-| `npm run secrets:check`                    | Scan for credentials and secret-like values                                                                       |
-| `npm run skills:load -- <package>#<skill>` | Load an installed TanStack agent skill                                                                            |
-| `npm run skills:stale`                     | Report stale TanStack skill sources                                                                               |
-| `npm run audit`                            | Fail on high or critical npm advisories                                                                           |
-| `npm run release`                          | Stamp `CHANGELOG.md`, commit, and tag `vX.Y.Z`                                                                    |
+| Command                                    | Purpose                                                                                                             |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| `npm run validate`                         | Full gate: formatting, lint, types, unused code, unit tests, contract, boundary, tokens, docs, and build            |
+| `npm run validate:static`                  | The same checks without the production build                                                                        |
+| `npm run test:e2e`                         | Production build and runtime check, then Chromium workflow, accessibility, and server-function checks on fixtures   |
+| `npm run api:fetch -- vX.Y.Z`              | Pin a published API release: download and verify its contract, update the lock, regenerate types                    |
+| `npm run api:generate`                     | Regenerate TypeScript from the pinned contract                                                                      |
+| `npm run api:check`                        | Verify the contract digest and that generated output is current                                                     |
+| `npm run boundary:check`                   | Verify browser-reachable code cannot import server-only modules                                                     |
+| `npm run unused:check`                     | Find unused files, exports, and dependencies with knip                                                              |
+| `npm run docs:check`                       | Verify local documentation links and heading anchors                                                                |
+| `npm run secrets:check`                    | Scan the Git history for credentials with gitleaks (needs Docker); `.gitleaksignore` lists reviewed false positives |
+| `npm run skills:load -- <package>#<skill>` | Load an installed TanStack agent skill                                                                              |
+| `npm run skills:stale`                     | Report stale TanStack skill sources                                                                                 |
+| `npm run audit`                            | Fail on high or critical npm advisories                                                                             |
+| `npm run release`                          | Stamp `CHANGELOG.md`, commit, and tag `vX.Y.Z`                                                                      |
 
-CI runs `validate:static`, the npm audit, and the skill check in one job, and `test:e2e` in a parallel job, with no retries, using the Chrome preinstalled on the GitHub runner instead of downloading a browser. Specs that change shared fixture state run in serial mode. Browser specs use [`tests/fixtures.ts`](tests/fixtures.ts), which fails a test on any uncaught page error.
+CI runs the secret scan, `validate:static`, the npm audit, and the skill check in one job, and `test:e2e` in a parallel job, with no retries, using the Chrome preinstalled on the GitHub runner instead of downloading a browser. Specs that change shared fixture state run in serial mode. Browser specs use [`tests/fixtures.ts`](tests/fixtures.ts), which fails a test on any uncaught page error.
 
 ## Visual and runtime review
 
