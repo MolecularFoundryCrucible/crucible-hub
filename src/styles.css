@@ -6,6 +6,8 @@
 @import "@fontsource/noto-sans-mono/400.css";
 
 @source not "../deploy";
+@source not "../docs";
+@source not "../decisions";
 
 @custom-variant dark (&:is(.dark *));
 
