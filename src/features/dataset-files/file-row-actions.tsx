@@ -74,6 +74,7 @@ export function FileRowActions({
       [
         crucibleKeys.datasetFiles(scope, permissions.datasetMfid),
         crucibleKeys.datasetIngestionRequests(scope, permissions.datasetMfid),
+        crucibleKeys.datasetDeletedFiles(scope, permissions.datasetMfid),
       ].map((queryKey) => queryClient.invalidateQueries({ queryKey }))
     )
   const rename = useMutation({
@@ -190,7 +191,7 @@ export function FileRowActions({
       </ConfirmationDialog>
       <ConfirmationDialog
         confirmLabel="Remove"
-        description="The file and its ingestion history leave this dataset. Its stored copy is cleaned up later."
+        description="The file and its ingestion history leave this dataset. Its content is kept for a while, and Recently deleted can restore it until then."
         error={error}
         kind="alert"
         onConfirm={() => {
