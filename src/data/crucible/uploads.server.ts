@@ -36,6 +36,7 @@ type FixtureUploadSession = {
   replaceFileMfid?: string
   size: number
   state: WorkspaceUploadSession["state"]
+  storeId?: string
 }
 
 const fixtureUploadSessions = new Map<string, FixtureUploadSession>()
@@ -188,6 +189,7 @@ export async function initializeWorkspaceUploadSession(
     idempotencyKey?: string
     replace?: { etag: string; fileMfid: string }
     size: number
+    storeId?: string
   },
   scenario?: FixtureScenario,
   requestSignal?: AbortSignal
@@ -210,7 +212,11 @@ export async function initializeWorkspaceUploadSession(
       : await client.POST(
           "/datasets/{dataset_mfid}/upload/multipart/initiate",
           {
-            body: { filename: input.filename, size: input.size },
+            body: {
+              filename: input.filename,
+              size: input.size,
+              ...(input.storeId ? { store_id: input.storeId } : {}),
+            },
             params: {
               header: { "idempotency-key": input.idempotencyKey },
               path: { dataset_mfid: input.datasetMfid },
@@ -289,6 +295,7 @@ export async function initializeWorkspaceUploadSession(
     ...(input.replace ? { replaceFileMfid: input.replace.fileMfid } : {}),
     size: input.size,
     state: "uploading",
+    ...(input.storeId ? { storeId: input.storeId } : {}),
   })
   return { partSize: fixturePartSize(input.size), state: "uploading", uploadId }
 }
@@ -496,7 +503,7 @@ export async function completeWorkspaceUpload(
       size: session.size,
       storage_backend: "gcs",
       storage_path: null,
-      store_id: "foundry",
+      store_id: session.storeId ?? "foundry",
     }
     fixtureUploadedFiles.set(input.datasetMfid, [
       ...(fixtureUploadedFiles.get(input.datasetMfid) ?? []),

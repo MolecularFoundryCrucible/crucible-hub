@@ -77,6 +77,11 @@ export const initializeWorkspaceDatasetUpload = createServerFn({
           .optional(),
         scenario: fixtureScenarioSchema.optional(),
         size: z.number().int().min(0).max(MAX_UPLOAD_SIZE),
+        storeId: z
+          .string()
+          .max(63)
+          .regex(/^[a-z][a-z0-9]*(-[a-z0-9]+)*$/)
+          .optional(),
       })
       .strict()
   )
@@ -92,6 +97,7 @@ export const initializeWorkspaceDatasetUpload = createServerFn({
             idempotencyKey: data.idempotencyKey,
             ...(data.replace ? { replace: data.replace } : {}),
             size: data.size,
+            ...(data.storeId && !data.replace ? { storeId: data.storeId } : {}),
           },
           data.scenario,
           context.requestSignal

@@ -16,6 +16,7 @@ import { datasetFilesQueryOptions } from "@/data/crucible/resources.queries"
 import { useUploadBatch } from "./upload-batch"
 import { UploadDropZone, UploadFileList } from "./upload-file-list"
 import { UploadLeaveDialog } from "./upload-leave-guard"
+import { UploadStoreField } from "./upload-store-field"
 
 export function UploadFilesDialog({
   datasetMfid,
@@ -36,6 +37,7 @@ export function UploadFilesDialog({
   )
   const batch = useUploadBatch({ existingFiles })
   const [confirmingCancel, setConfirmingCancel] = useState(false)
+  const [storeId, setStoreId] = useState("")
   const closeAfterUpload = useRef(false)
 
   function close() {
@@ -51,7 +53,7 @@ export function UploadFilesDialog({
   }
 
   async function upload() {
-    await batch.start(datasetMfid)
+    await batch.start(datasetMfid, storeId || undefined)
     if (closeAfterUpload.current) {
       closeAfterUpload.current = false
       close()
@@ -78,6 +80,12 @@ export function UploadFilesDialog({
             <DialogTitle>Add files</DialogTitle>
           </DialogHeader>
           <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
+            <UploadStoreField
+              datasetMfid={datasetMfid}
+              disabled={batch.uploading}
+              onChange={setStoreId}
+              value={storeId}
+            />
             <UploadDropZone
               compact={batch.items.length > 0}
               disabled={batch.uploading}

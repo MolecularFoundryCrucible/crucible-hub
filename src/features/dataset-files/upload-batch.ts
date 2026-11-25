@@ -287,7 +287,10 @@ export function useUploadBatch({
     setState(id, { ...item.state, ingestion })
   }
 
-  async function start(datasetMfid: string): Promise<boolean> {
+  async function start(
+    datasetMfid: string,
+    storeId?: string
+  ): Promise<boolean> {
     if (uploading) return false
     const current = new AbortController()
     controller.current = current
@@ -330,6 +333,7 @@ export function useUploadBatch({
           file: item.file,
           filename: item.filename,
           ...(item.replace ? { replace: item.replace } : {}),
+          ...(storeId ? { storeId } : {}),
           onProgress: (next) => {
             if (next.phase === "done") return
             transferred.set(item.id, next.uploadedBytes)
