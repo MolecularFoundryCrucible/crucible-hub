@@ -11,6 +11,7 @@ import { InstrumentLifecycleCard } from "@/features/instrument-lifecycle/instrum
 import { InstrumentAccessCard } from "@/features/instrument-operators/instrument-operators-card"
 import { OwnershipTransferCard } from "@/features/resource-ownership/ownership-transfer-card"
 import { ResourceForcedDeletionCard } from "@/features/resource-deletion/resource-forced-deletion"
+import { DefaultStoreCard } from "@/features/storage-settings/default-store-card"
 
 const route = getRouteApi("/_app/instruments/$instrumentMfid/settings/")
 
@@ -44,6 +45,11 @@ export function InstrumentManagePage() {
       {canViewAccess ? (
         <ContentBoundary width="reading">
           <InstrumentAccessCard instrument={resource} scope={scope} />
+        </ContentBoundary>
+      ) : null}
+      {canManageAccess ? (
+        <ContentBoundary width="reading">
+          <DefaultStoreCard kind="instrument" mfid={instrumentMfid} />
         </ContentBoundary>
       ) : null}
       {hasResourceManagement ? (

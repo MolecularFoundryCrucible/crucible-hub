@@ -49,6 +49,8 @@ export type HubConflictCode =
   | "project_not_found"
   | "filename_exists"
   | "store_unavailable"
+  | "etag_mismatch"
+  | "unknown_store"
   | "not_in_trash"
   | "version_expired"
   | "dataset_pending_deletion"
