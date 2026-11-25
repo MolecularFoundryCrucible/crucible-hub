@@ -581,6 +581,22 @@ export type WorkspaceFileDisposition = "attachment" | "inline"
 
 export type WorkspaceStore = Schema<"StoreRead">
 
+export type WorkspaceDeletedFile = {
+  datasetMfid: string
+  deletedAt: string
+  fileMfid: string
+  filename: string
+  restorableUntil: string
+  sha256Hash: string
+  size: number
+  storeId: string | null
+}
+
+export type WorkspaceDeletedFilePage = {
+  items: readonly WorkspaceDeletedFile[]
+  total: number
+}
+
 export type WorkspaceFileDownload =
   | { status: "ready"; url: string; expiresInSeconds: number }
   | { status: "unavailable" }

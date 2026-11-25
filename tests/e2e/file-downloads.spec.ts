@@ -140,3 +140,19 @@ test("opens stored files inline through a fresh link per visit", async ({
     page.getByRole("button", { name: "Return to Crucible Hub" })
   ).toBeVisible()
 })
+
+test("restores a recently deleted file into the dataset", async ({ page }) => {
+  const deletedFile = "operando-cycle-03.h5"
+  await page.goto(datasetPath)
+  await page.getByText("Recently deleted (1)").click()
+  const deletedTable = page.getByRole("table", {
+    name: "Recently deleted files",
+  })
+  await deletedTable
+    .getByRole("button", { name: `Actions for deleted ${deletedFile}` })
+    .click()
+  await page.getByRole("menuitem", { name: "Restore" }).click()
+  await page.getByRole("button", { name: "Restore", exact: true }).click()
+  await expect(page.getByText("File restored")).toBeVisible()
+  await expect(page.getByText("Recently deleted (1)")).toBeHidden()
+})

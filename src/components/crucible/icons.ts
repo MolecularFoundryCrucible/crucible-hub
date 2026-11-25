@@ -172,6 +172,8 @@ export {
   UserX as DisableAccountIcon,
   Pencil as RenameFileIcon,
   FileMinus as RemoveFileIcon,
+  ArchiveRestore as RestoreFileIcon,
+  Trash2 as PurgeFileIcon,
   KeyRound as ApiKeyIcon,
   MonitorSmartphone as SignedInSessionIcon,
   Trash2 as RemoveSignInMethodIcon,

@@ -63,6 +63,7 @@ import { useExitSafeMount } from "@/hooks/use-exit-safe"
 import { formatBytes } from "@/lib/format"
 import { PendingIcon } from "@/components/crucible/pending-icon"
 
+import { DeletedFilesSection } from "./deleted-files-section"
 import { FileRowActions } from "./file-row-actions"
 import type { FileRowPermissions } from "./file-row-actions"
 
@@ -149,6 +150,9 @@ export function DatasetFiles({
                 title="No associated files"
               />
             )}
+            {canDelete ? (
+              <DeletedFilesSection datasetMfid={datasetMfid} />
+            ) : null}
           </div>
         ) : (
           <PanelState
