@@ -53,6 +53,7 @@ const hubConflictCodes = new Set<string>([
   "join_request_closed",
   "project_not_found",
   "filename_exists",
+  "lineage_cycle",
   "filename_immutable",
   "pending_deletion",
   "storage_location_invalid",

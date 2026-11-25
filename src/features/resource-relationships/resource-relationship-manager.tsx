@@ -556,8 +556,14 @@ function relationshipError(error: unknown, action: "link" | "unlink") {
     if (error.details.kind === "not-found") {
       return "One of the resources or the relationship is no longer available."
     }
+    if (error.details.conflictCode === "lineage_cycle") {
+      return "This link would create a cycle: the child is already an ancestor of the parent."
+    }
+    if (error.details.conflictCode === "pending_deletion") {
+      return "One of these resources has a pending deletion request and cannot be changed."
+    }
     if (error.details.kind === "conflict") {
-      return "These resources may already have this relationship."
+      return "The relationship conflicts with the current state of these resources."
     }
     if (error.details.kind === "validation") {
       return "This relationship is not valid."
